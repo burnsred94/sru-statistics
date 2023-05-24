@@ -1,0 +1,11 @@
+image: http://soft.sallershub.ru/home/
+
+stages:
+  - test
+  - deploy
+
+test_job:
+  stage: test
+
+deploy_job:
+  stage: deploy
