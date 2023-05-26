@@ -8,7 +8,7 @@ import {
 import { KeyProvider } from './key.provider';
 import { ArticleRepository, KeysRepository } from '../repositories';
 import { map } from 'lodash';
-import { Article, Keys } from '../schemas/index.';
+import { Article } from '../schemas/index.';
 import { Types } from 'mongoose';
 
 @Injectable()
@@ -21,22 +21,22 @@ export class ArticleProvider {
     async create(
         object: ReduceSearchResultTwo,
         article: string,
-        telegramId: string,
         email: string,
+        telegramId: string,
     ) {
         const keys = await this.keyProvider.createKey(
             object.data,
             article,
             telegramId,
             email,
-        );
+        )
         const data = await this.articleRepository.create({
             article: article,
             telegramId: telegramId,
             email: email,
             city: object.city,
             city_id: object._id,
-            keys: keys as unknown as [Keys],
+            keys: [...keys] as unknown as [Types.ObjectId],
             productName: 'product',
         });
 

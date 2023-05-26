@@ -1,13 +1,12 @@
 import { Types } from 'mongoose';
 import { IKeys } from 'src/modules/interfaces';
-import { Pwz } from '../schemas/pwz.schema';
 
 export class KeysEntity {
   key: string;
   article: string;
   telegramId: string;
   email: string;
-  pwz: [Pwz];
+  pwz: [Types.ObjectId];
 
   constructor(data: IKeys) {
     this.key = data.key;

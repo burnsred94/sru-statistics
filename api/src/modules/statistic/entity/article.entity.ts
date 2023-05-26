@@ -1,6 +1,5 @@
 import { Types } from 'mongoose';
 import { IArticle } from 'src/modules/interfaces';
-import { Keys } from '../schemas/keys.schema';
 
 export class ArticleEntity {
   article: string;
@@ -9,7 +8,7 @@ export class ArticleEntity {
   email: string;
   city_id: string;
   city: string;
-  keys: [Keys];
+  keys: [Types.ObjectId];
 
   constructor(data: IArticle) {
     this.article = data.article;

@@ -16,8 +16,8 @@ export class Keys {
   @Prop({ type: String })
   telegramId: string;
 
-  @Prop({ type: [Pwz.name], ref: Pwz.name })
-  pwz: [Pwz];
+  @Prop({ type: [Types.ObjectId], ref: Pwz.name })
+  pwz: [Types.ObjectId];
 }
 
 export const KeysSchema = SchemaFactory.createForClass(Keys);

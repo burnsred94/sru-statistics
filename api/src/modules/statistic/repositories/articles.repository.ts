@@ -14,21 +14,20 @@ export class ArticleRepository {
 
   async create(article: Article): Promise<Article> {
     const newArticle = new ArticleEntity(article);
-    const articleCreate = await this.modelArticle.create(newArticle);
-    return await articleCreate.save();
+    const articleCreate = await this.modelArticle.create(newArticle)
+    const save = await articleCreate.save();
+    return save.populate({ path: 'keys', model: Keys.name, select: 'pwz', populate: { path: 'pwz', model: Pwz.name, select: 'name position' } })
   }
 
   async findOne(data: Partial<Article>) {
-    console.log(data);
     const find = await this.modelArticle
-      .find(data)
-      .populate({
-        path: 'keys',
-        populate: {
-          path: 'pwz'
-        }
-      }).exec()
-
+      .findOne({
+        email: data.email,
+        telegramId: data.telegramId,
+        article: data.article
+      })
+      .populate({ path: 'keys', model: Keys.name, select: 'pwz', populate: { path: 'pwz', model: Pwz.name, select: 'name position' } })
+      .exec()
     console.log(find)
     return find;
   }
