@@ -7,7 +7,7 @@ load_prod_env () {
 
 run_api_dev () {
 echo "RUNNING API DEVELOPMENT"
- docker compose up --build -d
+ docker compose --env-file ../api/.env up --build -d
 }
 
 
