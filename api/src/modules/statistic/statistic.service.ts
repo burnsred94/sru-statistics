@@ -4,13 +4,15 @@ import { CreateStatisticDto } from './dto';
 import { FetchProvider } from './providers/fetch.provider';
 import { ICreateRequest } from '../interfaces/requested/create-requested.interface';
 import { forEach, map } from 'lodash';
+import { ArticleRepository } from './repositories';
 
 @Injectable()
 export class StatisticService {
   constructor(
     private readonly statisticProvider: StatisticProvider,
+    private readonly articleRepository: ArticleRepository,
     private readonly fetchProvider: FetchProvider,
-  ) {}
+  ) { }
 
   async create(data: CreateStatisticDto) {
     const { telegramId, towns, article, keys, email } = data;
@@ -54,6 +56,14 @@ export class StatisticService {
       article: article,
       email: email,
       dataSearch: result,
+    });
+  }
+
+  async getOne(email, article, telegramId) {
+    return await this.articleRepository.findOne({
+      email: email,
+      telegramId: telegramId,
+      article: article
     });
   }
 }

@@ -4,6 +4,7 @@ import { Article } from '../schemas/article.schema';
 import { Injectable } from '@nestjs/common';
 import { ArticleEntity } from '../entity';
 import { Keys } from '../schemas/keys.schema';
+import { Pwz } from '../schemas/pwz.schema';
 
 @Injectable()
 export class ArticleRepository {
@@ -14,19 +15,21 @@ export class ArticleRepository {
   async create(article: Article): Promise<Article> {
     const newArticle = new ArticleEntity(article);
     const articleCreate = await this.modelArticle.create(newArticle);
-    return await articleCreate.save()
-
+    return await articleCreate.save();
   }
 
   async findOne(data: Partial<Article>) {
+    console.log(data);
     const find = await this.modelArticle
-      .find({
-        email: data.email,
-        telegramId: data.telegramId,
-        article: data.article,
-      })
-      .populate('keys', null, Keys.name);
+      .find(data)
+      .populate({
+        path: 'keys',
+        populate: {
+          path: 'pwz'
+        }
+      }).exec()
 
+    console.log(find)
     return find;
   }
 }

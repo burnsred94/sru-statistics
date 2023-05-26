@@ -48,6 +48,12 @@ export interface ReduceSearchResult {
   data: Data[][];
 }
 
+export interface ReduceSearchResultTwo {
+  city: string;
+  _id: string;
+  data: Data[];
+}
+
 export interface Data {
   key: string;
   result: Result | Result[];

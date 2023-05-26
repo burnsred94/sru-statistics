@@ -14,7 +14,7 @@ export class Pwz {
   @Prop({ type: String, default: '' })
   article: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String })
   name: string;
 
   @Prop({ type: Array<PeriodsEntity>, required: false })

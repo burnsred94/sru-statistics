@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { Keys } from 'src/modules/statistic/schemas/keys.schema';
 
 export interface IArticle {
   article: string;
@@ -7,5 +8,5 @@ export interface IArticle {
   email: string;
   city_id: string;
   productName: string;
-  keys: [Types.ObjectId];
+  keys: [Keys];
 }

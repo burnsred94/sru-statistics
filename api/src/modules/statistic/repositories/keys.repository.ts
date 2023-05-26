@@ -14,7 +14,6 @@ export class KeysRepository {
     const find = await this.keysModel.findOne({
       key: data.key,
       article: data.article,
-      address: data.address,
       email: data.email,
       telegramId: data.telegramId,
     });
@@ -28,7 +27,6 @@ export class KeysRepository {
         {
           key: data.key,
           article: data.article,
-          address: data.address,
           email: data.email,
           telegramId: data.telegramId,
         },

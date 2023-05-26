@@ -4,23 +4,20 @@ import { Types } from 'mongoose';
 
 @Schema()
 export class Keys {
-  @Prop({ type: String, required: true })
+  @Prop({ type: String })
   key: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String })
   article: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String })
   email: string;
 
   @Prop({ type: String })
   telegramId: string;
 
-  @Prop({ type: String })
-  address: string;
-
-  @Prop({ type: [Types.ObjectId], ref: Pwz.name })
-  pwz: [Types.ObjectId];
+  @Prop({ type: [Pwz.name], ref: Pwz.name })
+  pwz: [Pwz];
 }
 
 export const KeysSchema = SchemaFactory.createForClass(Keys);

@@ -16,6 +16,9 @@ import { GotModule } from '@t00nday/nestjs-got';
 import { FetchProvider } from './providers/fetch.provider';
 import { Pwz, PwzSchema } from './schemas/pwz.schema';
 import { PwzRepository } from './repositories/pwz.repository';
+import { ArticleProvider } from './providers/article-provider.provider';
+import { KeyProvider } from './providers/key.provider';
+import { PwzProvider } from './providers/pwz.provider';
 
 @Module({
   imports: [
@@ -36,6 +39,9 @@ import { PwzRepository } from './repositories/pwz.repository';
     StatisticService,
     FetchProvider,
     PwzRepository,
+    ArticleProvider,
+    KeyProvider,
+    PwzProvider,
   ],
   controllers: [StatisticController],
 })
