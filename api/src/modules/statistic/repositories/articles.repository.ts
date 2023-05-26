@@ -19,12 +19,10 @@ export class ArticleRepository {
     return save.populate({ path: 'keys', model: Keys.name, select: 'pwz', populate: { path: 'pwz', model: Pwz.name, select: 'name position' } })
   }
 
-  async findOne(data: Partial<Article>) {
+  async findOne(id: string) {
     const find = await this.modelArticle
-      .findOne({
-        email: data.email,
-        telegramId: data.telegramId,
-        article: data.article
+      .findById({
+        _id: id,
       })
       .populate({ path: 'keys', model: Keys.name, select: 'pwz', populate: { path: 'pwz', model: Pwz.name, select: 'name position' } })
       .exec()

@@ -59,11 +59,7 @@ export class StatisticService {
     });
   }
 
-  async getOne(email, article, telegramId) {
-    return await this.articleRepository.findOne({
-      email: email,
-      telegramId: telegramId,
-      article: article
-    });
+  async getOne(id) {
+    return await this.articleRepository.findOne(id);
   }
 }

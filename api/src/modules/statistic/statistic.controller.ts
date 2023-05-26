@@ -13,8 +13,8 @@ export class StatisticController {
     return await this.statisticService.create(data);
   }
 
-  @Get('get-statistic/:email/:telegramId/:article')
-  async getStatistic(@Param('email') email, @Param('article') article, @Param('telegramId') telegramId) {
-    return await this.statisticService.getOne(email, article, telegramId);
+  @Get('get-statistic/:id')
+  async getStatistic(@Param('id') id) {
+    return await this.statisticService.getOne(id);
   }
 }
