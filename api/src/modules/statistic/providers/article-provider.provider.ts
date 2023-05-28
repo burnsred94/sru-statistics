@@ -1,45 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import {
-    Data,
-    ReduceSearchResult,
-    ReduceSearchResultTwo,
-    Result,
-} from 'src/modules/interfaces/requested/create-requested.interface';
+import { ReduceSearchResultTwo } from 'src/modules/interfaces/requested/create-requested.interface';
 import { KeyProvider } from './key.provider';
-import { ArticleRepository, KeysRepository } from '../repositories';
-import { map } from 'lodash';
-import { Article } from '../schemas/index.';
+import { ArticleRepository } from '../repositories';
 import { Types } from 'mongoose';
 
 @Injectable()
 export class ArticleProvider {
-    constructor(
-        private readonly articleRepository: ArticleRepository,
-        private readonly keyProvider: KeyProvider,
-    ) { }
+  constructor(
+    private readonly articleRepository: ArticleRepository,
+    private readonly keyProvider: KeyProvider,
+  ) {}
 
-    async create(
-        object: ReduceSearchResultTwo,
-        article: string,
-        email: string,
-        telegramId: string,
-    ) {
-        const keys = await this.keyProvider.createKey(
-            object.data,
-            article,
-            telegramId,
-            email,
-        )
-        const data = await this.articleRepository.create({
-            article: article,
-            telegramId: telegramId,
-            email: email,
-            city: object.city,
-            city_id: object._id,
-            keys: [...keys] as unknown as [Types.ObjectId],
-            productName: 'product',
-        });
+  async create(object: ReduceSearchResultTwo, article: string, userId: string) {
+    const keys = await this.keyProvider.createKey(object.data, article, userId);
+    const data = await this.articleRepository.create({
+      userId: userId,
+      article: article,
+      city: object.city,
+      city_id: object._id,
+      keys: keys,
+      productName: 'product',
+    });
 
-        return data;
-    }
+    return data;
+  }
 }

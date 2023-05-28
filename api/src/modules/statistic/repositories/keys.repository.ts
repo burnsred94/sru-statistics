@@ -11,36 +11,10 @@ export class KeysRepository {
   ) {}
 
   async create(data: Keys) {
-    const find = await this.keysModel.findOne({
-      key: data.key,
-      article: data.article,
-      email: data.email,
-      telegramId: data.telegramId,
-    });
-
-    if (find === null) {
-      const newKey = new KeysEntity(data);
-      const createKey = await this.keysModel.create(newKey);
-      return createKey.save();
-    } else {
-      const update = await this.keysModel.findOneAndUpdate(
-        {
-          key: data.key,
-          article: data.article,
-          email: data.email,
-          telegramId: data.telegramId,
-        },
-        {
-          $addToSet: {
-            pwz: data.pwz,
-          },
-        },
-        {
-          new: true,
-        },
-      );
-      return update.save();
-    }
+    const newKey = new KeysEntity(data);
+    const createKey = await this.keysModel.create(newKey);
+    const keySave = await createKey.save();
+    return keySave._id;
   }
 
   // async update(key: Keys): Promise<Keys> {

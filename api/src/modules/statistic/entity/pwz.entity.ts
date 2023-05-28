@@ -1,17 +1,15 @@
+import { Types } from 'mongoose';
 import { Pwz } from '../schemas/pwz.schema';
-import { PeriodsEntity } from './period.entity';
 
 export class PwzEntity {
   article: string;
-  telegramId: string;
-  email: string;
+  userId: string;
   name: string;
-  position: Array<PeriodsEntity>;
+  position: Types.ObjectId[];
 
   constructor(data: Pwz) {
     this.article = data.article;
-    this.telegramId = data.telegramId;
-    this.email = data.email;
+    this.userId = data.userId;
     this.name = data.name;
     this.position = data.position;
   }

@@ -1,29 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import {
-  ArticleRepository,
-  KeysRepository,
-  StatisticRepository,
-} from '../repositories';
-import {
-  Data,
   IDestructionResult,
   ReduceSearchResult,
   ReduceSearchResultTwo,
   Result,
 } from 'src/modules/interfaces/requested/create-requested.interface';
-import { compact, forEach, map, merge } from 'lodash';
-import { PwzRepository } from '../repositories/pwz.repository';
-import { PeriodsEntity } from '../entity/period.entity';
-import { Types } from 'mongoose';
 import { ArticleProvider } from './article-provider.provider';
+import { compact, map } from 'lodash';
 
 @Injectable()
 export class StatisticProvider {
-  constructor(
-    private readonly articleRepository: ArticleRepository,
-    private readonly articleProvider: ArticleProvider,
-    private readonly statisticRepository: StatisticRepository,
-  ) {}
+  constructor(private readonly articleProvider: ArticleProvider) {}
 
   async create(data: IDestructionResult) {
     const result = await this.createStatistics(data);
@@ -32,12 +19,15 @@ export class StatisticProvider {
   }
 
   async createStatistics(data: IDestructionResult) {
-    const { article, email, telegramId, dataSearch } = data;
+    const { article, dataSearch, userId } = data;
     const dataParse = await this.parse(dataSearch);
 
-    const createArticle = map(dataParse, (object: ReduceSearchResultTwo) => {
-      return this.articleProvider.create(object, article, email, telegramId);
-    });
+    const createArticle = map(
+      dataParse,
+      async (object: ReduceSearchResultTwo) => {
+        return await this.articleProvider.create(object, article, userId);
+      },
+    );
 
     return await Promise.all(createArticle);
   }

@@ -11,13 +11,10 @@ export class Keys {
   article: string;
 
   @Prop({ type: String })
-  email: string;
-
-  @Prop({ type: String })
-  telegramId: string;
+  userId: string;
 
   @Prop({ type: [Types.ObjectId], ref: Pwz.name })
-  pwz: [Types.ObjectId];
+  pwz: Types.ObjectId[];
 }
 
 export const KeysSchema = SchemaFactory.createForClass(Keys);

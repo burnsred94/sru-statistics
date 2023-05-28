@@ -1,6 +1,5 @@
 export interface ICreateStatistic {
-  telegramId: string;
-  email: string;
+  userId: string;
   article: string;
   keys: string[];
   towns: ITown[];
@@ -36,8 +35,7 @@ export interface Result {
 export type IPosition = string | number;
 
 export interface IDestructionResult {
-  email: string;
-  telegramId: string;
+  userId: string;
   article: string;
   dataSearch: ReduceSearchResult[];
 }

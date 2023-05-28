@@ -2,52 +2,51 @@ import { Injectable } from '@nestjs/common';
 import { PwzProvider } from './pwz.provider';
 import { KeysRepository } from '../repositories';
 import {
-    Data,
-    Result,
+  Data,
+  Result,
 } from 'src/modules/interfaces/requested/create-requested.interface';
 import { map } from 'lodash';
 import { PwzEntity } from '../entity/pwz.entity';
 import { Types } from 'mongoose';
+import { Keys } from '../schemas/keys.schema';
 
 @Injectable()
 export class KeyProvider {
-    constructor(
-        private readonly pwzProvider: PwzProvider,
-        private readonly keysRepository: KeysRepository,
-    ) { }
+  constructor(
+    private readonly pwzProvider: PwzProvider,
+    private readonly keysRepository: KeysRepository,
+  ) {}
 
-    async createKey(
-        data: Data[],
-        article: string,
-        telegramId: string,
-        email: string,
-    ) {
-        const keys = map(data, async key => {
-            const pwz = map(key.result as Result[], async value => {
-                const result = await this.pwzProvider
-                    .create(value, article, telegramId, email)
-                    .then(resolved => {
-                        return resolved;
-                    });
-                if (result !== null) {
-                    return result;
-                }
-            });
-            const resolved = await Promise.all(pwz);
+  async createKey(data: Data[], article: string, userId: string) {
+    const keys = map(data, async name => {
+      const pwz = await this.createPwz(
+        name.result as Result[],
+        userId,
+        article,
+      );
 
-            return this.keysRepository
-                .create({
-                    key: key.key,
-                    pwz: resolved as unknown as [Types.ObjectId],
-                    article: article,
-                    telegramId: telegramId,
-                    email: email,
-                })
-                .then(resolved => {
-                    return resolved._id;
-                });
-        });
+      const resolved = await Promise.all(pwz);
 
-        return await Promise.all(keys);
-    }
+      return await this.keysRepository.create({
+        key: name.key,
+        pwz: resolved,
+        article: article,
+        userId: userId,
+      });
+    });
+
+    const resolvedKeys = await Promise.all(keys);
+
+    return resolvedKeys;
+  }
+
+  async createPwz(result: Result[], article: string, userId: string) {
+    const pwz = map(result, async value => {
+      if (value !== undefined) {
+        const result = await this.pwzProvider.create(value, article, userId);
+        return result;
+      }
+    });
+    return pwz;
+  }
 }

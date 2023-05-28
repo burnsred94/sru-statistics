@@ -1,14 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Statistic, StatisticSchema } from './schemas/statistics.schema';
 import { Article, ArticleSchema } from './schemas/article.schema';
 import { Keys, KeysSchema } from './schemas/keys.schema';
-import { Cities, CitiesSchema } from './schemas/cities.schema';
-import {
-  ArticleRepository,
-  KeysRepository,
-  StatisticRepository,
-} from './repositories';
+import { ArticleRepository, KeysRepository } from './repositories';
 import { StatisticProvider } from './providers/statistic.provider';
 import { StatisticController } from './statistic.controller';
 import { StatisticService } from './statistic.service';
@@ -19,20 +13,20 @@ import { PwzRepository } from './repositories/pwz.repository';
 import { ArticleProvider } from './providers/article-provider.provider';
 import { KeyProvider } from './providers/key.provider';
 import { PwzProvider } from './providers/pwz.provider';
+import { Period, PeriodSchema } from './schemas/periods.schema';
+import { PeriodRepository } from './repositories/periods.repository';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: Statistic.name, schema: StatisticSchema },
       { name: Article.name, schema: ArticleSchema },
       { name: Keys.name, schema: KeysSchema },
-      { name: Cities.name, schema: CitiesSchema },
       { name: Pwz.name, schema: PwzSchema },
+      { name: Period.name, schema: PeriodSchema },
     ]),
     GotModule,
   ],
   providers: [
-    StatisticRepository,
     ArticleRepository,
     KeysRepository,
     StatisticProvider,
@@ -42,6 +36,7 @@ import { PwzProvider } from './providers/pwz.provider';
     ArticleProvider,
     KeyProvider,
     PwzProvider,
+    PeriodRepository,
   ],
   controllers: [StatisticController],
 })

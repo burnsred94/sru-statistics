@@ -1,6 +1,7 @@
 export class PeriodsEntity {
   position: number | string;
   timestamp: string;
+  difference: number;
   options: {
     timeZone: 'Europe/Moscow';
     day: '2-digit';
@@ -8,8 +9,9 @@ export class PeriodsEntity {
     year: 'numeric';
   };
 
-  constructor(position: number | string) {
+  constructor(position: number | string, difference = 0) {
     this.position = position;
+    this.difference = difference;
     this.timestamp = this.formatter().format(new Date());
   }
 

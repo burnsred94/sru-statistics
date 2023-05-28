@@ -12,10 +12,7 @@ export class Article {
   productName: string;
 
   @Prop({ type: String })
-  telegramId: string;
-
-  @Prop({ type: String })
-  email: string;
+  userId: string;
 
   @Prop({ type: String })
   city: string;
@@ -23,8 +20,8 @@ export class Article {
   @Prop({ type: String })
   city_id: string;
 
-  @Prop({ type: Types.ObjectId, required: true })
-  keys: [Types.ObjectId];
+  @Prop({ type: [Types.ObjectId], required: true })
+  keys: Types.ObjectId[];
 }
 
 export const ArticleSchema = SchemaFactory.createForClass(Article);

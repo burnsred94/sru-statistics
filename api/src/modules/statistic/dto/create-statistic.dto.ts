@@ -6,9 +6,7 @@ import {
 
 export class CreateStatisticDto implements ICreateStatistic {
   @IsString()
-  telegramId: string;
-  @IsString()
-  email: string;
+  userId: string;
 
   @IsNotEmpty()
   @IsArray()

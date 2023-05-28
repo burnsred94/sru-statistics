@@ -1,15 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { PeriodsEntity } from '../entity/period.entity';
+import { Types } from 'mongoose';
+import { Period } from './periods.schema';
 
 @Schema({
   versionKey: false,
 })
 export class Pwz {
-  @Prop({ type: String, default: '' })
-  email: string;
-
-  @Prop({ type: String, default: '' })
-  telegramId: string;
+  @Prop({ type: String })
+  userId: string;
 
   @Prop({ type: String, default: '' })
   article: string;
@@ -17,8 +15,8 @@ export class Pwz {
   @Prop({ type: String })
   name: string;
 
-  @Prop({ type: Array<PeriodsEntity>, required: false })
-  position: Array<PeriodsEntity>;
+  @Prop({ type: [Types.ObjectId], ref: Period.name })
+  position: Types.ObjectId[];
 }
 
 export const PwzSchema = SchemaFactory.createForClass(Pwz);
