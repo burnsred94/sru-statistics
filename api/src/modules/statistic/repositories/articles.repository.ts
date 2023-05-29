@@ -9,6 +9,7 @@ import { FindDataDto } from '../dto/find-data.dto';
 import { NOT_FIND_ERROR } from 'src/constatnts/errors.constants';
 import { filter, includes, map } from 'lodash';
 import { RemoveKeyDto } from '../dto/remove-key.dto';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class ArticleRepository {
@@ -160,6 +161,42 @@ export class ArticleRepository {
         keys: map(value.keys, key => ({
           _id: key._id,
           key: key.key,
+          average: Object.entries(
+            map(key.pwz, pwz => {
+              const averageArray = pwz.position.reduce(
+                (accumulator, object) => {
+                  const number = +object.position;
+                  if (!Number.isNaN(number))
+                    accumulator.push({
+                      timestamp: object.timestamp,
+                      average: number,
+                    });
+                  return accumulator;
+                },
+                [],
+              );
+              return averageArray;
+            })
+              .flat()
+              .reduce((accumulator, current) => {
+                const { timestamp, average } = current;
+                if (!accumulator[timestamp]) {
+                  accumulator[timestamp] = [];
+                }
+                accumulator[timestamp].push(average);
+                return accumulator;
+              }, {}),
+          ).map(([timestamp, averages]) => ({
+            _id: randomUUID(),
+            timestamp,
+            average:
+              //@ts-ignore
+              averages.reduce(
+                (accumulator, current) => accumulator + current,
+                0,
+                //@ts-ignore
+              ) / averages.length,
+          })),
           pwz: map(key.pwz, pwz => ({
             _id: pwz._id,
             name: pwz.name,
@@ -168,11 +205,13 @@ export class ArticleRepository {
               if (findObject) {
                 accumulator.push(findObject);
               } else {
-                const newPeriod = new PeriodsEntity("Не обнаружено среди 2100 позиций").mockPeriod(string);
+                const newPeriod = new PeriodsEntity(
+                  'Не обнаружено среди 2100 позиций',
+                ).mockPeriod(string);
                 accumulator.push(newPeriod);
               }
               return accumulator;
-            }, [])
+            }, []),
           })),
         })),
       };
