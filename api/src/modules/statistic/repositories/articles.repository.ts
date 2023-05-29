@@ -68,10 +68,9 @@ export class ArticleRepository {
   async removeArticle(data) {
     const remove = await this.modelArticle.deleteOne({
       userId: data.userId,
-      _id: data.cityId,
+      city_id: data.cityId,
       article: data.article,
     });
-    console.log(remove);
     if (remove.deletedCount !== 0) {
       return { message: 'Removed successfully' };
     }
@@ -93,7 +92,7 @@ export class ArticleRepository {
 
   async removeKeyByArticle(data: RemoveKeyDto) {
     const find = await this.modelArticle.findOne({
-      _id: data.cityId,
+      city_id: data.cityId,
       userId: data.userId,
       article: data.article,
     });

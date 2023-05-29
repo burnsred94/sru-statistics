@@ -21,7 +21,7 @@ import { Response } from 'express';
 export class StatisticController {
   protected readonly logger = new Logger(StatisticController.name);
 
-  constructor(private readonly statisticService: StatisticService) {}
+  constructor(private readonly statisticService: StatisticService) { }
 
   @Post('create')
   async create(@Body() data: CreateStatisticDto) {

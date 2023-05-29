@@ -10,7 +10,7 @@ export class FetchProvider {
   constructor(
     private readonly gotService: GotService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   async fetchSearch(data: ITown, article: string, keys: string[]) {
     const url = await this.configService.get('SEARCH_API_URL');
@@ -54,7 +54,7 @@ export class FetchProvider {
     article: string,
     keys: string[],
   ) {
-    console.log(keys);
+    console.log(value)
     const url = await this.configService.get('SEARCH_API_URL');
     const result = await this.gotService
       .gotRef(url, {
@@ -72,6 +72,7 @@ export class FetchProvider {
         }),
       })
       .then(response => {
+        console.log(response)
         const { data } = JSON.parse(response.body);
         if (data.result) {
           const parse = data.result.map(item => ({

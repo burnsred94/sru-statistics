@@ -85,6 +85,7 @@ export class StatisticService {
 
   async searchKey(data: { pwz; article: string; keys: string[] }) {
     const result = map(data.pwz.pwz, async values => {
+      console.log('map', data.keys)
       const search = await this.fetchProvider.fetchSearchKey(
         values,
         data.article,
