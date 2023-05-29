@@ -21,4 +21,18 @@ export class PwzRepository {
       .findById(id)
       .populate('position', null, Period.name);
   }
+
+  async update(periodId: Types.ObjectId, idPwz: Types.ObjectId) {
+    const find = await this.pwzModel.findById({
+      _id: idPwz,
+    });
+    return await this.pwzModel.findByIdAndUpdate(
+      {
+        _id: idPwz,
+      },
+      {
+        position: [...find.position, periodId],
+      },
+    );
+  }
 }

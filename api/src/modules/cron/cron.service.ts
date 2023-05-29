@@ -6,7 +6,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 export class CronService {
   constructor(private readonly statisticService: StatisticService) {}
 
-  @Cron(CronExpression.EVERY_10_SECONDS, {
+  @Cron(CronExpression.EVERY_DAY_AT_1AM, {
     timeZone: 'Europe/Moscow',
   })
   async updateKey() {

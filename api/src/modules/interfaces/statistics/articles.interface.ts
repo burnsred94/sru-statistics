@@ -34,5 +34,5 @@ export interface Position {
   _id: string;
   position: string;
   timestamp: string;
-  difference: number;
+  difference: string;
 }

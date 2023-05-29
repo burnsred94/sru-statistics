@@ -2,7 +2,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Article } from '../schemas/article.schema';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { ArticleEntity } from '../entity';
+import { ArticleEntity, PeriodsEntity } from '../entity';
 import { Keys } from '../schemas/keys.schema';
 import { Pwz } from '../schemas/pwz.schema';
 import { FindDataDto } from '../dto/find-data.dto';
@@ -28,10 +28,12 @@ export class ArticleRepository {
     });
   }
 
-  async findByCityFromAddKeys(cityId: string) {
+  async findByCityFromAddKeys(data) {
     return await this.modelArticle
-      .findById({
-        _id: cityId,
+      .findOne({
+        city_id: data.cityId,
+        userId: data.userId,
+        article: data.article,
       })
       .populate({
         path: 'keys',
@@ -74,9 +76,8 @@ export class ArticleRepository {
     }
   }
 
-  async updateArticle(keyId: Types.ObjectId[], userId: string) {
-    const find = await this.modelArticle.findById(userId);
-    console.log(find);
+  async updateArticle(keyId: Types.ObjectId[], userId: Types.ObjectId) {
+    const find = await this.modelArticle.findById({ _id: userId });
     const findOrUpdate = await this.modelArticle.findByIdAndUpdate(
       {
         _id: userId,
@@ -162,14 +163,20 @@ export class ArticleRepository {
           pwz: map(key.pwz, pwz => ({
             _id: pwz._id,
             name: pwz.name,
-            position: pwz.position.filter(object =>
-              period.includes(object.timestamp),
-            ),
+            position: period.reduce((accumulator, string) => {
+              const findObject = pwz.position.find(p => p.timestamp === string);
+              if (findObject) {
+                accumulator.push(findObject);
+              } else {
+                const newPeriod = new PeriodsEntity("Не обнаружено среди 2100 позиций").mockPeriod(string);
+                accumulator.push(newPeriod);
+              }
+              return accumulator;
+            }, [])
           })),
         })),
       };
     });
-
     return result;
   }
 }

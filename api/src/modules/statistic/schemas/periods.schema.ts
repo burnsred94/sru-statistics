@@ -10,8 +10,8 @@ export class Period {
   @Prop({ type: String })
   timestamp: string;
 
-  @Prop({ type: Number })
-  difference: number;
+  @Prop({ type: String })
+  difference: string;
 }
 
 export const PeriodSchema = SchemaFactory.createForClass(Period);

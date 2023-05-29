@@ -9,4 +9,7 @@ export class AddKeysDto {
 
   @IsArray()
   keys: string[];
+
+  @IsString()
+  userId: string;
 }

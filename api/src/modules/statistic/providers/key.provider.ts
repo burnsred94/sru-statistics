@@ -18,6 +18,7 @@ export class KeyProvider {
   ) {}
 
   async createKey(data: Data[], article: string, userId: string) {
+    console.log(data);
     const keys = map(data, async name => {
       const pwz = await this.createPwz(
         name.result as Result[],
@@ -36,7 +37,6 @@ export class KeyProvider {
     });
 
     const resolvedKeys = await Promise.all(keys);
-
     return resolvedKeys;
   }
 

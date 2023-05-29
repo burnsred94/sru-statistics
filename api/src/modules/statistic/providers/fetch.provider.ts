@@ -54,6 +54,7 @@ export class FetchProvider {
     article: string,
     keys: string[],
   ) {
+    console.log(keys);
     const url = await this.configService.get('SEARCH_API_URL');
     const result = await this.gotService
       .gotRef(url, {

@@ -5,27 +5,23 @@ export class CalculateUtils {
     const typeValue = value as Position;
     const beforeValue = Number(typeValue.position);
     const afterValue = Number(position);
+    console.log(beforeValue, afterValue);
 
-    console.log(`beforeValue: ${beforeValue}, afterValue: ${afterValue}`);
     if (Number.isNaN(beforeValue) && Number.isNaN(afterValue)) {
-      console.log(`check: beforeValue: string, afterValue: string`)
-      return typeValue.position;
+      return '0';
     }
-    if (Number.isNaN(beforeValue) && Number.isNaN(afterValue)) {
-      console.log(`check: beforeValue: string, afterValue: number`)
+    if (!Number.isNaN(beforeValue) && Number.isNaN(afterValue)) {
       const result = String(afterValue);
       return `+${result}`;
     }
     if (!Number.isNaN(beforeValue) && !Number.isNaN(afterValue)) {
-      console.log(`check: beforeValue: number, afterValue: number`)
+      if (beforeValue === afterValue) return '0';
       if (beforeValue > afterValue) {
-        console.log(`check: beforeValue > afterValue`)
         const result = String(beforeValue - afterValue);
-        return `-${result}`;
+        return `+${result}`;
       } else {
-        console.log(`check: beforeValue < afterValue`)
         const result = String(beforeValue - afterValue);
-        return Number(result);
+        return result;
       }
     }
   }

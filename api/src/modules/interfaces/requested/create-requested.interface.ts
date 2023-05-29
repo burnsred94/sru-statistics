@@ -29,10 +29,8 @@ export interface DataClass {
 
 export interface Result {
   key: string;
-  position: IPosition;
+  position: string;
 }
-
-export type IPosition = string | number;
 
 export interface IDestructionResult {
   userId: string;
@@ -60,5 +58,5 @@ export interface Data {
 export interface Result {
   _id: string;
   address: string;
-  position: IPosition;
+  position: string;
 }

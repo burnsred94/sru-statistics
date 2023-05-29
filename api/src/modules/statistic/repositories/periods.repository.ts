@@ -10,8 +10,8 @@ export class PeriodRepository {
     @InjectModel(Period.name) private readonly periodModel: Model<Period>,
   ) {}
 
-  async create(position: string | number) {
-    const newPeriod = new PeriodsEntity(String(position));
+  async create(position: string, difference?: string) {
+    const newPeriod = new PeriodsEntity(position, difference);
     const createPeriod = await this.periodModel.create(newPeriod);
     const newPeriodSave = await createPeriod.save();
     return newPeriodSave._id;

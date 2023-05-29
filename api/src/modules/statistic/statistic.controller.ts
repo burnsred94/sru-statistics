@@ -71,7 +71,7 @@ export class StatisticController {
       return response.status(HttpStatus.OK).send({
         status: error.status,
         data: [],
-        errors: [...error.message],
+        errors: [{ message: error.message }],
       });
     }
   }

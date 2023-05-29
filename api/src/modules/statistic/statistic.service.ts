@@ -11,6 +11,7 @@ import { ParsersData } from './providers/utils/parse.utils';
 import { PwzRepository } from './repositories/pwz.repository';
 import { map } from 'lodash';
 import { CalculateUtils } from './providers/utils/calculate.utils';
+import { PeriodRepository } from './repositories/periods.repository';
 
 @Injectable()
 export class StatisticService {
@@ -21,6 +22,7 @@ export class StatisticService {
     private readonly keyProvider: KeyProvider,
     private readonly articleRepository: ArticleRepository,
     private readonly fetchProvider: FetchProvider,
+    private readonly periodRepository: PeriodRepository,
     private readonly pwzRepository: PwzRepository,
   ) {
     this.parse = new ParsersData();
@@ -58,10 +60,9 @@ export class StatisticService {
 
   async addKeyByArticleFromCity(dataKey: AddKeysDto) {
     const { article, keys, cityId } = dataKey;
-    const towns = await this.articleRepository.findByCityFromAddKeys(cityId);
-
+    const towns = await this.articleRepository.findByCityFromAddKeys(dataKey);
     const search = await this.searchKey({
-      pwz: towns[0],
+      pwz: towns.keys[0],
       article: article,
       keys: keys,
     });
@@ -69,7 +70,7 @@ export class StatisticService {
     const resolved = await Promise.all(search);
     const result = await this.parse.mergedData(resolved);
     const keyId = await this.keyProvider.createKey(result, article, cityId);
-    const update = await this.articleRepository.updateArticle(keyId, cityId);
+    const update = await this.articleRepository.updateArticle(keyId, towns._id);
 
     return update;
   }
@@ -82,8 +83,8 @@ export class StatisticService {
     return await this.articleRepository.removeKeyByArticle(data);
   }
 
-  async searchKey(data: { pwz: Array<any>; article: string; keys: string[] }) {
-    const result = map(data.pwz, async values => {
+  async searchKey(data: { pwz; article: string; keys: string[] }) {
+    const result = map(data.pwz.pwz, async values => {
       const search = await this.fetchProvider.fetchSearchKey(
         values,
         data.article,
@@ -107,29 +108,29 @@ export class StatisticService {
 
     const dataUpdated = resolvedMapping.flat();
 
-    // let iterator = 0;
-    // while (dataUpdated.length > iterator) {
-    //   const fetch = await this.fetchProvider.fetchSearchKey(
-    //     {
-    //       _id: dataUpdated[iterator]._id,
-    //       name: dataUpdated[iterator].address,
-    //     },
-    //     dataUpdated[iterator].article,
-    //     dataUpdated[iterator].keys,
-    //   );
-    //   const position = fetch.data[0].result.position;
+    let iterator = 0;
+    while (dataUpdated.length > iterator) {
+      const fetch = await this.fetchProvider.fetchSearchKey(
+        {
+          _id: dataUpdated[iterator]._id,
+          name: dataUpdated[iterator].address,
+        },
+        dataUpdated[iterator].article,
+        dataUpdated[iterator].keys,
+      );
 
-    //   const getPwz = await this.pwzRepository.findById(
-    //     dataUpdated[iterator]._id,
-    //   );
+      const position = fetch.data[0].result.position;
+      const getPwz = await this.pwzRepository.findById(
+        dataUpdated[iterator]._id,
+      );
 
-    //   const lastPosition = getPwz.position.at(-1);
+      const lastPosition = getPwz.position.at(-1);
 
-    //   const calc = await this.calculate.difference(lastPosition, position);
+      const calc = await this.calculate.difference(lastPosition, position);
+      const addPeriod = await this.periodRepository.create(position, calc);
+      await this.pwzRepository.update(addPeriod, dataUpdated[iterator]._id);
 
-    //   console.log(calc);
-
-    //   iterator += 1;
-    // }
+      iterator += 1;
+    }
   }
 }
