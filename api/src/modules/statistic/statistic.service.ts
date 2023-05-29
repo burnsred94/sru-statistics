@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { StatisticProvider } from './providers/statistic.provider';
 import { CreateStatisticDto, RemoveArticleDto } from './dto';
 import { FetchProvider } from './providers/fetch.provider';
@@ -15,6 +15,8 @@ import { PeriodRepository } from './repositories/periods.repository';
 
 @Injectable()
 export class StatisticService {
+  protected readonly logger = new Logger(StatisticService.name);
+
   parse: ParsersData;
   calculate: CalculateUtils;
   constructor(
@@ -31,6 +33,14 @@ export class StatisticService {
 
   async create(data: CreateStatisticDto) {
     const { towns, article, keys, userId } = data;
+    const checkArticle = await this.fetchProvider.fetchArticleName(article);
+
+    const lt = JSON.parse(checkArticle.body);
+
+    if (lt.status === 400) {
+      this.logger.error(lt.errors[0].message);
+      throw new BadRequestException(lt.errors[0].message);
+    }
 
     const resultSearch = [];
     let iterator = 0;
@@ -51,7 +61,9 @@ export class StatisticService {
       userId: userId,
       article: article,
       dataSearch: result,
+      productName: lt.data.product_name,
     });
+
   }
 
   async findByCity(data: FindDataDto) {

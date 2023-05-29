@@ -36,6 +36,7 @@ export interface IDestructionResult {
   userId: string;
   article: string;
   dataSearch: ReduceSearchResult[];
+  productName: string;
 }
 
 export interface ReduceSearchResult {

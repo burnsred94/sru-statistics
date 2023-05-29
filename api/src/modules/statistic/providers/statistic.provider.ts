@@ -25,13 +25,18 @@ export class StatisticProvider {
   }
 
   async createStatistics(data: IDestructionResult) {
-    const { article, dataSearch, userId } = data;
+    const { article, dataSearch, userId, productName } = data;
     const dataParse = await this.parse.parseReduce(dataSearch);
 
     const createArticle = map(
       dataParse,
       async (object: ReduceSearchResultTwo) => {
-        return await this.articleProvider.create(object, article, userId);
+        return await this.articleProvider.create(
+          object,
+          article,
+          userId,
+          productName,
+        );
       },
     );
     return await Promise.all(createArticle);

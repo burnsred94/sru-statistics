@@ -88,4 +88,9 @@ export class FetchProvider {
       });
     return { _id: value._id, data: result };
   }
+
+  async fetchArticleName(article) {
+    const url = await this.configService.get('PRODUCT_SERVICE_GET_ARTICLE')
+    return await this.gotService.gotRef(url + article);
+  }
 }

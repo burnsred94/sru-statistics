@@ -8,9 +8,14 @@ export class ArticleProvider {
   constructor(
     private readonly articleRepository: ArticleRepository,
     private readonly keyProvider: KeyProvider,
-  ) {}
+  ) { }
 
-  async create(object: ReduceSearchResultTwo, article: string, userId: string) {
+  async create(
+    object: ReduceSearchResultTwo,
+    article: string,
+    userId: string,
+    productName: string,
+  ) {
     const keys = await this.keyProvider.createKey(object.data, article, userId);
     const data = await this.articleRepository.create({
       userId: userId,
@@ -18,7 +23,7 @@ export class ArticleProvider {
       city: object.city,
       city_id: object._id,
       keys: keys,
-      productName: 'product',
+      productName: productName,
     });
 
     return data;

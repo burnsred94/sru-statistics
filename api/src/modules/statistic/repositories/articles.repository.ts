@@ -145,7 +145,7 @@ export class ArticleRepository {
       });
     if (find.length === 0) throw new BadRequestException(NOT_FIND_ERROR);
 
-    return await this.filterByTimestamp(find, data.periods);
+    return await this.filterByTimestamp(find, data.periods)
   }
 
   async filterByTimestamp(data, period) {
@@ -215,6 +215,6 @@ export class ArticleRepository {
         })),
       };
     });
-    return result;
+    return result.reverse();
   }
 }
