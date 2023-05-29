@@ -10,7 +10,7 @@ import { GotModule } from '@t00nday/nestjs-got';
 import { FetchProvider } from './providers/fetch.provider';
 import { Pwz, PwzSchema } from './schemas/pwz.schema';
 import { PwzRepository } from './repositories/pwz.repository';
-import { ArticleProvider } from './providers/article-provider.provider';
+import { ArticleProvider } from './providers/article.provider';
 import { KeyProvider } from './providers/key.provider';
 import { PwzProvider } from './providers/pwz.provider';
 import { Period, PeriodSchema } from './schemas/periods.schema';
@@ -39,5 +39,6 @@ import { PeriodRepository } from './repositories/periods.repository';
     PeriodRepository,
   ],
   controllers: [StatisticController],
+  exports: [StatisticService],
 })
 export class StatisticModule {}

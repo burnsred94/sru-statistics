@@ -5,7 +5,7 @@ export class KeysEntity {
   key: string;
   article: string;
   userId: string;
-  pwz: { _id: Types.ObjectId }[];
+  pwz: Types.ObjectId[];
 
   constructor(data: IKeys) {
     this.key = data.key;

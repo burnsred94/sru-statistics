@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { ReduceSearchResultTwo } from 'src/modules/interfaces/requested/create-requested.interface';
 import { KeyProvider } from './key.provider';
 import { ArticleRepository } from '../repositories';
-import { Types } from 'mongoose';
+import { ReduceSearchResultTwo } from 'src/modules/interfaces';
 
 @Injectable()
 export class ArticleProvider {

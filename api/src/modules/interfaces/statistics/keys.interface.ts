@@ -4,5 +4,5 @@ export interface IKeys {
   key: string;
   article: string;
   userId: string;
-  pwz: { _id: Types.ObjectId }[];
+  pwz: Types.ObjectId[];
 }

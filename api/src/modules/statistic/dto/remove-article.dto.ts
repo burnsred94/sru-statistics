@@ -1,12 +1,10 @@
 import { IsString } from 'class-validator';
 
-export class RemoveKeyDto {
+export class RemoveArticleDto {
   @IsString()
   article: string;
   @IsString()
   cityId: string;
   @IsString()
   userId: string;
-  @IsString()
-  keyId: string;
 }

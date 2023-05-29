@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GotService } from '@t00nday/nestjs-got';
-import { forEach, map } from 'lodash';
+import { map } from 'lodash';
 import { Types } from 'mongoose';
 import { ITown } from 'src/modules/interfaces/requested/create-requested.interface';
 
@@ -14,7 +14,7 @@ export class FetchProvider {
 
   async fetchSearch(data: ITown, article: string, keys: string[]) {
     const url = await this.configService.get('SEARCH_API_URL');
-    const result = map(data.pwz, async (address, index) => {
+    const result = map(data.pwz, async address => {
       const result = await this.gotService
         .gotRef(url, {
           method: 'POST',

@@ -14,7 +14,7 @@ import { RemoveKeyDto } from '../dto/remove-key.dto';
 export class ArticleRepository {
   constructor(
     @InjectModel(Article.name) private readonly modelArticle: Model<Article>,
-  ) {}
+  ) { }
 
   async create(article: Article): Promise<Article> {
     const newArticle = new ArticleEntity(article);
@@ -41,11 +41,9 @@ export class ArticleRepository {
       });
   }
 
-  async findOne(id: string) {
+  async findAll() {
     const find = await this.modelArticle
-      .findById({
-        _id: id,
-      })
+      .find()
       .populate({
         path: 'keys',
         model: Keys.name,
@@ -127,7 +125,7 @@ export class ArticleRepository {
   async findByCity(data: FindDataDto) {
     const find = await this.modelArticle
       .find({
-        _id: data.city,
+        city_id: data.city,
         userId: data.userId,
       })
       .populate({
@@ -146,85 +144,32 @@ export class ArticleRepository {
       });
     if (find.length === 0) throw new BadRequestException(NOT_FIND_ERROR);
 
-    const result = await this.modelArticle.aggregate([
-      {
-        $match: {
-          _id: { $in: find.map(p => p._id) },
-        },
-      },
-      {
-        $unwind: {
-          path: '$keys',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: 'keys',
-          localField: 'keys',
-          foreignField: '_id',
-          as: 'keys',
-        },
-      },
-      {
-        $unwind: {
-          path: '$keys.pwz',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: 'pwzs',
-          localField: 'keys.pwz',
-          foreignField: '_id',
-          as: 'pwz',
-        },
-      },
-      {
-        $unwind: {
-          path: '$pwz.position',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: 'periods',
-          localField: 'pwz.position',
-          foreignField: '_id',
-          as: 'position',
-        },
-      },
+    return await this.filterByTimestamp(find, data.periods);
+  }
 
-      // {
-      //   $unwind: {
-      //     path: '$pwzs.periods',
-      //     preserveNullAndEmptyArrays: true,
-      //   },
-      // },
-      // {
-      //   $lookup: {
-      //     from: 'periods',
-      //     localField: 'position.position',
-      //     foreignField: 'position.position',
-      //     as: 'position',
-      //   },
-      // },
-    ]);
+  async filterByTimestamp(data, period) {
+    const result = map(data, value => {
+      return {
+        _id: value._id,
+        productName: value.productName,
+        article: value.article,
+        city: value.city,
+        userId: value.userId,
+        city_id: value.city_id,
+        keys: map(value.keys, key => ({
+          _id: key._id,
+          key: key.key,
+          pwz: map(key.pwz, pwz => ({
+            _id: pwz._id,
+            name: pwz.name,
+            position: pwz.position.filter(object =>
+              period.includes(object.timestamp),
+            ),
+          })),
+        })),
+      };
+    });
 
-    return find;
+    return result;
   }
 }
-// return result;
-// {
-//   $project: {
-//     'keys.pwz.position': {
-//       $filter: {
-//         input: '$keys.pwz.position',
-//         as: 'pos',
-//         cond: {
-//           $in: ['$$pos.timestamp', dates],
-//         },
-//       },
-//     },
-//   },
-// },
