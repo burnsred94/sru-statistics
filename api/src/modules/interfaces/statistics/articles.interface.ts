@@ -1,9 +1,10 @@
 import { Types } from 'mongoose';
+import { User } from 'src/modules/auth/user';
 
 export interface IArticle {
   article: string;
   city: string;
-  userId: string;
+  userId: User;
   city_id: string;
   productName: string;
   keys: Types.ObjectId[];

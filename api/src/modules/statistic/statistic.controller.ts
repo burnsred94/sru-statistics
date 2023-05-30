@@ -6,6 +6,7 @@ import {
   Logger,
   Post,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { StatisticService } from './statistic.service';
 import {
@@ -17,25 +18,34 @@ import {
 } from './dto';
 import { Response } from 'express';
 import { GetOneDto } from './dto/get-one-article.dto';
+import { JwtAuthGuard } from '../auth/auth.guard';
+import { CurrentUser } from '../auth/user.decorator';
+import { User } from '../auth/user';
+import { ApiAcceptedResponse, ApiBody } from '@nestjs/swagger';
 
 @Controller('v1')
 export class StatisticController {
   protected readonly logger = new Logger(StatisticController.name);
 
-  constructor(private readonly statisticService: StatisticService) { }
+  constructor(private readonly statisticService: StatisticService) {}
 
+  @ApiAcceptedResponse({ description: 'Create Statistic' })
+  @UseGuards(JwtAuthGuard)
   @Post('create')
-  async create(@Body() data: CreateStatisticDto) {
-    return await this.statisticService.create(data);
+  async create(@CurrentUser() user: User, @Body() data: CreateStatisticDto) {
+    return await this.statisticService.create(data, user);
   }
 
+  @ApiAcceptedResponse({ description: 'Find statistics' })
+  @UseGuards(JwtAuthGuard)
   @Post('find-by-city')
   async findArticleByCity(
+    @CurrentUser() user: User,
     @Body() data: FindDataDto,
     @Res() response: Response,
   ) {
     try {
-      const find = await this.statisticService.findByCity(data);
+      const find = await this.statisticService.findByCity(data, user);
       return response.status(HttpStatus.OK).send({
         status: HttpStatus.OK,
         data: find,
@@ -55,13 +65,19 @@ export class StatisticController {
     }
   }
 
+  @ApiAcceptedResponse({ description: 'Added key from user-city' })
+  @UseGuards(JwtAuthGuard)
   @Post('add-key-by-article-from-city')
   async addKeyByArticleFromCity(
+    @CurrentUser() user: User,
     @Body() data: AddKeysDto,
     @Res() response: Response,
   ) {
     try {
-      const addKey = await this.statisticService.addKeyByArticleFromCity(data);
+      const addKey = await this.statisticService.addKeyByArticleFromCity(
+        data,
+        user,
+      );
       return response.status(HttpStatus.CREATED).send({
         status: HttpStatus.CREATED,
         data: addKey,
@@ -77,13 +93,16 @@ export class StatisticController {
     }
   }
 
+  @ApiAcceptedResponse({ description: 'Removed article' })
+  @UseGuards(JwtAuthGuard)
   @Delete('remove-article')
   async removeArticle(
+    @CurrentUser() user: User,
     @Body() data: RemoveArticleDto,
     @Res() response: Response,
   ) {
     try {
-      const remove = await this.statisticService.removeArticle(data);
+      const remove = await this.statisticService.removeArticle(data, user);
 
       return response.status(HttpStatus.OK).send({
         status: HttpStatus.OK,
@@ -106,10 +125,16 @@ export class StatisticController {
     }
   }
 
+  @ApiAcceptedResponse({ description: 'Removed key' })
+  @UseGuards(JwtAuthGuard)
   @Delete('remove-key')
-  async removeKey(@Body() data: RemoveKeyDto, @Res() response: Response) {
+  async removeKey(
+    @CurrentUser() user: User,
+    @Body() data: RemoveKeyDto,
+    @Res() response: Response,
+  ) {
     try {
-      const removeKey = await this.statisticService.removeKey(data);
+      const removeKey = await this.statisticService.removeKey(data, user);
       return response.status(HttpStatus.OK).send({
         status: HttpStatus.OK,
         data: {

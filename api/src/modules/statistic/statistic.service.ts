@@ -9,10 +9,15 @@ import { KeyProvider } from './providers/key.provider';
 import { RemoveKeyDto } from './dto/remove-key.dto';
 import { ParsersData } from './providers/utils/parse.utils';
 import { PwzRepository } from './repositories/pwz.repository';
-import { map } from 'lodash';
+import { forEach, map } from 'lodash';
 import { CalculateUtils } from './providers/utils/calculate.utils';
 import { PeriodRepository } from './repositories/periods.repository';
 import { GetOneDto } from './dto/get-one-article.dto';
+import { User } from '../auth/user';
+import {
+  ARTICLE_DUPLICATE,
+  KEY_DUPLICATE,
+} from 'src/constatnts/errors.constants';
 
 @Injectable()
 export class StatisticService {
@@ -33,12 +38,34 @@ export class StatisticService {
   }
 
   async getOneArticle(dto: GetOneDto) {
-    return await this.articleRepository.findOneArticle(dto);
+    return await this.articleRepository.findOneArticle(dto, false);
   }
 
-  async create(data: CreateStatisticDto) {
-    const { towns, article, keys, userId } = data;
+  async create(data: CreateStatisticDto, userId: User) {
+    const { towns, article, keys } = data;
     const checkArticle = await this.fetchProvider.fetchArticleName(article);
+
+    if (towns.length > 1) {
+      for (const element of towns) {
+        const findArticleByUser = await this.articleRepository.findOneArticle(
+          { userId: userId, article: article, cityId: element._id },
+          true,
+        );
+
+        if (findArticleByUser !== null) {
+          throw new BadRequestException(ARTICLE_DUPLICATE);
+        }
+      }
+    } else {
+      const findArticleByUser = await this.articleRepository.findOneArticle(
+        { userId: userId, article: article, cityId: towns[0]._id },
+        true,
+      );
+
+      if (findArticleByUser !== null) {
+        throw new BadRequestException(ARTICLE_DUPLICATE);
+      }
+    }
 
     const lt = JSON.parse(checkArticle.body);
 
@@ -70,13 +97,23 @@ export class StatisticService {
     });
   }
 
-  async findByCity(data: FindDataDto) {
-    return await this.articleRepository.findByCity(data);
+  async findByCity(data: FindDataDto, user: User) {
+    return await this.articleRepository.findByCity(data, user);
   }
 
-  async addKeyByArticleFromCity(dataKey: AddKeysDto) {
-    const { article, keys, cityId } = dataKey;
-    const towns = await this.articleRepository.findByCityFromAddKeys(dataKey);
+  async addKeyByArticleFromCity(dataKey: AddKeysDto, userId: User) {
+    const { article, keys } = dataKey;
+
+    for (const element of keys) {
+      const find = await this.keyProvider.findKeyUser(userId, element, article);
+      if (find !== null) throw new BadRequestException(KEY_DUPLICATE);
+    }
+
+    const towns = await this.articleRepository.findByCityFromAddKeys(
+      dataKey,
+      userId,
+    );
+
     const search = await this.searchKey({
       pwz: towns.keys[0],
       article: article,
@@ -85,23 +122,22 @@ export class StatisticService {
 
     const resolved = await Promise.all(search);
     const result = await this.parse.mergedData(resolved);
-    const keyId = await this.keyProvider.createKey(result, article, cityId);
+    const keyId = await this.keyProvider.createKey(result, article, userId);
     const update = await this.articleRepository.updateArticle(keyId, towns._id);
 
     return update;
   }
 
-  async removeArticle(data: RemoveArticleDto) {
-    return await this.articleRepository.removeArticle(data);
+  async removeArticle(data: RemoveArticleDto, user: User) {
+    return await this.articleRepository.removeArticle(data, user);
   }
 
-  async removeKey(data: RemoveKeyDto) {
-    return await this.articleRepository.removeKeyByArticle(data);
+  async removeKey(data: RemoveKeyDto, user: User) {
+    return await this.articleRepository.removeKeyByArticle(data, user);
   }
 
   async searchKey(data: { pwz; article: string; keys: string[] }) {
     const result = map(data.pwz.pwz, async values => {
-      console.log('map', data.keys);
       const search = await this.fetchProvider.fetchSearchKey(
         values,
         data.article,

@@ -1,9 +1,10 @@
 import { Types } from 'mongoose';
 import { Pwz } from '../schemas/pwz.schema';
+import { User } from 'src/modules/auth/user';
 
 export class PwzEntity {
   article: string;
-  userId: string;
+  userId: User;
   name: string;
   position: Types.ObjectId[];
 

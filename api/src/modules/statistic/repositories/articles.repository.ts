@@ -6,17 +6,22 @@ import { ArticleEntity, PeriodsEntity } from '../entity';
 import { Keys } from '../schemas/keys.schema';
 import { Pwz } from '../schemas/pwz.schema';
 import { FindDataDto } from '../dto/find-data.dto';
-import { NOT_FIND_ERROR } from 'src/constatnts/errors.constants';
+import {
+  NOT_FIND_ERROR,
+  ONE_KEY_NOT_REMOVED,
+} from 'src/constatnts/errors.constants';
 import { map } from 'lodash';
 import { RemoveKeyDto } from '../dto/remove-key.dto';
 import { randomUUID } from 'node:crypto';
 import { GetOneDto } from '../dto/get-one-article.dto';
+import { User } from 'src/modules/auth/user';
+import { AddKeysDto, RemoveArticleDto } from '../dto';
 
 @Injectable()
 export class ArticleRepository {
   constructor(
     @InjectModel(Article.name) private readonly modelArticle: Model<Article>,
-  ) { }
+  ) {}
 
   async create(article: Article): Promise<Article> {
     const newArticle = new ArticleEntity(article);
@@ -30,18 +35,26 @@ export class ArticleRepository {
     });
   }
 
-  async findByCityFromAddKeys(data) {
+  async findByCityFromAddKeys(data: AddKeysDto, user: User) {
     return await this.modelArticle
       .findOne({
         city_id: data.cityId,
-        userId: data.userId,
+        userId: user,
         article: data.article,
       })
       .populate({
         path: 'keys',
         model: Keys.name,
         select: 'pwz key',
-        populate: { path: 'pwz', model: Pwz.name, select: 'name' },
+        populate: {
+          path: 'pwz',
+          model: Pwz.name,
+          select: 'name position',
+          populate: {
+            path: 'position',
+            select: 'position timestamp difference',
+          },
+        },
       });
   }
 
@@ -66,7 +79,7 @@ export class ArticleRepository {
     return find;
   }
 
-  async findOneArticle(data: GetOneDto) {
+  async findOneArticle(data: GetOneDto, check: boolean) {
     const find = await this.modelArticle
       .findOne({
         city_id: data.cityId,
@@ -88,12 +101,14 @@ export class ArticleRepository {
         },
       });
 
+    if (check) return find;
+
     return await this.filterByTimestamp([find], data.periods);
   }
 
-  async removeArticle(data) {
+  async removeArticle(data: RemoveArticleDto, user: User) {
     const remove = await this.modelArticle.deleteOne({
-      userId: data.userId,
+      userId: user,
       city_id: data.cityId,
       article: data.article,
     });
@@ -116,14 +131,16 @@ export class ArticleRepository {
     return findOrUpdate;
   }
 
-  async removeKeyByArticle(data: RemoveKeyDto) {
+  async removeKeyByArticle(data: RemoveKeyDto, user: User) {
     const find = await this.modelArticle.findOne({
       city_id: data.cityId,
-      userId: data.userId,
+      userId: user,
       article: data.article,
     });
 
     if (find) {
+      if (find.keys.length === 1)
+        throw new BadRequestException(ONE_KEY_NOT_REMOVED);
       const remove = await this.modelArticle.findByIdAndUpdate(
         {
           _id: find._id,
@@ -149,11 +166,12 @@ export class ArticleRepository {
     } else throw new BadRequestException(NOT_FIND_ERROR);
   }
 
-  async findByCity(data: FindDataDto) {
+  async findByCity(data: FindDataDto, user: User) {
+    console.log(data, user);
     const find = await this.modelArticle
       .find({
         city_id: data.city,
-        userId: data.userId,
+        userId: user,
       })
       .populate({
         path: 'keys',

@@ -6,7 +6,5 @@ export class RemoveKeyDto {
   @IsString()
   cityId: string;
   @IsString()
-  userId: string;
-  @IsString()
   keyId: string;
 }

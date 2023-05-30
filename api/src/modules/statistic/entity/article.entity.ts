@@ -1,10 +1,11 @@
 import { Types } from 'mongoose';
+import { User } from 'src/modules/auth/user';
 import { IArticle } from 'src/modules/interfaces';
 
 export class ArticleEntity {
   article: string;
   productName: string;
-  userId: string;
+  userId: User;
   city_id: string;
   city: string;
   keys: Types.ObjectId[];

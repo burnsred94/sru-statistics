@@ -1,5 +1,6 @@
+import { User } from 'src/modules/auth/user';
+
 export interface ICreateStatistic {
-  userId: string;
   article: string;
   keys: string[];
   towns: ITown[];
@@ -33,7 +34,7 @@ export interface Result {
 }
 
 export interface IDestructionResult {
-  userId: string;
+  userId: User;
   article: string;
   dataSearch: ReduceSearchResult[];
   productName: string;

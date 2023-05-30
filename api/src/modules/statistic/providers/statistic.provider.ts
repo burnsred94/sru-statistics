@@ -3,12 +3,11 @@ import { Injectable } from '@nestjs/common';
 import { compact, map } from 'lodash';
 import {
   IDestructionResult,
-  ReduceSearchResult,
   ReduceSearchResultTwo,
-  Result,
 } from 'src/modules/interfaces';
 import { ArticleProvider } from './article.provider';
 import { ParsersData } from './utils/parse.utils';
+import { User } from 'src/modules/auth/user';
 
 @Injectable()
 export class StatisticProvider {

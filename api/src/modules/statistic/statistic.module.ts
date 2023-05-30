@@ -15,6 +15,7 @@ import { KeyProvider } from './providers/key.provider';
 import { PwzProvider } from './providers/pwz.provider';
 import { Period, PeriodSchema } from './schemas/periods.schema';
 import { PeriodRepository } from './repositories/periods.repository';
+import { JwtStrategy } from '../auth/jwt.strategy';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { PeriodRepository } from './repositories/periods.repository';
     KeyProvider,
     PwzProvider,
     PeriodRepository,
+    JwtStrategy,
   ],
   controllers: [StatisticController],
   exports: [StatisticService],

@@ -6,9 +6,7 @@ import {
   Result,
 } from 'src/modules/interfaces/requested/create-requested.interface';
 import { map } from 'lodash';
-import { PwzEntity } from '../entity/pwz.entity';
-import { Types } from 'mongoose';
-import { Keys } from '../schemas/keys.schema';
+import { User } from 'src/modules/auth/user';
 
 @Injectable()
 export class KeyProvider {
@@ -17,13 +15,12 @@ export class KeyProvider {
     private readonly keysRepository: KeysRepository,
   ) {}
 
-  async createKey(data: Data[], article: string, userId: string) {
-    console.log(data);
+  async createKey(data: Data[], article: string, userId: User) {
     const keys = map(data, async name => {
       const pwz = await this.createPwz(
         name.result as Result[],
-        userId,
         article,
+        userId,
       );
 
       const resolved = await Promise.all(pwz);
@@ -40,7 +37,7 @@ export class KeyProvider {
     return resolvedKeys;
   }
 
-  async createPwz(result: Result[], article: string, userId: string) {
+  async createPwz(result: Result[], article: string, userId: User) {
     const pwz = map(result, async value => {
       if (value !== undefined) {
         const result = await this.pwzProvider.create(value, article, userId);
@@ -48,5 +45,10 @@ export class KeyProvider {
       }
     });
     return pwz;
+  }
+
+  async findKeyUser(user: User, key: string, article: string) {
+    const find = await this.keysRepository.findOne(user, key, article);
+    return find;
   }
 }

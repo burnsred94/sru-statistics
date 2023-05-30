@@ -5,6 +5,4 @@ export class RemoveArticleDto {
   article: string;
   @IsString()
   cityId: string;
-  @IsString()
-  userId: string;
 }

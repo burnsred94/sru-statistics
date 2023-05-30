@@ -3,6 +3,7 @@ import { Keys } from '../schemas/keys.schema';
 import { Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { KeysEntity } from '../entity';
+import { User } from 'src/modules/auth/user';
 
 @Injectable()
 export class KeysRepository {
@@ -17,7 +18,12 @@ export class KeysRepository {
     return keySave._id;
   }
 
-  // async update(key: Keys): Promise<Keys> {
-  //     return this.keysModel.updateOne({ name: key.name }, key);
-  // }
+  async findOne(user: User, key: string, article: string) {
+    const findKey = await this.keysModel.findOne({
+      userId: user,
+      key: key,
+      article: article,
+    });
+    return findKey;
+  }
 }
