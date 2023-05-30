@@ -8,7 +8,7 @@ export class ArticleProvider {
   constructor(
     private readonly articleRepository: ArticleRepository,
     private readonly keyProvider: KeyProvider,
-  ) { }
+  ) {}
 
   async create(
     object: ReduceSearchResultTwo,

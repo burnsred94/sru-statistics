@@ -7,9 +7,10 @@ import { Keys } from '../schemas/keys.schema';
 import { Pwz } from '../schemas/pwz.schema';
 import { FindDataDto } from '../dto/find-data.dto';
 import { NOT_FIND_ERROR } from 'src/constatnts/errors.constants';
-import { filter, includes, map } from 'lodash';
+import { map } from 'lodash';
 import { RemoveKeyDto } from '../dto/remove-key.dto';
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
+import { GetOneDto } from '../dto/get-one-article.dto';
 
 @Injectable()
 export class ArticleRepository {
@@ -63,6 +64,31 @@ export class ArticleRepository {
       })
       .exec();
     return find;
+  }
+
+  async findOneArticle(data: GetOneDto) {
+    const find = await this.modelArticle
+      .findOne({
+        city_id: data.cityId,
+        userId: data.userId,
+        article: data.article,
+      })
+      .populate({
+        path: 'keys',
+        model: Keys.name,
+        select: 'pwz key',
+        populate: {
+          path: 'pwz',
+          model: Pwz.name,
+          select: 'name position',
+          populate: {
+            path: 'position',
+            select: 'position timestamp difference',
+          },
+        },
+      });
+
+    return await this.filterByTimestamp([find], data.periods);
   }
 
   async removeArticle(data) {
@@ -145,7 +171,7 @@ export class ArticleRepository {
       });
     if (find.length === 0) throw new BadRequestException(NOT_FIND_ERROR);
 
-    return await this.filterByTimestamp(find, data.periods)
+    return await this.filterByTimestamp(find, data.periods);
   }
 
   async filterByTimestamp(data, period) {

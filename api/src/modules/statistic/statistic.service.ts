@@ -12,6 +12,7 @@ import { PwzRepository } from './repositories/pwz.repository';
 import { map } from 'lodash';
 import { CalculateUtils } from './providers/utils/calculate.utils';
 import { PeriodRepository } from './repositories/periods.repository';
+import { GetOneDto } from './dto/get-one-article.dto';
 
 @Injectable()
 export class StatisticService {
@@ -29,6 +30,10 @@ export class StatisticService {
   ) {
     this.parse = new ParsersData();
     this.calculate = new CalculateUtils();
+  }
+
+  async getOneArticle(dto: GetOneDto) {
+    return await this.articleRepository.findOneArticle(dto);
   }
 
   async create(data: CreateStatisticDto) {
@@ -63,7 +68,6 @@ export class StatisticService {
       dataSearch: result,
       productName: lt.data.product_name,
     });
-
   }
 
   async findByCity(data: FindDataDto) {
@@ -97,7 +101,7 @@ export class StatisticService {
 
   async searchKey(data: { pwz; article: string; keys: string[] }) {
     const result = map(data.pwz.pwz, async values => {
-      console.log('map', data.keys)
+      console.log('map', data.keys);
       const search = await this.fetchProvider.fetchSearchKey(
         values,
         data.article,

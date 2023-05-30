@@ -16,6 +16,7 @@ import {
   RemoveKeyDto,
 } from './dto';
 import { Response } from 'express';
+import { GetOneDto } from './dto/get-one-article.dto';
 
 @Controller('v1')
 export class StatisticController {
@@ -114,6 +115,30 @@ export class StatisticController {
         data: {
           message: removeKey,
         },
+        errors: [],
+      });
+    } catch (error) {
+      this.logger.error(error);
+      return response.status(HttpStatus.OK).send({
+        status: error.status,
+        errors: [
+          {
+            message: error.message,
+          },
+        ],
+        data: [],
+      });
+    }
+  }
+
+  @Post('get-one-article')
+  async getOneArticle(@Body() dto: GetOneDto, @Res() response: Response) {
+    try {
+      const getData = await this.statisticService.getOneArticle(dto);
+
+      return response.status(HttpStatus.OK).send({
+        status: HttpStatus.OK,
+        data: getData[0],
         errors: [],
       });
     } catch (error) {
