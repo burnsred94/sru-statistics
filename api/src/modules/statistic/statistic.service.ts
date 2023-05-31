@@ -16,6 +16,7 @@ import { GetOneDto } from './dto/get-one-article.dto';
 import { User } from '../auth/user';
 import {
   ARTICLE_DUPLICATE,
+  FILED_SEARCH_PRODUCT,
   KEY_DUPLICATE,
 } from 'src/constatnts/errors.constants';
 
@@ -71,7 +72,7 @@ export class StatisticService {
 
     if (lt.status === 400) {
       this.logger.error(lt.errors[0].message);
-      throw new BadRequestException(lt.errors[0].message);
+      throw new BadRequestException(FILED_SEARCH_PRODUCT);
     }
 
     const resultSearch = [];
@@ -133,7 +134,16 @@ export class StatisticService {
   }
 
   async removeKey(data: RemoveKeyDto, user: User) {
-    return await this.articleRepository.removeKeyByArticle(data, user);
+    const removeArticle = await this.articleRepository.removeKeyByArticle(
+      data,
+      user,
+    );
+    if (removeArticle) {
+      const deleteKey = await this.keyProvider.deleteKey(data.keyId);
+      return deleteKey;
+    } else {
+      return removeArticle
+    }
   }
 
   async searchKey(data: { pwz; article: string; keys: string[] }) {

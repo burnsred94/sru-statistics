@@ -51,4 +51,8 @@ export class KeyProvider {
     const find = await this.keysRepository.findOne(user, key, article);
     return find;
   }
+
+  async deleteKey(id: string) {
+    return await this.keysRepository.delete(id);
+  }
 }

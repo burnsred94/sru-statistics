@@ -4,12 +4,15 @@ import { Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { KeysEntity } from '../entity';
 import { User } from 'src/modules/auth/user';
+import { SUCCESS_DELETE_KEY } from 'src/constatnts/success.constants';
+import { BadRequestException } from '@nestjs/common'
+import { FAILED_DELETED_KEY } from 'src/constatnts/errors.constants';
 
 @Injectable()
 export class KeysRepository {
   constructor(
     @InjectModel(Keys.name) private readonly keysModel: Model<Keys>,
-  ) {}
+  ) { }
 
   async create(data: Keys) {
     const newKey = new KeysEntity(data);
@@ -25,5 +28,17 @@ export class KeysRepository {
       article: article,
     });
     return findKey;
+  }
+
+  async delete(keyId: string) {
+    const remove = await this.keysModel.deleteOne({
+      _id: keyId,
+    });
+
+    if (remove.deletedCount > 0) {
+      return { message: SUCCESS_DELETE_KEY };
+    } else {
+      throw new BadRequestException(FAILED_DELETED_KEY);
+    }
   }
 }
