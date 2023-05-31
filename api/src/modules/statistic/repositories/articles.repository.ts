@@ -21,7 +21,7 @@ import { AddKeysDto, RemoveArticleDto } from '../dto';
 export class ArticleRepository {
   constructor(
     @InjectModel(Article.name) private readonly modelArticle: Model<Article>,
-  ) {}
+  ) { }
 
   async create(article: Article): Promise<Article> {
     const newArticle = new ArticleEntity(article);
@@ -167,7 +167,6 @@ export class ArticleRepository {
   }
 
   async findByCity(data: FindDataDto, user: User) {
-    console.log(data, user);
     const find = await this.modelArticle
       .find({
         city_id: data.city,
@@ -190,6 +189,14 @@ export class ArticleRepository {
     if (find.length === 0) throw new BadRequestException(NOT_FIND_ERROR);
 
     return await this.filterByTimestamp(find, data.periods);
+  }
+
+  async finCityArticle(article: string, user: User, cityId: string) {
+    return await this.modelArticle.findOne({
+      article: article,
+      userId: user,
+      city_id: cityId,
+    });
   }
 
   async filterByTimestamp(data, period) {

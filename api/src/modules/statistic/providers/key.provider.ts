@@ -7,13 +7,14 @@ import {
 } from 'src/modules/interfaces/requested/create-requested.interface';
 import { map } from 'lodash';
 import { User } from 'src/modules/auth/user';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class KeyProvider {
   constructor(
     private readonly pwzProvider: PwzProvider,
     private readonly keysRepository: KeysRepository,
-  ) {}
+  ) { }
 
   async createKey(data: Data[], article: string, userId: User) {
     const keys = map(data, async name => {
@@ -47,8 +48,8 @@ export class KeyProvider {
     return pwz;
   }
 
-  async findKeyUser(user: User, key: string, article: string) {
-    const find = await this.keysRepository.findOne(user, key, article);
+  async findKeyUser(_id: Types.ObjectId) {
+    const find = await this.keysRepository.findById(_id);
     return find;
   }
 

@@ -103,11 +103,24 @@ export class StatisticService {
   }
 
   async addKeyByArticleFromCity(dataKey: AddKeysDto, userId: User) {
-    const { article, keys } = dataKey;
+    const { article, keys, cityId } = dataKey;
 
     for (const element of keys) {
-      const find = await this.keyProvider.findKeyUser(userId, element, article);
-      if (find !== null) throw new BadRequestException(KEY_DUPLICATE);
+      const findArticle = await this.articleRepository.finCityArticle(
+        article,
+        userId,
+        cityId,
+      );
+      for (let index = 0; findArticle.keys.length > index; index++) {
+        console.log(findArticle);
+        const findKey = await this.keyProvider.findKeyUser(
+          findArticle.keys[index]._id,
+        );
+        console.log(findKey);
+        if (findKey.key === element) {
+          throw new BadRequestException(KEY_DUPLICATE);
+        }
+      }
     }
 
     const towns = await this.articleRepository.findByCityFromAddKeys(

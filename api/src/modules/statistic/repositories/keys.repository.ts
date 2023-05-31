@@ -1,6 +1,6 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Keys } from '../schemas/keys.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { KeysEntity } from '../entity';
 import { User } from 'src/modules/auth/user';
@@ -28,6 +28,10 @@ export class KeysRepository {
       article: article,
     });
     return findKey;
+  }
+
+  async findById(id: Types.ObjectId) {
+    return await this.keysModel.findById(id);
   }
 
   async delete(keyId: string) {
