@@ -62,7 +62,6 @@ export class StatisticService {
       }
     });
 
-
     const resolved = await Promise.all(result);
     return resolved;
   }
@@ -85,9 +84,9 @@ export class StatisticService {
       const check = find(addresses, item => item.address === value.name);
       if (!check) {
         forEach(value.position, async pos => {
-          await this.periodRepository.deleteById(pos._id)
-        })
-        await this.pwzRepository.deleteById(value._id)
+          await this.periodRepository.deleteById(pos._id);
+        });
+        await this.pwzRepository.deleteById(value._id);
       }
     });
 
@@ -113,7 +112,6 @@ export class StatisticService {
         return updateKey;
       }
     });
-
 
     const resolved = await Promise.all(mapping);
     return resolved;

@@ -7,7 +7,7 @@ import { Period } from '../schemas/periods.schema';
 
 @Injectable()
 export class PwzRepository {
-  constructor(@InjectModel(Pwz.name) private readonly pwzModel: Model<Pwz>) { }
+  constructor(@InjectModel(Pwz.name) private readonly pwzModel: Model<Pwz>) {}
 
   async create(data: Pwz) {
     const newPwz = new PwzEntity(data);
