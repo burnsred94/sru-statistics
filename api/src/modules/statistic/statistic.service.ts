@@ -82,6 +82,7 @@ export class StatisticService {
 
     const mapping = map(addresses, async item => {
       const checkAddress = find(pwz, pwzItem => pwzItem.name === item.address);
+      console.log(checkAddress);
       if (!checkAddress) {
         const searching = await this.fetchProvider.fetchSearchKey(
           { _id: key._id, name: item.address as string },
@@ -98,7 +99,9 @@ export class StatisticService {
           name: item.address,
           position: [period],
         });
+        console.log(pwz)
         const updateKey = await this.keyProvider.updateKey(_id, pwz);
+        console.log(updateKey)
         return updateKey;
       }
     });
