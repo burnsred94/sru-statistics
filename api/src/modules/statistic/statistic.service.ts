@@ -80,16 +80,6 @@ export class StatisticService {
   async mergeIterationsKey(key, addresses, article, id) {
     const { pwz } = key;
 
-    forEach(pwz, async value => {
-      const check = find(addresses, item => item.address === value.name);
-      if (!check) {
-        forEach(value.position, async pos => {
-          await this.periodRepository.deleteById(pos._id);
-        });
-        await this.pwzRepository.deleteById(value._id);
-      }
-    });
-
     const mapping = map(addresses, async item => {
       const checkAddress = find(pwz, pwzItem => pwzItem.name === item.address);
       if (!checkAddress) {
@@ -110,6 +100,16 @@ export class StatisticService {
         });
         const updateKey = await this.keyProvider.updateKey(_id, pwz);
         return updateKey;
+      }
+    });
+
+    forEach(pwz, async value => {
+      const check = find(addresses, item => item.address === value.name);
+      if (!check) {
+        forEach(value.position, async pos => {
+          await this.periodRepository.deleteById(pos._id);
+        });
+        await this.pwzRepository.deleteById(value._id);
       }
     });
 
