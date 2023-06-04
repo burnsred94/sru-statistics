@@ -21,7 +21,7 @@ import { AddKeysDto, RemoveArticleDto } from '../dto';
 export class ArticleRepository {
   constructor(
     @InjectModel(Article.name) private readonly modelArticle: Model<Article>,
-  ) { }
+  ) {}
 
   async create(article: Article): Promise<Article> {
     const newArticle = new ArticleEntity(article);

@@ -45,12 +45,20 @@ export class StatisticController {
     @Res() response: Response,
   ) {
     try {
-      const find = await this.statisticService.findByCity(data, user);
-      return response.status(HttpStatus.OK).send({
-        status: HttpStatus.OK,
-        data: find,
-        errors: [],
-      });
+      const mergeStatisticsWithProfile = await this.statisticService.merge(
+        user,
+        data,
+      );
+      const resolved = await Promise.all(mergeStatisticsWithProfile);
+
+      if (resolved) {
+        const find = await this.statisticService.findByCity(data, user);
+        return response.status(HttpStatus.OK).send({
+          status: HttpStatus.OK,
+          data: find,
+          errors: [],
+        });
+      }
     } catch (error) {
       this.logger.error(error);
       return response.status(HttpStatus.OK).send({

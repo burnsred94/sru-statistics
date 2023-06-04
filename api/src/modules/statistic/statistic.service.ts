@@ -9,7 +9,7 @@ import { KeyProvider } from './providers/key.provider';
 import { RemoveKeyDto } from './dto/remove-key.dto';
 import { ParsersData } from './providers/utils/parse.utils';
 import { PwzRepository } from './repositories/pwz.repository';
-import { forEach, map } from 'lodash';
+import { filter, find, forEach, map } from 'lodash';
 import { CalculateUtils } from './providers/utils/calculate.utils';
 import { PeriodRepository } from './repositories/periods.repository';
 import { GetOneDto } from './dto/get-one-article.dto';
@@ -36,6 +36,87 @@ export class StatisticService {
   ) {
     this.parse = new ParsersData();
     this.calculate = new CalculateUtils();
+  }
+
+  async merge(id: User, dto) {
+    const { data } = await this.fetchProvider.fetchProfile(id);
+    const statisticData = await this.findByCity(dto, id);
+
+    const result = map(statisticData, async item => {
+      const checkProfile = find(
+        data.towns,
+        town => town.city_id === item.city_id,
+      );
+
+      if (checkProfile) {
+        const { keys } = item;
+        const { addresses } = checkProfile;
+
+        const keysData = await this.keysMergeIterations(
+          keys,
+          addresses,
+          item,
+          id,
+        );
+        return keysData;
+      }
+    });
+
+
+    const resolved = await Promise.all(result);
+    return resolved;
+  }
+
+  async keysMergeIterations(keys, addresses, item, _id) {
+    const mapping = map(
+      keys,
+      async key =>
+        await this.mergeIterationsKey(key, addresses, item.article, _id),
+    );
+
+    const resolved = await Promise.all(mapping);
+    return resolved;
+  }
+
+  async mergeIterationsKey(key, addresses, article, id) {
+    const { pwz } = key;
+
+    forEach(pwz, async value => {
+      const check = find(addresses, item => item.address === value.name);
+      if (!check) {
+        forEach(value.position, async pos => {
+          await this.periodRepository.deleteById(pos._id)
+        })
+        await this.pwzRepository.deleteById(value._id)
+      }
+    });
+
+    const mapping = map(addresses, async item => {
+      const checkAddress = find(pwz, pwzItem => pwzItem.name === item.address);
+      if (!checkAddress) {
+        const searching = await this.fetchProvider.fetchSearchKey(
+          { _id: key._id, name: item.address as string },
+          article,
+          [key.key],
+        );
+        const { data, _id } = searching;
+        const period = await this.periodRepository.create(
+          data[0].result.position,
+        );
+        const pwz = await this.pwzRepository.create({
+          userId: id,
+          article: article,
+          name: item.address,
+          position: [period],
+        });
+        const updateKey = await this.keyProvider.updateKey(_id, pwz);
+        return updateKey;
+      }
+    });
+
+
+    const resolved = await Promise.all(mapping);
+    return resolved;
   }
 
   async getOneArticle(dto: GetOneDto) {
@@ -112,11 +193,9 @@ export class StatisticService {
         cityId,
       );
       for (let index = 0; findArticle.keys.length > index; index++) {
-        console.log(findArticle);
         const findKey = await this.keyProvider.findKeyUser(
           findArticle.keys[index]._id,
         );
-        console.log(findKey);
         if (findKey.key === element) {
           throw new BadRequestException(KEY_DUPLICATE);
         }
@@ -155,7 +234,7 @@ export class StatisticService {
       const deleteKey = await this.keyProvider.deleteKey(data.keyId);
       return deleteKey;
     } else {
-      return removeArticle
+      return removeArticle;
     }
   }
 

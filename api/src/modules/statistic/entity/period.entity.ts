@@ -5,7 +5,6 @@ export class PeriodsEntity {
   timestamp: string;
   difference: string;
   options: {
-    timeZone: 'Europe/Moscow';
     day: '2-digit';
     month: '2-digit';
     year: 'numeric';
@@ -14,12 +13,16 @@ export class PeriodsEntity {
   constructor(position: number | string, difference = '0') {
     this.position = String(position);
     this.difference = difference;
-    this.timestamp = this.formatter().format(new Date());
+    this.timestamp = this.date();
   }
 
-  formatter() {
-    const format = new Intl.DateTimeFormat('ru-RU', this.options);
-    return format;
+  date() {
+    let date = new Date();
+    date = new Date(
+      date.toLocaleString('en-US', { timeZone: 'Europe/Moscow' }),
+    );
+    const formattedDate = date.toLocaleDateString('ru-RU', this.options);
+    return formattedDate;
   }
 
   mockPeriod(timestamp: string) {

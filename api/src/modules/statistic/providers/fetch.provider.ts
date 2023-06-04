@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { GotService } from '@t00nday/nestjs-got';
 import { map } from 'lodash';
 import { Types } from 'mongoose';
+import { User } from 'src/modules/auth/user';
 import { ITown } from 'src/modules/interfaces/requested/create-requested.interface';
 
 @Injectable()
@@ -90,5 +91,13 @@ export class FetchProvider {
   async fetchArticleName(article) {
     const url = await this.configService.get('PRODUCT_SERVICE_GET_ARTICLE');
     return await this.gotService.gotRef(url + article);
+  }
+
+  async fetchProfile(id: User) {
+    console.log(id);
+    const url = await this.configService.get('PROFILE_API_URL');
+    const { body } = await this.gotService.gotRef(url + id);
+
+    return JSON.parse(body);
   }
 }

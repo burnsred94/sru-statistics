@@ -5,14 +5,14 @@ import { Injectable } from '@nestjs/common';
 import { KeysEntity } from '../entity';
 import { User } from 'src/modules/auth/user';
 import { SUCCESS_DELETE_KEY } from 'src/constatnts/success.constants';
-import { BadRequestException } from '@nestjs/common'
+import { BadRequestException } from '@nestjs/common';
 import { FAILED_DELETED_KEY } from 'src/constatnts/errors.constants';
 
 @Injectable()
 export class KeysRepository {
   constructor(
     @InjectModel(Keys.name) private readonly keysModel: Model<Keys>,
-  ) { }
+  ) {}
 
   async create(data: Keys) {
     const newKey = new KeysEntity(data);
@@ -44,5 +44,13 @@ export class KeysRepository {
     } else {
       throw new BadRequestException(FAILED_DELETED_KEY);
     }
+  }
+
+  async update(keyId: Types.ObjectId, data: Types.ObjectId) {
+    return await this.keysModel.findByIdAndUpdate(keyId, {
+      $push: {
+        pwz: data,
+      },
+    });
   }
 }

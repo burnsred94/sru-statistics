@@ -14,7 +14,7 @@ export class KeyProvider {
   constructor(
     private readonly pwzProvider: PwzProvider,
     private readonly keysRepository: KeysRepository,
-  ) { }
+  ) {}
 
   async createKey(data: Data[], article: string, userId: User) {
     const keys = map(data, async name => {
@@ -55,5 +55,9 @@ export class KeyProvider {
 
   async deleteKey(id: string) {
     return await this.keysRepository.delete(id);
+  }
+
+  async updateKey(id: Types.ObjectId, data: Types.ObjectId) {
+    return await this.keysRepository.update(id, data);
   }
 }
