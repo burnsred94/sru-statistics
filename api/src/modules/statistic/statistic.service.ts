@@ -43,6 +43,7 @@ export class StatisticService {
     const statisticData = await this.findByCity(dto, id);
 
     const result = map(statisticData, async item => {
+      console.log(item)
       const checkProfile = find(
         data.towns,
         town => town.city_id === item.city_id,
@@ -82,7 +83,6 @@ export class StatisticService {
 
     const mapping = map(addresses, async item => {
       const checkAddress = find(pwz, pwzItem => pwzItem.name === item.address);
-      console.log(checkAddress);
       if (!checkAddress) {
         const searching = await this.fetchProvider.fetchSearchKey(
           { _id: key._id, name: item.address as string },
@@ -93,15 +93,14 @@ export class StatisticService {
         const period = await this.periodRepository.create(
           data[0].result.position,
         );
+
         const pwz = await this.pwzRepository.create({
           userId: id,
           article: article,
           name: item.address,
           position: [period],
         });
-        console.log(pwz)
         const updateKey = await this.keyProvider.updateKey(_id, pwz);
-        console.log(updateKey)
         return updateKey;
       }
     });
