@@ -27,7 +27,7 @@ import { ApiAcceptedResponse, ApiBody } from '@nestjs/swagger';
 export class StatisticController {
   protected readonly logger = new Logger(StatisticController.name);
 
-  constructor(private readonly statisticService: StatisticService) {}
+  constructor(private readonly statisticService: StatisticService) { }
 
   @ApiAcceptedResponse({ description: 'Create Statistic' })
   @UseGuards(JwtAuthGuard)
@@ -45,9 +45,11 @@ export class StatisticController {
     @Res() response: Response,
   ) {
     try {
+      const statisticData = await this.statisticService.findByCity(data, user);
+
       const mergeStatisticsWithProfile = await this.statisticService.merge(
         user,
-        data,
+        statisticData,
       );
       const resolved = await Promise.all(mergeStatisticsWithProfile);
 

@@ -11,7 +11,7 @@ export class FetchProvider {
   constructor(
     private readonly gotService: GotService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   async fetchSearch(data: ITown, article: string, keys: string[]) {
     const url = await this.configService.get('SEARCH_API_URL');
@@ -94,7 +94,6 @@ export class FetchProvider {
   }
 
   async fetchProfile(id: User) {
-    console.log(id);
     const url = await this.configService.get('PROFILE_API_URL');
     const { body } = await this.gotService.gotRef(url + id);
 

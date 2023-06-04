@@ -38,12 +38,10 @@ export class StatisticService {
     this.calculate = new CalculateUtils();
   }
 
-  async merge(id: User, dto) {
+  async merge(id: User, statisticData) {
     const { data } = await this.fetchProvider.fetchProfile(id);
-    const statisticData = await this.findByCity(dto, id);
 
     const result = map(statisticData, async item => {
-      console.log(item)
       const checkProfile = find(
         data.towns,
         town => town.city_id === item.city_id,
