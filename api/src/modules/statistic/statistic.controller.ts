@@ -46,7 +46,7 @@ export class StatisticController {
   ) {
     try {
       const statisticData = await this.statisticService.findByCity(data, user);
-
+      console.log('fetched statistic')
       const mergeStatisticsWithProfile = await this.statisticService.merge(
         user,
         statisticData,
