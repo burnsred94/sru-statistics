@@ -28,7 +28,7 @@ export class PeriodsEntity {
 
   mockPeriod(timestamp: string) {
     return {
-      _id: new mongoose.Types.ObjectId(randomUUID()),
+      _id: new mongoose.Types.ObjectId(),
       position: this.position,
       difference: this.difference,
       timestamp: timestamp,
