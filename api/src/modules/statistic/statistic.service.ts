@@ -39,6 +39,8 @@ export class StatisticService {
   }
 
   async merge(id: User, statisticData) {
+    if (statisticData === undefined) return null;
+
     const { data } = await this.fetchProvider.fetchProfile(id);
 
     const result = map(statisticData, async item => {
@@ -178,6 +180,7 @@ export class StatisticService {
   }
 
   async findByCity(data: FindDataDto, user: User) {
+    console.log(data);
     return await this.articleRepository.findByCity(data, user);
   }
 

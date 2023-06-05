@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { randomUUID } from 'node:crypto';
 
 export class PeriodsEntity {
@@ -27,7 +28,7 @@ export class PeriodsEntity {
 
   mockPeriod(timestamp: string) {
     return {
-      _id: randomUUID(),
+      _id: new mongoose.Types.ObjectId(randomUUID()),
       position: this.position,
       difference: this.difference,
       timestamp: timestamp,
