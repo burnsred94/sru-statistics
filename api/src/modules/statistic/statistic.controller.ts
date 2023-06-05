@@ -46,7 +46,6 @@ export class StatisticController {
   ) {
     try {
       const statisticData = await this.statisticService.findByCity(data, user);
-      console.log('find one', statisticData, user, data);
       const mergeStatisticsWithProfile = await this.statisticService.merge(
         user,
         statisticData,
@@ -55,7 +54,6 @@ export class StatisticController {
 
       if (resolved) {
         const find = await this.statisticService.findByCity(data, user);
-        console.log('find two', statisticData, user, data);
         return response.status(HttpStatus.OK).send({
           status: HttpStatus.OK,
           data: find,
@@ -64,6 +62,7 @@ export class StatisticController {
       }
     } catch (error) {
       this.logger.error(error);
+      const find = await this.statisticService.findByCity(data, user);
       return response.status(HttpStatus.OK).send({
         status: error.status,
         errors: [
@@ -71,7 +70,7 @@ export class StatisticController {
             message: error.message,
           },
         ],
-        data: [],
+        data: find,
       });
     }
   }
