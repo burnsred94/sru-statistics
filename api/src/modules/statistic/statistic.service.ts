@@ -40,10 +40,11 @@ export class StatisticService {
 
   async merge(id: User, statisticData) {
     if (statisticData === undefined) return null;
-
+    console.log('statistic data', statisticData)
     const { data } = await this.fetchProvider.fetchProfile(id);
-
+    console.log('fetch', data);
     const result = map(statisticData, async item => {
+      console.log(item);
       const checkProfile = find(
         data.towns,
         town => town.city_id === item.city_id,
