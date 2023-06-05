@@ -10,11 +10,7 @@ async function bootstrap() {
 
   app.setGlobalPrefix(`${configService.get('PROJECT')}`);
 
-  app.enableCors({
-    origin: 'https://dev.sellershub.ru/',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
-  });
+  app.enableCors();
 
   app.useGlobalPipes(new ValidationPipe());
 
