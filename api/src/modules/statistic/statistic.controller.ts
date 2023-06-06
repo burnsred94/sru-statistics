@@ -47,21 +47,21 @@ export class StatisticController {
     try {
       const statisticData = await this.statisticService.findByCity(data, user);
 
-      // const mergeStatisticsWithProfile = await this.statisticService.merge(
-      //   user,
-      //   statisticData,
-      // );
+      const mergeStatisticsWithProfile = await this.statisticService.merge(
+        user,
+        statisticData,
+      );
 
-      // const resolved = await Promise.all(mergeStatisticsWithProfile);
+      const resolved = await Promise.all(mergeStatisticsWithProfile);
 
-      // if (resolved) {
-      const find = await this.statisticService.findByCity(data, user)
-      return response.status(HttpStatus.OK).send({
-        status: HttpStatus.OK,
-        data: statisticData,
-        errors: [],
-      });
-      // }
+      if (resolved) {
+        const find = await this.statisticService.findByCity(data, user)
+        return response.status(HttpStatus.OK).send({
+          status: HttpStatus.OK,
+          data: find,
+          errors: [],
+        });
+      }
     } catch (error) {
       this.logger.error(error);
       const find = await this.statisticService.findByCity(data, user);
