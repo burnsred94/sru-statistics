@@ -40,27 +40,18 @@ export class ParsersData {
 
   async formatData(resultSearch) {
     const dataForCreate = resultSearch.flat() as ICreateRequest[];
-    const dataReduce = dataForCreate.reduce((accumulator, item) => {
-      if (item !== undefined || item.data !== undefined) {
-        const city = item.city;
-        if (!accumulator[city]) {
-          accumulator[city] = [];
-        }
-        accumulator[city].push(item.data);
-        return accumulator;
+    const dataReduce = dataForCreate.reduce((accumulator, { city, data }) => {
+      if (data) {
+        accumulator[city] = [...(accumulator[city] || []), data];
       }
+      return accumulator;
     }, {});
 
-    const result = [];
-    Object.keys(dataReduce).forEach((key: string | number) => {
-      const object = {
-        city: key,
-        _id: dataForCreate.find(index => index.city === key)._id,
-        data: dataReduce[key],
-      };
-      result.push(object);
+    return Object.keys(dataReduce).map((key: string | number) => {
+      const { _id } = dataForCreate.find(({ city }) => city === key);
+      const data = dataReduce[key];
+      return { city: key, _id, data };
     });
-    return result;
   }
 
   async mergedData(data) {

@@ -16,7 +16,7 @@ export class StatisticProvider {
     this.parse = new ParsersData();
   }
 
-  async create(data: IDestructionResult) {
+  async create(data) {
     const result = await this.createStatistics(data);
 
     return result;

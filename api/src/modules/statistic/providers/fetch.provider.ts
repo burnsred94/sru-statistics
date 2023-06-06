@@ -11,7 +11,7 @@ export class FetchProvider {
   constructor(
     private readonly gotService: GotService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   async fetchSearch(data: ITown, article: string, keys: string[]) {
     const url = await this.configService.get('SEARCH_API_URL');

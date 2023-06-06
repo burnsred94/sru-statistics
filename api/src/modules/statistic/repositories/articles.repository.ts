@@ -21,7 +21,7 @@ import { AddKeysDto, RemoveArticleDto } from '../dto';
 export class ArticleRepository {
   constructor(
     @InjectModel(Article.name) private readonly modelArticle: Model<Article>,
-  ) { }
+  ) {}
 
   async create(article: Article): Promise<Article> {
     const newArticle = new ArticleEntity(article);
@@ -185,7 +185,8 @@ export class ArticleRepository {
             select: 'position timestamp difference',
           },
         },
-      }).exec();
+      })
+      .exec();
 
     if (find.length === 0) throw new BadRequestException(NOT_FIND_ERROR);
 
@@ -201,72 +202,86 @@ export class ArticleRepository {
   }
 
   async filterByTimestamp(data, period) {
-    const result = map(data, value => {
-      return {
-        _id: value._id,
-        productName: value.productName,
-        article: value.article,
-        city: value.city,
-        userId: value.userId,
-        city_id: value.city_id,
-        keys: map(value.keys, key => ({
-          _id: key._id,
-          key: key.key,
-          average: Object.entries(
-            map(key.pwz, pwz => {
-              const averageArray = pwz.position.reduce(
-                (accumulator, object) => {
-                  const number = +object.position;
-                  if (!Number.isNaN(number))
-                    accumulator.push({
-                      timestamp: object.timestamp,
-                      average: number,
-                    });
-                  return accumulator;
-                },
-                [],
-              );
-              return averageArray;
-            })
-              .flat()
-              .reduce((accumulator, current) => {
-                const { timestamp, average } = current;
-                if (!accumulator[timestamp]) {
-                  accumulator[timestamp] = [];
-                }
-                accumulator[timestamp].push(average);
-                return accumulator;
-              }, {}),
-          ).map(([timestamp, averages]) => ({
-            _id: randomUUID(),
-            timestamp,
-            average:
-              //@ts-ignore
-              averages.reduce(
-                (accumulator, current) => accumulator + current,
-                0,
-                //@ts-ignore
-              ) / averages.length,
-          })),
-          pwz: map(key.pwz, pwz => ({
-            _id: pwz._id,
-            name: pwz.name,
-            position: period.reduce((accumulator, string) => {
-              const findObject = pwz.position.find(p => p.timestamp === string);
-              if (findObject) {
-                accumulator.push(findObject);
-              } else {
-                const newPeriod = new PeriodsEntity(
-                  'Не обнаружено среди 2100 позиций',
-                ).mockPeriod(string);
-                accumulator.push(newPeriod);
-              }
-              return accumulator;
-            }, []),
-          })),
-        })),
-      };
-    });
+    const result = await Promise.all(
+      data.map(async value => {
+        const keys = await Promise.all(
+          value.keys.map(async key => {
+            const pwzAverages = await Promise.all(
+              key.pwz.map(async pwz => {
+                const averageArray = pwz.position.reduce(
+                  (accumulator, object) => {
+                    const number = +object.position;
+                    if (!Number.isNaN(number)) {
+                      accumulator.push({
+                        timestamp: object.timestamp,
+                        average: number,
+                      });
+                    }
+                    return accumulator;
+                  },
+                  [],
+                );
+                const groupedAverages = averageArray.reduce(
+                  (accumulator, current) => {
+                    const { timestamp, average } = current;
+                    if (!accumulator[timestamp]) {
+                      accumulator[timestamp] = [];
+                    }
+                    accumulator[timestamp].push(average);
+                    return accumulator;
+                  },
+                  {},
+                );
+                const averages = Object.entries(groupedAverages).map(
+                  ([timestamp, averages]: [string, Array<number>]) => ({
+                    _id: randomUUID(),
+                    timestamp,
+                    average:
+                      averages.reduce(
+                        (accumulator, current) => accumulator + current,
+                        0,
+                      ) / averages.length,
+                  }),
+                );
+                return {
+                  _id: pwz._id,
+                  name: pwz.name,
+                  position: period.reduce((accumulator, string) => {
+                    const findObject = pwz.position.find(
+                      p => p.timestamp === string,
+                    );
+                    if (findObject) {
+                      accumulator.push(findObject);
+                    } else {
+                      const newPeriod = new PeriodsEntity(
+                        'Не обнаружено среди 2100 позиций',
+                      ).mockPeriod(string);
+                      accumulator.push(newPeriod);
+                    }
+                    return accumulator;
+                  }, []),
+                  averages,
+                };
+              }),
+            );
+            return {
+              _id: key._id,
+              key: key.key,
+              pwz: pwzAverages,
+            };
+          }),
+        );
+        return {
+          _id: value._id,
+          productName: value.productName,
+          article: value.article,
+          city: value.city,
+          userId: value.userId,
+          city_id: value.city_id,
+          keys,
+        };
+      }),
+    );
     return result.reverse();
   }
 }

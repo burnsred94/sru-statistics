@@ -47,10 +47,12 @@ export class KeysRepository {
   }
 
   async update(keyId: Types.ObjectId, data: Types.ObjectId) {
-    return await this.keysModel.findByIdAndUpdate(keyId, {
-      $push: {
-        pwz: data,
-      },
-    });
+    return await this.keysModel
+      .findByIdAndUpdate(keyId, {
+        $push: {
+          pwz: data,
+        },
+      })
+      .lean();
   }
 }

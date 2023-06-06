@@ -125,26 +125,17 @@ export class StatisticService {
     const { towns, article, keys } = data;
     const checkArticle = await this.fetchProvider.fetchArticleName(article);
 
-    if (towns.length > 1) {
-      for (const element of towns) {
-        const findArticleByUser = await this.articleRepository.findOneArticle(
-          { userId: userId, article: article, cityId: element._id },
-          true,
-        );
+    const findArticleByUser = await this.articleRepository.findOneArticle(
+      {
+        userId: userId,
+        article: article,
+        cityId: towns[0]._id,
+      },
+      true,
+    );
 
-        if (findArticleByUser !== null) {
-          throw new BadRequestException(ARTICLE_DUPLICATE);
-        }
-      }
-    } else {
-      const findArticleByUser = await this.articleRepository.findOneArticle(
-        { userId: userId, article: article, cityId: towns[0]._id },
-        true,
-      );
-
-      if (findArticleByUser !== null) {
-        throw new BadRequestException(ARTICLE_DUPLICATE);
-      }
+    if (findArticleByUser !== null) {
+      throw new BadRequestException(ARTICLE_DUPLICATE);
     }
 
     const lt = JSON.parse(checkArticle.body);
@@ -154,18 +145,9 @@ export class StatisticService {
       throw new BadRequestException(FILED_SEARCH_PRODUCT);
     }
 
-    const resultSearch = [];
-    let iterator = 0;
-
-    while (towns.length > iterator) {
-      const search = await this.fetchProvider.fetchSearch(
-        towns[iterator],
-        article,
-        keys,
-      );
-      resultSearch.push(search);
-      iterator++;
-    }
+    const resultSearch = await Promise.all(
+      towns.map(town => this.fetchProvider.fetchSearch(town, article, keys)),
+    );
 
     const result = await this.parse.formatData(resultSearch);
 
