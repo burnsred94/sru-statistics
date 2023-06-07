@@ -27,7 +27,7 @@ export class ArticleRepository {
     const newArticle = new ArticleEntity(article);
     const articleCreate = await this.modelArticle.create(newArticle);
     const save = await articleCreate.save();
-    return save.populate({
+    return await save.populate({
       path: 'keys',
       model: Keys.name,
       select: 'pwz key',
@@ -55,7 +55,8 @@ export class ArticleRepository {
             select: 'position timestamp difference',
           },
         },
-      });
+      })
+      .lean();
   }
 
   async findAll() {
@@ -80,6 +81,15 @@ export class ArticleRepository {
   }
 
   async findOneArticle(data: GetOneDto, check: boolean) {
+    if (check)
+      return await this.modelArticle
+        .findOne({
+          city_id: data.cityId,
+          userId: data.userId,
+          article: data.article,
+        })
+        .lean();
+
     const find = await this.modelArticle
       .findOne({
         city_id: data.cityId,
@@ -99,11 +109,12 @@ export class ArticleRepository {
             select: 'position timestamp difference',
           },
         },
-      });
+      })
+      .lean();
 
     if (check) return find;
 
-    return await this.filterByTimestamp([find], data.periods);
+    return await this.filterByTimestamp([find], data.periods)[0];
   }
 
   async removeArticle(data: RemoveArticleDto, user: User) {
@@ -200,72 +211,86 @@ export class ArticleRepository {
   }
 
   async filterByTimestamp(data, period) {
-    const result = map(data, value => {
-      return {
-        _id: value._id,
-        productName: value.productName,
-        article: value.article,
-        city: value.city,
-        userId: value.userId,
-        city_id: value.city_id,
-        keys: map(value.keys, key => ({
-          _id: key._id,
-          key: key.key,
-          average: Object.entries(
-            map(key.pwz, pwz => {
-              const averageArray = pwz.position.reduce(
-                (accumulator, object) => {
-                  const number = +object.position;
-                  if (!Number.isNaN(number))
-                    accumulator.push({
-                      timestamp: object.timestamp,
-                      average: number,
-                    });
-                  return accumulator;
-                },
-                [],
-              );
-              return averageArray;
-            })
-              .flat()
-              .reduce((accumulator, current) => {
-                const { timestamp, average } = current;
-                if (!accumulator[timestamp]) {
-                  accumulator[timestamp] = [];
-                }
-                accumulator[timestamp].push(average);
-                return accumulator;
-              }, {}),
-          ).map(([timestamp, averages]) => ({
-            _id: randomUUID(),
-            timestamp,
-            average:
-              //@ts-ignore
-              averages.reduce(
-                (accumulator, current) => accumulator + current,
-                0,
-                //@ts-ignore
-              ) / averages.length,
-          })),
-          pwz: map(key.pwz, pwz => ({
-            _id: pwz._id,
-            name: pwz.name,
-            position: period.reduce((accumulator, string) => {
-              const findObject = pwz.position.find(p => p.timestamp === string);
-              if (findObject) {
-                accumulator.push(findObject);
-              } else {
-                const newPeriod = new PeriodsEntity(
-                  'Не обнаружено среди 2100 позиций',
-                ).mockPeriod(string);
-                accumulator.push(newPeriod);
-              }
-              return accumulator;
-            }, []),
-          })),
-        })),
-      };
-    });
+    const result = await Promise.all(
+      data.map(async value => {
+        const keys = await Promise.all(
+          value.keys.map(async key => {
+            const pwzAverages = await Promise.all(
+              key.pwz.map(async pwz => {
+                const averageArray = pwz.position.reduce(
+                  (accumulator, object) => {
+                    const number = +object.position;
+                    if (!Number.isNaN(number)) {
+                      accumulator.push({
+                        timestamp: object.timestamp,
+                        average: number,
+                      });
+                    }
+                    return accumulator;
+                  },
+                  [],
+                );
+                const groupedAverages = averageArray.reduce(
+                  (accumulator, current) => {
+                    const { timestamp, average } = current;
+                    if (!accumulator[timestamp]) {
+                      accumulator[timestamp] = [];
+                    }
+                    accumulator[timestamp].push(average);
+                    return accumulator;
+                  },
+                  {},
+                );
+                const averages = Object.entries(groupedAverages).map(
+                  ([timestamp, averages]: [string, Array<number>]) => ({
+                    _id: randomUUID(),
+                    timestamp,
+                    average:
+                      averages.reduce(
+                        (accumulator, current) => accumulator + current,
+                        0,
+                      ) / averages.length,
+                  }),
+                );
+                return {
+                  _id: pwz._id,
+                  name: pwz.name,
+                  position: period.reduce((accumulator, string) => {
+                    const findObject = pwz.position.find(
+                      p => p.timestamp === string,
+                    );
+                    if (findObject) {
+                      accumulator.push(findObject);
+                    } else {
+                      const newPeriod = new PeriodsEntity(
+                        'Не обнаружено среди 2100 позиций',
+                      ).mockPeriod(string);
+                      accumulator.push(newPeriod);
+                    }
+                    return accumulator;
+                  }, []),
+                  averages,
+                };
+              }),
+            );
+            return {
+              _id: key._id,
+              key: key.key,
+              pwz: pwzAverages,
+            };
+          }),
+        );
+        return {
+          _id: value._id,
+          productName: value.productName,
+          article: value.article,
+          city: value.city,
+          userId: value.userId,
+          city_id: value.city_id,
+          keys,
+        };
+      }),
+    );
     return result.reverse();
   }
 }

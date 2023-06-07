@@ -13,7 +13,6 @@ export interface ITown {
 }
 
 export interface IPwz {
-  _id: string;
   name: string;
 }
 
