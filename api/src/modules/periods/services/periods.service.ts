@@ -3,11 +3,11 @@ import { PeriodsRepository } from '../repositories';
 
 @Injectable()
 export class PeriodsService {
-  constructor(private readonly periodRepository: PeriodsRepository) {}
+  constructor(private readonly periodRepository: PeriodsRepository) { }
 
   async create(value: number, difference?: string) {
     return await this.periodRepository.create(
-      value === 0 ? 'Не обнаружено среди 2100 позиций' : String(value),
+      value === 0 ? '2000+' : String(value),
       difference,
     );
   }

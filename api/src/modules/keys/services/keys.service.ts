@@ -15,7 +15,7 @@ export class KeysService {
     @InjectQueue(RedisQueueEnum.KEYS_QUEUE) private readonly keysQueue: Queue,
     private readonly keysRepository: KeysRepository,
     private readonly mockGenerator: MockGenerator,
-  ) {}
+  ) { }
 
   async create(data: ICreateKey) {
     const keyJob = await this.keysQueue.add(
@@ -49,6 +49,8 @@ export class KeysService {
   }
 
   async update(search) {
-    await this.keysQueue.add(RedisProcessorsKeysEnum.UPDATE_KEYS, search);
+    const updateData = await this.keysQueue.add(RedisProcessorsKeysEnum.UPDATE_KEYS, search);
+    const average = await updateData.finished();
+    console.log(average);
   }
 }

@@ -8,11 +8,13 @@ import { PeriodsEntity } from '../entities';
 export class PeriodsRepository {
   constructor(
     @InjectModel(Periods.name) private readonly periodModel: Model<Periods>,
-  ) {}
+  ) { }
 
   async create(position: string, difference?: string) {
     const newPeriod = new PeriodsEntity(position, difference);
+    console.log(newPeriod);
     const createPeriod = await this.periodModel.create(newPeriod);
+    console.log(createPeriod);
     const newPeriodSave = await createPeriod.save();
     return newPeriodSave._id;
   }

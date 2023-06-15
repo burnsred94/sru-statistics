@@ -10,7 +10,7 @@ export class PvzService {
   constructor(
     private readonly pvzRepository: PvzRepository,
     private readonly periodsService: PeriodsService,
-  ) {}
+  ) { }
 
   async create(value: IResultAddress, article: string, userId: User) {
     const period = await this.periodsService.create(value.position);
@@ -28,7 +28,11 @@ export class PvzService {
   }
 
   async updatePeriod(position, difference, id) {
+    console.log(position, difference, id);
     const period = await this.periodsService.create(position, difference);
-    console.log(`updatePeriod`, position, difference);
+    console.log(period);
+    await this.pvzRepository.update(id, {
+      position: period,
+    });
   }
 }

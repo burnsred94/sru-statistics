@@ -83,7 +83,7 @@ export class ArticleRepository {
           city_id: city_id,
           keys: chunks[0],
           meta: {
-            count: query.page,
+            count: 1,
             pages_count: chunks.length,
             total_keys: genKeys.length
           },

@@ -20,7 +20,7 @@ export class KeysProcessor {
   constructor(
     private readonly pvzService: PvzService,
     private readonly averageService: AverageService,
-  ) {}
+  ) { }
 
   @Process({
     name: RedisProcessorsKeysEnum.CREATE_KEY,
@@ -76,15 +76,15 @@ export class KeysProcessor {
     const resultAverage = [];
     while (result.length > iterator) {
       resultAverage.push(result[iterator].position);
+      console.log(result[iterator])
       await this.pvzService.updatePeriod(
         result[iterator].position,
         result[iterator].differences,
         result[iterator]._id,
       );
+
       iterator += 1;
     }
-
-    console.log(resultAverage);
 
     const summa = resultAverage.reduce(
       (previous, current) => Number(previous) + Number(current),
@@ -95,5 +95,8 @@ export class KeysProcessor {
     const newAverage = await this.averageService.create({
       average: String(average),
     });
+
+    return String(newAverage);
+
   }
 }
