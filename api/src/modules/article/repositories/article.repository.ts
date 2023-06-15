@@ -57,7 +57,7 @@ export class ArticleRepository {
       } = stats;
       const genKeys = await this.keysService.findById(keys, data.periods);
 
-      const chunks = chunk(genKeys, query.limit)
+      const chunks = chunk(genKeys, query.limit);
 
       return query.articleId === String(_id)
         ? {
@@ -70,7 +70,7 @@ export class ArticleRepository {
           city: city,
           city_id: city_id,
           keys: chunks[query.page - 1],
-          meta: { count: query.page, pages_count: chunks.length },
+          meta: { count: query.page, pages_count: chunks.length, total_keys: genKeys.length },
         }
         : {
           _id: _id,
@@ -81,8 +81,12 @@ export class ArticleRepository {
           userId: userId,
           city: city,
           city_id: city_id,
-          keys: take(genKeys, 8),
-          meta: { count: query.page, pages_count: Math.round(genKeys.length / 8) }
+          keys: chunks[0],
+          meta: {
+            count: query.page,
+            pages_count: chunks.length,
+            total_keys: genKeys.length
+          },
         };
     });
 

@@ -15,9 +15,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Article.name, schema: ArticleSchema },
-    ]),
+    MongooseModule.forFeature([{ name: Article.name, schema: ArticleSchema }]),
     FetchModule,
     KeysModule,
     EventEmitterModule.forRoot(),
@@ -39,4 +37,4 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
   ],
   exports: [ArticleService],
 })
-export class ArticleModule { }
+export class ArticleModule {}

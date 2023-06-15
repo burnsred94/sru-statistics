@@ -17,7 +17,7 @@ export class ArticleProcessor {
     private readonly articleService: ArticleService,
     private readonly keysService: KeysService,
     private readonly eventEmitter: EventEmitter2,
-  ) { }
+  ) {}
 
   @Process({
     name: RedisProcessorsArticleEnum.ARTICLE_CREATE,
