@@ -76,11 +76,10 @@ export class KeysProcessor {
     const resultAverage = [];
     while (result.length > iterator) {
       resultAverage.push(result[iterator].position);
-      console.log(result[iterator])
       await this.pvzService.updatePeriod(
         result[iterator].position,
         result[iterator].differences,
-        result[iterator]._id,
+        result[iterator].id,
       );
 
       iterator += 1;
@@ -96,7 +95,7 @@ export class KeysProcessor {
       average: String(average),
     });
 
-    return String(newAverage);
+    return newAverage;
 
   }
 }

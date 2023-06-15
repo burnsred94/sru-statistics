@@ -48,9 +48,9 @@ export class KeysService {
     return resolved;
   }
 
-  async update(search) {
+  async update(search, keyId) {
     const updateData = await this.keysQueue.add(RedisProcessorsKeysEnum.UPDATE_KEYS, search);
     const average = await updateData.finished();
-    console.log(average);
+    await this.keysRepository.updateAverage(keyId, average);
   }
 }

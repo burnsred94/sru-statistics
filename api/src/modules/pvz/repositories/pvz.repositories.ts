@@ -1,9 +1,8 @@
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { Pvz } from '../schemas';
 import { PvzEntity } from '../entities';
-import { Periods } from 'src/modules/periods';
 
 @Injectable()
 export class PvzRepository {

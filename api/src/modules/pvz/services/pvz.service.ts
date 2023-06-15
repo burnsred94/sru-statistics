@@ -28,11 +28,7 @@ export class PvzService {
   }
 
   async updatePeriod(position, difference, id) {
-    console.log(position, difference, id);
     const period = await this.periodsService.create(position, difference);
-    console.log(period);
-    await this.pvzRepository.update(id, {
-      position: period,
-    });
+    await this.pvzRepository.update(id, period);
   }
 }

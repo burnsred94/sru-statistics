@@ -6,7 +6,7 @@ import { IPwz } from 'src/modules/article';
 
 @Injectable()
 export class FetchSearchProvider {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   async fetchSearch(pvz: IPwz[], article: string, key: string) {
     const url = await this.configService.get('SEARCH_API_URL');
@@ -35,11 +35,11 @@ export class FetchSearchProvider {
         name: data.data[0].address,
         id: v._id,
         differences:
-          v.position.length > 5
+          v.position.length > 4
             ? '0'
             : diff > 0
-            ? String(`+${diff}`)
-            : String(diff),
+              ? String(`+${diff}`)
+              : String(diff),
         position: data.data[0].position,
       };
     });

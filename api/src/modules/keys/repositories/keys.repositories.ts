@@ -15,7 +15,7 @@ import { Periods } from 'src/modules/periods';
 export class KeysRepository {
   constructor(
     @InjectModel(Keys.name) private readonly keysModel: Model<Keys>,
-  ) {}
+  ) { }
 
   async create(data: Keys) {
     const newKey = new KeysEntity(data);
@@ -41,5 +41,13 @@ export class KeysRepository {
         select: 'timestamp average',
         model: Average.name,
       });
+  }
+
+  async updateAverage(id: Types.ObjectId, average: Types.ObjectId) {
+    return await this.keysModel.updateOne({ _id: id }, {
+      $push: {
+        average: average,
+      }
+    });
   }
 }
