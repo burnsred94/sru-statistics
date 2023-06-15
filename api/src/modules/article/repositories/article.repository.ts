@@ -11,7 +11,7 @@ import {
   UpdateStatusDto,
 } from '../dto';
 import { Keys, KeysService } from 'src/modules/keys';
-import { map, take } from 'lodash';
+import { chunk, map, take } from 'lodash';
 import { Pvz } from 'src/modules/pvz';
 import { Periods } from 'src/modules/periods';
 
@@ -20,7 +20,7 @@ export class ArticleRepository {
   constructor(
     @InjectModel(Article.name) private readonly modelArticle: Model<Article>,
     private readonly keysService: KeysService,
-  ) {}
+  ) { }
 
   async create(article: Article) {
     const newArticle = new ArticleEntity(article);
@@ -57,29 +57,33 @@ export class ArticleRepository {
       } = stats;
       const genKeys = await this.keysService.findById(keys, data.periods);
 
+      const chunks = chunk(genKeys, query.limit)
+
       return query.articleId === String(_id)
         ? {
-            _id: _id,
-            article: article,
-            productName: productName,
-            productImg: productImg,
-            productRef: productRef,
-            userId: userId,
-            city: city,
-            city_id: city_id,
-            keys: take(genKeys, query.page * query.limit),
-          }
+          _id: _id,
+          article: article,
+          productName: productName,
+          productImg: productImg,
+          productRef: productRef,
+          userId: userId,
+          city: city,
+          city_id: city_id,
+          keys: chunks[query.page - 1],
+          meta: { count: query.page, pages_count: chunks.length },
+        }
         : {
-            _id: _id,
-            article: article,
-            productName: productName,
-            productImg: productImg,
-            productRef: productRef,
-            userId: userId,
-            city: city,
-            city_id: city_id,
-            keys: take(genKeys, 8),
-          };
+          _id: _id,
+          article: article,
+          productName: productName,
+          productImg: productImg,
+          productRef: productRef,
+          userId: userId,
+          city: city,
+          city_id: city_id,
+          keys: take(genKeys, 8),
+          meta: { count: query.page, pages_count: Math.round(genKeys.length / 8) }
+        };
     });
 
     const resolved = await Promise.all(generateData);

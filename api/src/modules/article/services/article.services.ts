@@ -16,6 +16,8 @@ import { Queue } from 'bull';
 import { Types } from 'mongoose';
 import { RedisProcessorsArticleEnum, RedisQueueEnum } from 'src/redis-queues';
 import { fromEventPattern } from 'rxjs';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventsWS } from '../gateways/events';
 
 @Injectable({})
 export class ArticleService {
@@ -23,7 +25,8 @@ export class ArticleService {
     private readonly articleRepository: ArticleRepository,
     private readonly fetchProductProvider: FetchProductProvider,
     @InjectQueue(RedisQueueEnum.ARTICLE_QUEUE) private articleQueue: Queue,
-  ) {}
+    private readonly eventEmitter: EventEmitter2,
+  ) { }
 
   async create(data: CreateArticleDto, user: User) {
     const { towns, article, keys } = data;
@@ -83,11 +86,23 @@ export class ArticleService {
   }
 
   async updateStatus(data: UpdateStatusDto, id: User) {
-    return this.articleRepository.updateStatus(data, id);
+    const update = await this.articleRepository.updateStatus(data, id);
+    if (update) {
+      this.eventEmitter.emit(EventsWS.REMOVE_ARTICLE, {
+        userId: update.userId,
+        cityId: update.city_id,
+      });
+    }
   }
 
   async removeKey(data: RemoveKeyDto, user: User) {
-    return await this.articleRepository.removeKey(data, user);
+    const removeKey = await this.articleRepository.removeKey(data, user);
+
+    if (removeKey) {
+      this.eventEmitter.emit(EventsWS.REMOVE_KEY, {
+        userId: user,
+      });
+    }
   }
 
   async cronUpdate() {

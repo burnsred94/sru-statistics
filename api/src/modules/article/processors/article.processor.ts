@@ -6,6 +6,7 @@ import { ArticleService } from '../services';
 import { RedisProcessorsArticleEnum, RedisQueueEnum } from 'src/redis-queues';
 import { forEach, map } from 'lodash';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventsWS } from '../gateways/events';
 
 @Processor({
   name: RedisQueueEnum.ARTICLE_QUEUE,
@@ -16,7 +17,7 @@ export class ArticleProcessor {
     private readonly articleService: ArticleService,
     private readonly keysService: KeysService,
     private readonly eventEmitter: EventEmitter2,
-  ) {}
+  ) { }
 
   @Process({
     name: RedisProcessorsArticleEnum.ARTICLE_CREATE,
@@ -43,7 +44,7 @@ export class ArticleProcessor {
       const update = await this.articleService.update(key, articleId);
 
       if (update) {
-        this.eventEmitter.emit('article.created-key', {
+        this.eventEmitter.emit(EventsWS.CREATE_ARTICLE, {
           userId: userId,
           cityId: city_id,
         });
@@ -74,7 +75,14 @@ export class ArticleProcessor {
         articleId: find._id,
       });
 
-      this.articleService.update(key, find._id);
+      const update = await this.articleService.update(key, find._id);
+
+      if (update) {
+        this.eventEmitter.emit(EventsWS.ADDED_KEYS, {
+          userId: find.userId,
+          cityId: find.city_id,
+        });
+      }
     });
   }
 
