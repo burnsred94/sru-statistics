@@ -6,8 +6,7 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-      target: development
-    command: npm run start:dev
+      target: production
     env_file:
       - ./api/.env
     ports:
