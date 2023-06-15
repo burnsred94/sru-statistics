@@ -1,10 +1,5 @@
 version: '3.8'
 
-networks:
-  geo_default:
-    external:
-      name: geo_default
-
 services:
   api:
     container_name: sru-statistics-api
@@ -19,5 +14,54 @@ services:
       - $PORT:$PORT_DEV
     volumes:
       - ./api/:/usr/src/app
-    networks:
-      - geo_default
+
+  redis:
+    container_name: redis
+    image: redis
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+    volumes:
+      - ./api/redis:/data
+
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password123
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-admin
+    restart: unless-stopped
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: changeme
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password123
+      ME_CONFIG_MONGODB_URL: 'mongodb://root:password123@mongodb:27017'
+    depends_on:
+      - mongodb
+
+  redisinsight:
+    image: redislabs/redisinsight:latest
+    ports:
+      - '8001:8001'
+    volumes:
+      - ./api/redis/data/redisinsight:/db
+
+networks:
+  api:
+    driver: geo_default
+  redis:
+    driver: geo_default
+  redisinsight:
+    driver: geo_default
+  mongodb:
+    driver: geo_default
