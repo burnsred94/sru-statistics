@@ -15,7 +15,6 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { Types } from 'mongoose';
 import { RedisProcessorsArticleEnum, RedisQueueEnum } from 'src/redis-queues';
-import { fromEventPattern } from 'rxjs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventsWS } from '../gateways/events';
 import { forEach } from 'lodash';

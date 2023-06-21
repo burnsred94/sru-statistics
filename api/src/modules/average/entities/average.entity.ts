@@ -27,7 +27,7 @@ export class AverageEntity {
   mock(time: string) {
     return {
       _id: randomUUID(),
-      average: this.average,
+      average: time,
       timestamp: time,
     };
   }
