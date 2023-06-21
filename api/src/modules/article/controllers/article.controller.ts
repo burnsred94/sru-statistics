@@ -18,6 +18,7 @@ import {
   FindByCityDto,
   FindByCityQueryDto,
   RemoveKeyDto,
+  UpdateFromProfileDto,
   UpdateStatusDto,
 } from '../dto';
 import { User } from 'src/modules';
@@ -28,7 +29,7 @@ import { Response } from 'express';
 export class ArticleController {
   protected readonly logger = new Logger(ArticleController.name);
 
-  constructor(private readonly articleService: ArticleService) {}
+  constructor(private readonly articleService: ArticleService) { }
 
   @ApiAcceptedResponse({ description: 'Create Statistic' })
   @UseGuards(JwtAuthGuard)
@@ -68,7 +69,7 @@ export class ArticleController {
     try {
       const findByCity = await this.articleService.findByCity(
         data,
-        user,
+        user as unknown as number,
         query,
       );
 
@@ -96,7 +97,7 @@ export class ArticleController {
     @Res() response: Response,
   ) {
     try {
-      const addKey = await this.articleService.addKeysByCity(dto);
+      const addKey = await this.articleService.addKeysByArticle(dto, user);
       return response.status(HttpStatus.OK).send({
         status: HttpStatus.OK,
         data: addKey,
@@ -161,6 +162,17 @@ export class ArticleController {
         error: [{ message: error.message }],
         status: error.statusCode,
       });
+    }
+  }
+
+  @ApiAcceptedResponse({ description: 'Update article from profile' })
+  @Post('update-from-profile')
+  async updateFromProfile(@Body() dto: UpdateFromProfileDto) {
+    try {
+      const { userId, towns } = dto.data;
+      await this.articleService.updateStatsFromProfile(userId, towns);
+    } catch (error) {
+      this.logger.error(error.message);
     }
   }
 }

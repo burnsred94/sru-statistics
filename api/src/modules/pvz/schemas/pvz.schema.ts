@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
-import { Article } from 'src/modules/article';
 import { User } from 'src/modules/auth/user';
 import { Periods } from 'src/modules/periods';
 
@@ -13,6 +12,9 @@ export class Pvz {
 
   @Prop({ type: String })
   article: string;
+
+  @Prop({ type: Boolean, default: true })
+  active: boolean;
 
   @Prop({ type: String })
   name: string;

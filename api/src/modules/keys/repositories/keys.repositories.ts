@@ -15,7 +15,16 @@ import { Periods } from 'src/modules/periods';
 export class KeysRepository {
   constructor(
     @InjectModel(Keys.name) private readonly keysModel: Model<Keys>,
-  ) { }
+  ) {}
+
+  async find(data: { userId: number; cityId: string }) {
+    return await this.keysModel
+      .find({
+        userId: data.userId,
+        city_id: data.cityId,
+      })
+      .populate({ path: 'pwz', select: 'name article', model: Pvz.name });
+  }
 
   async create(data: Keys) {
     const newKey = new KeysEntity(data);
@@ -44,10 +53,39 @@ export class KeysRepository {
   }
 
   async updateAverage(id: Types.ObjectId, average: Types.ObjectId) {
-    return await this.keysModel.updateOne({ _id: id }, {
-      $push: {
-        average: average,
-      }
-    });
+    return await this.keysModel.updateOne(
+      { _id: id },
+      {
+        $push: {
+          average: average,
+        },
+      },
+    );
+  }
+
+  async update(id, pvz) {
+    await this.keysModel.updateOne(
+      {
+        _id: id,
+      },
+      {
+        $set: {
+          pwz: pvz,
+        },
+      },
+    );
+  }
+
+  async updateAndPush(id, pvz) {
+    return await this.keysModel.updateOne(
+      {
+        _id: id,
+      },
+      {
+        $push: {
+          pwz: pvz,
+        },
+      },
+    );
   }
 }

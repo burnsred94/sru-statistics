@@ -12,12 +12,14 @@ import { BullModule } from '@nestjs/bull';
 import { RedisQueueEnum } from 'src/redis-queues';
 import { ArticleGateway } from './gateways/article.gateway';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { PvzModule } from '../pvz';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Article.name, schema: ArticleSchema }]),
     FetchModule,
     KeysModule,
+    PvzModule,
     EventEmitterModule.forRoot(),
     BullModule.registerQueue({
       name: RedisQueueEnum.ARTICLE_QUEUE,

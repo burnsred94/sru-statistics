@@ -20,7 +20,14 @@ export class ArticleRepository {
   constructor(
     @InjectModel(Article.name) private readonly modelArticle: Model<Article>,
     private readonly keysService: KeysService,
-  ) { }
+  ) {}
+
+  async findUserData(data, user: number, query: FindByCityQueryDto) {
+    const find = await this.modelArticle.find({
+      userId: user,
+    });
+    return find;
+  }
 
   async create(article: Article) {
     const newArticle = new ArticleEntity(article);
@@ -37,7 +44,29 @@ export class ArticleRepository {
     });
   }
 
-  async findByCity(data: FindByCityDto, id: User, query: FindByCityQueryDto) {
+  async findByUser(user: number) {
+    return await this.modelArticle
+      .find({
+        userId: user,
+      })
+      .populate({
+        path: 'keys',
+        select: 'key pwz',
+        model: Keys.name,
+        populate: {
+          path: 'pwz',
+          select: 'name',
+          model: Pvz.name,
+          populate: {
+            path: 'position',
+            select: 'timestamp position',
+            model: Periods.name,
+          },
+        },
+      });
+  }
+
+  async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto) {
     const find = await this.modelArticle.find({
       userId: id,
       city_id: data.city,
@@ -61,33 +90,37 @@ export class ArticleRepository {
 
       return query.articleId === String(_id)
         ? {
-          _id: _id,
-          article: article,
-          productName: productName,
-          productImg: productImg,
-          productRef: productRef,
-          userId: userId,
-          city: city,
-          city_id: city_id,
-          keys: chunks[query.page - 1],
-          meta: { count: query.page, pages_count: chunks.length, total_keys: genKeys.length },
-        }
+            _id: _id,
+            article: article,
+            productName: productName,
+            productImg: productImg,
+            productRef: productRef,
+            userId: userId,
+            city: city,
+            city_id: city_id,
+            keys: chunks[query.page - 1],
+            meta: {
+              count: query.page,
+              pages_count: chunks.length,
+              total_keys: genKeys.length,
+            },
+          }
         : {
-          _id: _id,
-          article: article,
-          productName: productName,
-          productImg: productImg,
-          productRef: productRef,
-          userId: userId,
-          city: city,
-          city_id: city_id,
-          keys: chunks[0],
-          meta: {
-            count: 1,
-            pages_count: chunks.length,
-            total_keys: genKeys.length
-          },
-        };
+            _id: _id,
+            article: article,
+            productName: productName,
+            productImg: productImg,
+            productRef: productRef,
+            userId: userId,
+            city: city,
+            city_id: city_id,
+            keys: chunks[0],
+            meta: {
+              count: 1,
+              pages_count: chunks.length,
+              total_keys: genKeys.length,
+            },
+          };
     });
 
     const resolved = await Promise.all(generateData);

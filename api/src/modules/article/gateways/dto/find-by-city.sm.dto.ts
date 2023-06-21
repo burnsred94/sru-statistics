@@ -9,7 +9,7 @@ export class SMFindByCityDto {
 }
 
 export interface SMDataFindByCity {
-  userId: User;
+  userId: number;
   city_id: string;
   periods: string[];
 }

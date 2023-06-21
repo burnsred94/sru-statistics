@@ -3,14 +3,13 @@ import { User } from 'src/modules/auth/user';
 import { PvzRepository } from '../repositories';
 import { Periods, PeriodsService } from 'src/modules/periods';
 import { IResultAddress } from '../interfaces';
-import { Types } from 'mongoose';
 
 @Injectable()
 export class PvzService {
   constructor(
     private readonly pvzRepository: PvzRepository,
     private readonly periodsService: PeriodsService,
-  ) { }
+  ) {}
 
   async create(value: IResultAddress, article: string, userId: User) {
     const period = await this.periodsService.create(value.position);
@@ -19,6 +18,7 @@ export class PvzService {
       name: value.address,
       position: [period],
       userId: userId,
+      active: true,
     });
     return pvz.populate({
       path: 'position',

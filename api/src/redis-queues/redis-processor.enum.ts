@@ -3,6 +3,8 @@ export enum RedisProcessorsArticleEnum {
   FIND_BY_ARTICLE = 'find-by-article',
   ARTICLE_UPDATE_KEY = 'update-article-key',
   ARTICLE_UPDATE_STATS_EVERY_DAY = 'update-article-stats',
+  UPDATE_ARTICLE_FROM_PROFILE = 'update-article-profile',
+  FIND_ALL_BY_USER = 'find-all-by-user',
 }
 
 export enum RedisProcessorsKeysEnum {

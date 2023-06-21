@@ -29,7 +29,7 @@ export class MockGenerator {
 
     const averageMockData = map(periods, async period => {
       const find = averageTS.find(average => average.timestamp === period);
-      return find ?? new AverageEntity({ average: '0' }).mock(period);
+      return find ?? new AverageEntity({ average: '2000+' }).mock(period);
     });
     const resolved = await Promise.all(averageMockData);
 
@@ -40,7 +40,7 @@ export class MockGenerator {
     const generatedMock = map(pwzs, async pwz => {
       const pwzPositionIterator = map(periods, date => {
         const find = pwz.position.find(pos => pos.timestamp === date);
-        return find ?? new PeriodsEntity('0').mockPeriod(date);
+        return find ?? new PeriodsEntity('2000+').mockPeriod(date);
       });
       return {
         _id: pwz._id,

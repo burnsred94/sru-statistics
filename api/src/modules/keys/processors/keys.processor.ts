@@ -3,15 +3,6 @@ import { Job } from 'bull';
 import { AverageEntity, AverageService } from 'src/modules/average';
 import { PvzService } from 'src/modules/pvz';
 import { RedisProcessorsKeysEnum, RedisQueueEnum } from 'src/redis-queues';
-import { KeysRepository } from '../repositories';
-import { forEach, map, some } from 'lodash';
-import { Types } from 'mongoose';
-
-interface IAverage {
-  _id: Types.ObjectId;
-  timestamp: string;
-  average: number;
-}
 
 @Processor({
   name: RedisQueueEnum.KEYS_QUEUE,
@@ -20,22 +11,24 @@ export class KeysProcessor {
   constructor(
     private readonly pvzService: PvzService,
     private readonly averageService: AverageService,
-  ) { }
+  ) {}
 
   @Process({
     name: RedisProcessorsKeysEnum.CREATE_KEY,
     concurrency: 1000,
   })
   async createKey(job: Job) {
-    const { data, articleId, key, userId, city_id } = job.data;
+    const { data, article } = job.data;
+    const { key, userId, city_id, data: dataPwz } = data;
 
     const resultAverage = [];
     const resultId = [];
     let iterator = 0;
-    while (data.length > iterator) {
+
+    while (dataPwz.length > iterator) {
       const pvz = await this.pvzService.create(
-        data[iterator],
-        articleId,
+        dataPwz[iterator],
+        article,
         userId,
       );
       resultAverage.push(pvz);
@@ -56,7 +49,7 @@ export class KeysProcessor {
     });
 
     return {
-      article: articleId,
+      article: article,
       key: key,
       userId: userId,
       pwz: resultId,
@@ -96,6 +89,5 @@ export class KeysProcessor {
     });
 
     return newAverage;
-
   }
 }

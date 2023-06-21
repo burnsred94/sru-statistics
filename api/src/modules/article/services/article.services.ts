@@ -27,7 +27,12 @@ export class ArticleService {
     private readonly fetchProductProvider: FetchProductProvider,
     @InjectQueue(RedisQueueEnum.ARTICLE_QUEUE) private articleQueue: Queue,
     private readonly eventEmitter: EventEmitter2,
-  ) {}
+  ) { }
+
+  async findByUser(userId: number) {
+    const userStats = await this.articleRepository.findByUser(userId);
+    return userStats;
+  }
 
   async create(data: CreateArticleDto, user: User) {
     const { towns, article, keys } = data;
@@ -66,19 +71,31 @@ export class ArticleService {
     return true;
   }
 
-  async findByCity(data: FindByCityDto, id: User, query: FindByCityQueryDto) {
+  async findAllCity(data, id: number, query: FindByCityQueryDto) {
+    const find = await this.articleRepository.findByUser(id);
+    const job = await this.articleQueue.add(
+      RedisProcessorsArticleEnum.FIND_ALL_BY_USER,
+      { find, query, data },
+    );
+    const finishedJob = await job.finished();
+    const resolved = await Promise.all(finishedJob);
+    return resolved;
+  }
+
+  async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto) {
     const find = await this.articleRepository.findByCity(data, id, query);
     return find;
   }
 
-  async addKeysByCity(data: AddKeyDto) {
+  async addKeysByArticle(data: AddKeyDto, user) {
     const { articleId, keys } = data;
     const find = await this.articleRepository.findById(articleId);
-
+    const findAll = await this.articleRepository.findByUser(user);
+    const filtered = findAll.filter(item => item.article === find.article);
     const update = await this.articleQueue.add(
       RedisProcessorsArticleEnum.ARTICLE_UPDATE_KEY,
       {
-        find,
+        filtered,
         keys,
       },
     );
@@ -103,6 +120,16 @@ export class ArticleService {
         userId: user,
       });
     }
+  }
+
+  async updateStatsFromProfile(userId, dataUpdate) {
+    const job = await this.articleQueue.add(
+      RedisProcessorsArticleEnum.UPDATE_ARTICLE_FROM_PROFILE,
+      {
+        userId,
+        dataUpdate,
+      },
+    );
   }
 
   async cronUpdate() {

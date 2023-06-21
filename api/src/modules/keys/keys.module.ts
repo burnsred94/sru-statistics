@@ -24,6 +24,6 @@ import { MockGenerator } from './utils';
     }),
   ],
   providers: [KeysRepository, KeysService, KeysProcessor, MockGenerator],
-  exports: [KeysService],
+  exports: [KeysService, MockGenerator],
 })
-export class KeysModule {}
+export class KeysModule { }
