@@ -167,9 +167,10 @@ export class ArticleController {
 
   @ApiAcceptedResponse({ description: 'Update article from profile' })
   @Post('update-from-profile')
-  async updateFromProfile(@Body() dto: UpdateFromProfileDto) {
+  async updateFromProfile(@Body() data) {
     try {
-      const { userId, towns } = dto.data;
+      const { userId, towns } = data;
+      console.log(userId, towns)
       await this.articleService.updateStatsFromProfile(userId, towns);
     } catch (error) {
       this.logger.error(error.message);
