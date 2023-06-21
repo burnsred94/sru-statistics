@@ -20,7 +20,7 @@ export class ArticleRepository {
   constructor(
     @InjectModel(Article.name) private readonly modelArticle: Model<Article>,
     private readonly keysService: KeysService,
-  ) {}
+  ) { }
 
   async findUserData(data, user: number, query: FindByCityQueryDto) {
     const find = await this.modelArticle.find({
@@ -48,6 +48,7 @@ export class ArticleRepository {
     return await this.modelArticle
       .find({
         userId: user,
+        active: true,
       })
       .populate({
         path: 'keys',
@@ -90,37 +91,37 @@ export class ArticleRepository {
 
       return query.articleId === String(_id)
         ? {
-            _id: _id,
-            article: article,
-            productName: productName,
-            productImg: productImg,
-            productRef: productRef,
-            userId: userId,
-            city: city,
-            city_id: city_id,
-            keys: chunks[query.page - 1],
-            meta: {
-              count: query.page,
-              pages_count: chunks.length,
-              total_keys: genKeys.length,
-            },
-          }
+          _id: _id,
+          article: article,
+          productName: productName,
+          productImg: productImg,
+          productRef: productRef,
+          userId: userId,
+          city: city,
+          city_id: city_id,
+          keys: chunks[query.page - 1],
+          meta: {
+            count: query.page,
+            pages_count: chunks.length,
+            total_keys: genKeys.length,
+          },
+        }
         : {
-            _id: _id,
-            article: article,
-            productName: productName,
-            productImg: productImg,
-            productRef: productRef,
-            userId: userId,
-            city: city,
-            city_id: city_id,
-            keys: chunks[0],
-            meta: {
-              count: 1,
-              pages_count: chunks.length,
-              total_keys: genKeys.length,
-            },
-          };
+          _id: _id,
+          article: article,
+          productName: productName,
+          productImg: productImg,
+          productRef: productRef,
+          userId: userId,
+          city: city,
+          city_id: city_id,
+          keys: chunks[0],
+          meta: {
+            count: 1,
+            pages_count: chunks.length,
+            total_keys: genKeys.length,
+          },
+        };
     });
 
     const resolved = await Promise.all(generateData);

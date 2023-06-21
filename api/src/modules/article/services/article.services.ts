@@ -104,6 +104,17 @@ export class ArticleService {
 
   async updateStatus(data: UpdateStatusDto, id: User) {
     const update = await this.articleRepository.updateStatus(data, id);
+    const find = await this.articleRepository.findByUser(id as unknown as number);
+
+    forEach(find, async (article) => {
+      if (article.article === update.article) {
+        await this.articleRepository.updateStatus({ articleId: article._id as unknown as string }, id)
+        this.eventEmitter.emit(EventsWS.REMOVE_ARTICLE, {
+          userId: article.userId,
+          cityId: article.city_id,
+        });
+      }
+    });
     if (update) {
       this.eventEmitter.emit(EventsWS.REMOVE_ARTICLE, {
         userId: update.userId,

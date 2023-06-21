@@ -102,7 +102,7 @@ export class ArticleProcessor {
           return {
             _id: itemTwo._id,
             timestamp: itemTwo.timestamp,
-            position: itemTwo.position > 0 ? (itemTwo.position / element.pwz.length).toFixed(0) : '2100+'
+            average: itemTwo.position > 0 ? (itemTwo.position / element.pwz.length).toFixed(0) : '2100+'
           }
         })
 
@@ -305,6 +305,7 @@ export class ArticleProcessor {
           },
           item.article,
         );
+
 
         const update = await this.articleService.update(key, item._id);
 
