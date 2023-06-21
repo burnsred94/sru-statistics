@@ -286,7 +286,6 @@ export class ArticleProcessor {
     const { filtered, keys } = job.data;
 
     forEach(filtered, (item) => {
-
       const filterPvz = item.keys[0].pwz.map(pwz => ({ name: pwz.name }));
 
       forEach(keys, async keyName => {

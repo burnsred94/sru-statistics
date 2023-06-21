@@ -20,7 +20,7 @@ import { EventsWS } from './events';
 export class ArticleGateway {
   private logger: Logger = new Logger('MessageGateway');
 
-  constructor(private readonly articleService: ArticleService) {}
+  constructor(private readonly articleService: ArticleService) { }
 
   clients = [];
 
@@ -42,7 +42,10 @@ export class ArticleGateway {
         payload.data.userId,
         payload.query,
       );
-      client.emit('findByCity', findAll);
+      const hasKeys = findAll.every(object => object.hasOwnProperty('keys'));
+      if (hasKeys) {
+        client.emit('findByCity', findAll);
+      }
     } else {
       const findCity = await this.articleService.findByCity(
         { city: payload.data.city_id, periods: payload.data.periods },
@@ -50,7 +53,11 @@ export class ArticleGateway {
         payload.query as FindByCityQueryDto,
       );
 
-      client.emit('findByCity', findCity);
+      const hasKeys = findCity.every(object => object.hasOwnProperty('keys'));
+      if (hasKeys) {
+        client.emit('findByCity', findCity);
+      }
+
     }
   }
 
@@ -96,13 +103,29 @@ export class ArticleGateway {
     );
 
     if (findClient) {
-      const findByCity = await this.articleService.findByCity(
-        { city: findClient.data.city_id, periods: findClient.data.periods },
-        findClient.data.userId,
-        findClient.query,
-      );
+      if (findClient.data.city_id === 'all') {
+        const findAll = await this.articleService.findAllCity(
+          { periods: findClient.data.periods },
+          findClient.data.userId,
+          findClient.query,
+        );
 
-      await findClient.client.emit('findByCity', findByCity);
+        const hasKeys = findAll.every(object => object.hasOwnProperty('keys'));
+        if (hasKeys) {
+          await findClient.client.emit('findByCity', findAll);
+        }
+
+      } else {
+        const findByCity = await this.articleService.findByCity(
+          { city: findClient.data.city_id, periods: findClient.data.periods },
+          findClient.data.userId,
+          findClient.query,
+        );
+        const hasKeys = findByCity.every(object => object.hasOwnProperty('keys'));
+        if (hasKeys) {
+          await findClient.client.emit('findByCity', findByCity);
+        }
+      }
     }
   }
 
