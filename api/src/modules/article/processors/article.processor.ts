@@ -43,6 +43,7 @@ export class ArticleProcessor {
             productImg: current.productImg,
             keys: current.keys,
           });
+
         } else {
           const index = accumulator.findIndex(
             item => item.article === current.article,
@@ -244,12 +245,13 @@ export class ArticleProcessor {
 
   @Process({
     name: RedisProcessorsArticleEnum.ARTICLE_CREATE,
-    concurrency: 1000,
+    concurrency: 10,
   })
   async createKeys(job: Job) {
     const { pvz, keys, article, articleId, userId, city_id } = job.data.search;
 
     forEach(keys, async keyName => {
+
       const keyResult: IKeyResult = await this.fetchSearchProvider.fetchSearch(
         pvz,
         article,
