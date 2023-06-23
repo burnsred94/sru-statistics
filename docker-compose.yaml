@@ -1,5 +1,10 @@
 version: '3.8'
 
+networks:
+  geo_default:
+    external:
+      name: geo_default
+
 services:
   api:
     container_name: sru-statistics-api
@@ -13,6 +18,8 @@ services:
       - $PORT:$PORT_DEV
     volumes:
       - ./api/:/usr/src/app
+    networks:
+      - geo_default
 
   redis:
     container_name: redis
@@ -22,6 +29,8 @@ services:
       - 6379:6379
     volumes:
       - ./api/redis:/data
+    networks:
+      - geo_default
 
   redisinsight:
     image: redislabs/redisinsight:latest
@@ -29,13 +38,5 @@ services:
       - '8001:8001'
     volumes:
       - ./api/redis/data/redisinsight:/db
-
-networks:
-  api:
-    driver: geo_default
-  redis:
-    driver: geo_default
-  redisinsight:
-    driver: geo_default
-  mongodb:
-    driver: geo_default
+    networks:
+      - geo_default
