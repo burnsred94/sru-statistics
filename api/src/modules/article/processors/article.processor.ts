@@ -229,10 +229,12 @@ export class ArticleProcessor {
           );
 
           if (update) {
-            this.eventEmitter.emit(EventsWS.CREATE_ARTICLE, {
-              userId: item.userId,
-              cityId: item.cityId,
-            });
+            setTimeout(() => {
+              this.eventEmitter.emit(EventsWS.CREATE_ARTICLE, {
+                userId: item.userId,
+                cityId: item.cityId,
+              });
+            }, 5000)
           }
         }
       });
