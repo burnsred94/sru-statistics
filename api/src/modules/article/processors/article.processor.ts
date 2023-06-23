@@ -73,7 +73,7 @@ export class ArticleProcessor {
         .groupBy('key')
         .mapValues((group) => {
           const pwz = flatMap(group, 'pwz');
-          return { key: group[0].key, pwz, ids: group.map(item => ({ key: item.key, _id: item._id })) };
+          return { _id: group[0]._id, key: group[0].key, pwz };
         })
         .values()
         .value();
@@ -243,6 +243,8 @@ export class ArticleProcessor {
     forEach(dataResult, async item => {
       await this.keysService.pvzUpdate(item._id, item.pwz);
     });
+
+
   }
 
   @Process({
