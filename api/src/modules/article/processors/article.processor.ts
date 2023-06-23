@@ -73,7 +73,7 @@ export class ArticleProcessor {
         .groupBy('key')
         .mapValues((group) => {
           const pwz = flatMap(group, 'pwz');
-          return { key: group[0].key, pwz };
+          return { key: group[0].key, pwz, ids: group.map(item => ({ key: item.key, _id: item._id })) };
         })
         .values()
         .value();
