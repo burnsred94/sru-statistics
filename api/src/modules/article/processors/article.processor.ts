@@ -73,7 +73,7 @@ export class ArticleProcessor {
         .groupBy('key')
         .mapValues((group) => {
           const pwz = flatMap(group, 'pwz');
-          return { _id: group[0]._id, key: group[0].key, pwz };
+          return { key: group[0].key, pwz };
         })
         .values()
         .value();
@@ -110,6 +110,14 @@ export class ArticleProcessor {
         return { key: element.key, _id: element.key._id, average: averageResult, pwz: element.pwz };
       });
 
+      const keys = average.map((value, index) => {
+        return {
+          key: value.key,
+          _id: find[0].keys[index]._id,
+          average: value.average,
+          pwz: value.pwz
+        }
+      })
 
       return {
         ids: item.ids,
@@ -117,7 +125,7 @@ export class ArticleProcessor {
         productName: item.productName,
         productRef: item.productRef,
         productImg: item.productImg,
-        keys: average,
+        keys: keys,
       }
     })
 
