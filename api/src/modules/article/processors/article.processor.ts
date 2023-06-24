@@ -119,6 +119,7 @@ export class ArticleProcessor {
         }
       })
 
+
       return {
         ids: item.ids,
         article: item.article,
@@ -134,6 +135,7 @@ export class ArticleProcessor {
         const mockData = await this.mockGenerator.keyGenerator(value, data.periods)
         return {
           key: mockData.key,
+          _id: value._id,
           average: mockData.average,
           pwz: mockData.pwz
         }
