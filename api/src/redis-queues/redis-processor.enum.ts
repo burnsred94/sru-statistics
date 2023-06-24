@@ -5,6 +5,7 @@ export enum RedisProcessorsArticleEnum {
   ARTICLE_UPDATE_STATS_EVERY_DAY = 'update-article-stats',
   UPDATE_ARTICLE_FROM_PROFILE = 'update-article-profile',
   FIND_ALL_BY_USER = 'find-all-by-user',
+  REMOVE_KEYS = 'remove-keys',
 }
 
 export enum RedisProcessorsKeysEnum {

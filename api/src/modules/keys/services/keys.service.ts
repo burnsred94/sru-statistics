@@ -23,6 +23,10 @@ export class KeysService {
     return await this.keysRepository.find(data);
   }
 
+  async findByKey(user: string, key: string) {
+    return await this.keysRepository.findByName(user, key);
+  }
+
   async create(data: ICreateKey, article: string) {
     const keyJob = await this.keysQueue.add(
       RedisProcessorsKeysEnum.CREATE_KEY,

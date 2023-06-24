@@ -29,6 +29,8 @@ export class ArticleRepository {
     return find;
   }
 
+
+
   async create(article: Article) {
     const newArticle = new ArticleEntity(article);
     const articleCreate = await this.modelArticle.create(newArticle);
@@ -154,15 +156,20 @@ export class ArticleRepository {
   async removeKey(data: RemoveKeyDto, id: User) {
     const find = await this.modelArticle.findById(data.articleId);
 
-    return await this.modelArticle.findOneAndUpdate(
-      {
-        _id: data.articleId,
-        userId: id,
-      },
-      {
-        keys: find.keys.filter(key => String(key._id) !== String(data.keyId)),
-      },
-    );
+
+
+
+    // await this.modelArticle.findOneAndUpdate(
+    //   {
+    //     _id: data.articleId,
+    //     userId: id,
+    //   },
+    //   {
+    //     keys: find.keys.filter(key => String(key._id) !== String(data.keyId)),
+    //   },
+    // );
+
+    return find
   }
 
   async find() {

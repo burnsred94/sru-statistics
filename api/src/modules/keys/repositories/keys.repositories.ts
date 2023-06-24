@@ -10,12 +10,20 @@ import { Keys } from '../schemas';
 import { Pvz } from 'src/modules/pvz';
 import { Average } from 'src/modules/average';
 import { Periods } from 'src/modules/periods';
+import { forEach } from 'lodash';
 
 @Injectable()
 export class KeysRepository {
   constructor(
     @InjectModel(Keys.name) private readonly keysModel: Model<Keys>,
-  ) {}
+  ) { }
+
+  async findByName(userId: string, name: string) {
+    const find = await this.keysModel.find({ userId: userId, key: name })
+    forEach(find, async (key) => {
+      await this.keysModel.findByIdAndDelete(key._id)
+    })
+  }
 
   async find(data: { userId: number; cityId: string }) {
     return await this.keysModel

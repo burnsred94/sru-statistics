@@ -336,6 +336,15 @@ export class ArticleProcessor {
   }
 
   @Process({
+    name: RedisProcessorsArticleEnum.REMOVE_KEYS,
+    concurrency: 1000,
+  })
+  async removeKeys(job: Job) {
+    const { userId, id } = job.data;
+    await this.keysService.findByKey(userId, id);
+  }
+
+  @Process({
     name: RedisProcessorsArticleEnum.ARTICLE_UPDATE_STATS_EVERY_DAY,
     concurrency: 1000,
   })
