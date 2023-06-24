@@ -107,7 +107,7 @@ export class ArticleProcessor {
           }
         })
 
-        return { key: element.key, average: averageResult, pwz: element.pwz };
+        return { key: element.key, _id: element.key._id, average: averageResult, pwz: element.pwz };
       });
 
 
