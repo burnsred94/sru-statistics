@@ -126,7 +126,7 @@ export class ArticleService {
 
     const removeKey = await this.articleRepository.removeKey(data, user);
 
-    const find = await this.articleQueue.add(RedisProcessorsArticleEnum.REMOVE_KEYS, { user, id: removeKey._id })
+
 
     if (removeKey) {
       this.eventEmitter.emit(EventsWS.REMOVE_KEY, {

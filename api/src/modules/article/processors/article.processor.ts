@@ -341,6 +341,7 @@ export class ArticleProcessor {
   })
   async removeKeys(job: Job) {
     const { userId, id } = job.data;
+    console.log(userId, id);
     await this.keysService.findByKey(userId, id);
   }
 

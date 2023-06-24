@@ -11,7 +11,7 @@ import {
   UpdateStatusDto,
 } from '../dto';
 import { Keys, KeysService } from 'src/modules/keys';
-import { chunk, map, take } from 'lodash';
+import { chunk, forEach, map, take } from 'lodash';
 import { Pvz } from 'src/modules/pvz';
 import { Periods } from 'src/modules/periods';
 
@@ -154,22 +154,28 @@ export class ArticleRepository {
   }
 
   async removeKey(data: RemoveKeyDto, id: User) {
-    const find = await this.modelArticle.findById(data.articleId);
+    const find = await this.modelArticle.findById(data.articleId).populate({ path: 'keys', select: 'key', model: Keys.name })
 
+    const keyName = find.keys.find(key => String(key._id) === String(data.keyId))
+    const findAll = await this.modelArticle.find({ userId: id, article: find.article }).populate({ path: 'keys', select: 'key', model: Keys.name })
 
+    const dataUp = map(findAll, async value => {
+      await this.modelArticle.findOneAndUpdate(
+        {
+          _id: value._id,
+          userId: id,
+        },
+        {
+          //@ts-ignore
+          keys: value.keys.filter(key => key.key !== keyName.key),
+        },
+      );
+      return 'success';
+    })
 
+    const resolved = await Promise.all(dataUp)
 
-    // await this.modelArticle.findOneAndUpdate(
-    //   {
-    //     _id: data.articleId,
-    //     userId: id,
-    //   },
-    //   {
-    //     keys: find.keys.filter(key => String(key._id) !== String(data.keyId)),
-    //   },
-    // );
-
-    return find
+    return resolved
   }
 
   async find() {
