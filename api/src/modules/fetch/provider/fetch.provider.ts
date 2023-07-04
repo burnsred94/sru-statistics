@@ -43,13 +43,11 @@ export class FetchProvider {
     const getKeys = await this.keysService.findById(keys, [currentDate], 'all');
     const formatted = await this.fetchUtils.formatDataToParse(getKeys);
 
-    process.nextTick(() => {
-      forEach(formatted, async element => {
-        await new Promise(resolve => {
-          setTimeout(resolve, 50);
-        });
-        await axios.post(url, element)
+    forEach(formatted, async element => {
+      await new Promise(resolve => {
+        setTimeout(resolve, 50);
       });
+      await axios.post(url, element)
     })
   }
 }

@@ -18,7 +18,7 @@ export class PvzController {
     @Res() response: Response,
   ) {
     try {
-      process.nextTick(async () => await this.pvzService.update(data));
+      await this.pvzService.update(data)
 
       return response.status(HttpStatus.OK).send({
         data: TICK_UPDATED_PERIOD,
