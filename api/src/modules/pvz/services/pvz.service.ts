@@ -36,6 +36,7 @@ export class PvzService {
 
   async update(data: UpdatePvzDto) {
     await this.periodsService.update(data.periodId, data.position);
+    console.log('update', data)
     await this.pvzRepository.updateStatus(data.addressId);
 
     const findNonActive = await this.pvzRepository.findNonActive(data.key_id);

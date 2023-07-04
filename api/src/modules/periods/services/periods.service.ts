@@ -13,6 +13,7 @@ export class PeriodsService {
   }
 
   async update(id: Types.ObjectId, position: string) {
+    console.log('updating:', id, position);
     await this.periodRepository.update(id, position);
   }
 }
