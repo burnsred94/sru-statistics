@@ -9,14 +9,14 @@ export class FetchUtils {
       const addresses = map(pwz, element => {
         return {
           name: element.name,
-          addressId: element._id,
-          periodId: element.position[0]._id,
+          addressId: String(element._id),
+          periodId: String(element.position[0]._id),
         };
       });
       return {
         article: article,
         key: key,
-        key_id: item._id,
+        key_id: String(item._id),
         pvz: addresses,
       };
     });
