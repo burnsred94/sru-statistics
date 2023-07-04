@@ -19,7 +19,7 @@ import { EventsWS } from '../events';
 export class ArticleGateway {
   private logger: Logger = new Logger('MessageGateway');
 
-  constructor(private readonly articleService: ArticleService) {}
+  constructor(private readonly articleService: ArticleService) { }
 
   clients = [];
 
@@ -90,16 +90,18 @@ export class ArticleGateway {
       client => client.data?.userId === send.userId,
     );
 
-    const findByCity = await this.articleService.findByCity(
-      {
-        city: findClient.data.city,
-        periods: findClient.data.periods,
-        userId: findClient.data.userId,
-      },
-      findClient.data.userId,
-      findClient.query,
-    );
-    await findClient.client.emit('findByCity', findByCity);
+    if (findClient) {
+      const findByCity = await this.articleService.findByCity(
+        {
+          city: findClient.data.city,
+          periods: findClient.data.periods,
+          userId: findClient.data.userId,
+        },
+        findClient.data.userId,
+        findClient.query,
+      );
+      await findClient.client.emit('findByCity', findByCity);
+    }
   }
 
   async checkClient(index: number, payload: SMFindByCityDto, client: Socket) {
