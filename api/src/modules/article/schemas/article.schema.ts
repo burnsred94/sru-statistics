@@ -16,10 +16,10 @@ export class Article {
   @Prop({ type: String })
   productName: string;
 
-  @Prop({ type: String })
+  @Prop({ type: String, default: null })
   productRef: string;
 
-  @Prop({ type: String })
+  @Prop({ type: String, default: null })
   productImg: string;
 
   @Prop({ type: Boolean })

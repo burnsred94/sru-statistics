@@ -24,7 +24,7 @@ export class ArticleService {
     private readonly keyService: KeysService,
     private readonly utilsDestructor: TownsDestructor,
     private readonly eventEmitter: EventEmitter2,
-  ) {}
+  ) { }
 
   //Cделано, осталось добавить запросы на парсер
   async create(data: CreateArticleDto, user: User) {
@@ -43,8 +43,8 @@ export class ArticleService {
     });
 
     const newArticle = await this.articleRepository.create({
-      productImg: productNameData.status ? productNameData.img : '',
-      productRef: productNameData.status ? productNameData.product_url : '',
+      productImg: productNameData.status ? productNameData.img : null,
+      productRef: productNameData.status ? productNameData.product_url : null,
       userId: user,
       article: data.article,
       active: true,

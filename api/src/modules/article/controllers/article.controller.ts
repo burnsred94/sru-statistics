@@ -18,12 +18,13 @@ import {
 import { CurrentUser, JwtAuthGuard, User } from 'src/modules';
 import { ArticleService } from '../services';
 import { Response } from 'express';
+import { initArticleMessage } from 'src/constatnts';
 
 @Controller('v1')
 export class ArticleController {
   protected readonly logger = new Logger(ArticleController.name);
 
-  constructor(private readonly articleService: ArticleService) {}
+  constructor(private readonly articleService: ArticleService) { }
 
   @ApiAcceptedResponse({ description: 'Create Statistic' })
   @UseGuards(JwtAuthGuard)
@@ -34,12 +35,13 @@ export class ArticleController {
     @Res() response: Response,
   ) {
     try {
-      const tick = process.nextTick(
+      process.nextTick(
         async () => await this.articleService.create(data, user),
       );
 
+      const initArticle = initArticleMessage(data.article);
       return response.status(HttpStatus.OK).send({
-        data: tick,
+        data: initArticle,
         error: [],
         status: response.statusCode,
       });

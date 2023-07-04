@@ -100,7 +100,7 @@ export class ArticleGateway {
         findClient.data.userId,
         findClient.query,
       );
-      await findClient.client.emit('findByCity', findByCity);
+      await findClient.client.emit('findByCity', findByCity.reverse());
     }
   }
 
