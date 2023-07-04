@@ -7,6 +7,8 @@ import { MockGenerator } from '../utils';
 import { AverageService } from 'src/modules/average';
 import { IKey } from 'src/interfaces';
 import { PvzService } from 'src/modules/pvz';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { EventsAverage, EventsWS } from 'src/modules/article/events';
 
 @Injectable()
 export class KeysService {
@@ -15,6 +17,7 @@ export class KeysService {
     private readonly pvzService: PvzService,
     private readonly mockGenerator: MockGenerator,
     private readonly averageService: AverageService,
+    private readonly eventEmitter: EventEmitter2
   ) { }
 
   async create(data: IKey) {
@@ -32,7 +35,7 @@ export class KeysService {
       });
 
       const pvz = map(data.pvz, async pvz => {
-        return await this.pvzService.create(pvz, data.article, data.userId, newKey);
+        return await this.pvzService.create(pvz, data.article, data.userId, String(newKey));
       });
 
       const resolved = await Promise.all(pvz);
@@ -48,7 +51,14 @@ export class KeysService {
     return resolvedKeys;
   }
 
+  @OnEvent(EventsAverage.UPDATE_AVERAGE)
+  async updateAverage(payload: { average: number, key_id: string }) {
+    const id = payload.key_id as unknown as Types.ObjectId
+    const key = await this.keysRepository.findById(id, 'all');
+    await this.averageService.update(key.average.at(-1)._id, String(payload.average));
 
+    this.eventEmitter.emit(EventsWS.CREATE_ARTICLE, { userId: key.userId });
+  }
 
   async findById(
     ids: Array<{ _id: Types.ObjectId; active: boolean }>,

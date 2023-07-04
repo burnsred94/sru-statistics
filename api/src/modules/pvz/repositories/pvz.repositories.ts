@@ -33,13 +33,13 @@ export class PvzRepository {
     await this.pvzModel.findByIdAndUpdate({ _id: id }, { $set: { status: StatusPvz.SUCCESS } })
   }
 
-  async findNonActive(id: Types.ObjectId) {
+  async findNonActive(id: string) {
     const data = await this.pvzModel.find({ key_id: id, status: StatusPvz.PENDING })
       .lean();
     return data.length;
   }
 
-  async findActive(id: Types.ObjectId) {
+  async findActive(id: string) {
     const query = await this.pvzModel.find({ key_id: id, status: StatusPvz.SUCCESS })
       .populate({ path: 'position', select: 'position', model: Periods.name })
       .lean();

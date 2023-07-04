@@ -16,8 +16,8 @@ export class Pvz {
   @Prop({ type: String })
   status: string;
 
-  @Prop({ type: Types.ObjectId })
-  key_id: Types.ObjectId
+  @Prop({ type: String })
+  key_id: string
 
   @Prop({ type: String })
   city_id: string;

@@ -18,7 +18,7 @@ export class PvzService {
     private readonly eventEmitter: EventEmitter2
   ) { }
 
-  async create(value, article: string, userId: User, keyId: Types.ObjectId) {
+  async create(value, article: string, userId: User, keyId: string) {
     const period = await this.periodsService.create('Ожидается');
     const pvz = await this.pvzRepository.create({
       article: article,
@@ -40,15 +40,18 @@ export class PvzService {
 
     const findNonActive = await this.pvzRepository.findNonActive(data.key_id);
 
+    console.log(findNonActive);
+
     if (findNonActive === 0) {
       this.eventEmitter.emit(EventsAverage.CALCULATE_AVERAGE, data.key_id);
     }
   }
 
   @OnEvent(EventsAverage.CALCULATE_AVERAGE)
-  async calculateAverage(payload: Types.ObjectId) {
+  async calculateAverage(payload: string) {
     const data = await this.pvzRepository.findActive(payload)
     const average = await this.pvzUtils.calculateAverage(data);
+    this.eventEmitter.emit(EventsAverage.UPDATE_AVERAGE, { average: average, key_id: payload });
   }
 
   // async updatePeriod(position, difference, id) {

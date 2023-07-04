@@ -19,7 +19,7 @@ export class FetchProvider {
     private readonly configService: ConfigService,
     private readonly keysService: KeysService,
     private readonly fetchUtils: FetchUtils,
-  ) {}
+  ) { }
 
   async fetchArticleName(article: string) {
     const url = await this.configService.get('PRODUCT_SERVICE_GET_ARTICLE');
@@ -37,25 +37,25 @@ export class FetchProvider {
   @OnEvent(EventsParser.SEND_TO_PARSE)
   async fetchParser(payload: { keysId: Types.ObjectId[] }) {
     const url = await this.configService.get('SEARCH_API_URL');
-    console.log(url);
     const { keysId } = payload;
     const keys = map(keysId, key => ({ _id: key, active: true }));
     const currentDate = new PeriodsEntity('-').date();
     const getKeys = await this.keysService.findById(keys, [currentDate], 'all');
     const formatted = await this.fetchUtils.formatDataToParse(getKeys);
 
-    forEach(formatted, async element => {
-      await new Promise(resolve => {
-        setTimeout(resolve, 50);
+    process.nextTick(() => {
+      forEach(formatted, async element => {
+        await new Promise(resolve => {
+          setTimeout(resolve, 50);
+        });
+        await axios.post(url, {
+          method: 'POST',
+          body: JSON.stringify(element),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
       });
-      //Отправление данных для парсера
-      // await axios.post(url, {
-      //   method: 'POST',
-      //   body: JSON.stringify(element),
-      //   headers: {
-      //     'Content-Type': 'application/json'
-      //   }
-      // })
-    });
+    })
   }
 }

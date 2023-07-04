@@ -10,12 +10,13 @@ export class FetchUtils {
         return {
           name: element.name,
           addressId: element._id,
-          positionId: element.position[0]._id,
+          periodId: element.position[0]._id,
         };
       });
       return {
         article: article,
         key: key,
+        key_id: item._id,
         pvz: addresses,
       };
     });

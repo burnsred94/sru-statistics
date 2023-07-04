@@ -8,7 +8,7 @@ export class PvzEntity {
   active: boolean;
   city: string;
   status: string;
-  key_id: Types.ObjectId;
+  key_id: string;
   city_id: string;
   name: string;
   position: Types.ObjectId[];

@@ -22,5 +22,5 @@ export class UpdatePvzDto {
   key: string;
   @IsNotEmpty()
   @IsString()
-  key_id: Types.ObjectId;
+  key_id: string;
 }

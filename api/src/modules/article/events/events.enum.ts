@@ -12,4 +12,5 @@ export enum EventsParser {
 
 export enum EventsAverage {
   CALCULATE_AVERAGE = 'calculate.average',
+  UPDATE_AVERAGE = 'update.average',
 }
