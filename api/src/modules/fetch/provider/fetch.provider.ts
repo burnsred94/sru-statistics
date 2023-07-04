@@ -48,14 +48,13 @@ export class FetchProvider {
         await new Promise(resolve => {
           setTimeout(resolve, 50);
         });
-        console.log(element);
-        // await axios.post(url, {
-        //   method: 'POST',
-        //   body: element,
-        //   headers: {
-        //     'Content-Type': 'application/json'
-        //   }
-        // })
+        await axios.post(url, {
+          method: 'POST',
+          body: element,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
       });
     })
   }
