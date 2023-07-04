@@ -1,14 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { PeriodsRepository } from '../repositories';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class PeriodsService {
-  constructor(private readonly periodRepository: PeriodsRepository) {}
+  constructor(
+    private readonly periodRepository: PeriodsRepository,
+  ) { }
 
-  async create(value: number, difference?: string) {
-    return await this.periodRepository.create(
-      value === 0 ? '2000+' : String(value),
-      difference,
-    );
+  async create(value: string, difference?: string) {
+    return await this.periodRepository.create(value, difference);
+  }
+
+  async update(id: Types.ObjectId, position: string) {
+    await this.periodRepository.update(id, position);
   }
 }

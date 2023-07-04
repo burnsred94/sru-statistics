@@ -1,18 +1,16 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Article, ArticleSchema } from './schemas';
 import { FetchModule } from '../fetch/fetch.module';
+import { JwtStrategy } from '../auth';
+import { KeysModule } from '../keys';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { PvzModule } from '../pvz';
+import { Article, ArticleSchema } from './schemas';
 import { ArticleController } from './controllers';
 import { ArticleService } from './services';
 import { ArticleRepository } from './repositories';
-import { JwtStrategy } from '../auth';
-import { KeysModule } from '../keys';
-import { ArticleProcessor } from './processors';
-import { BullModule } from '@nestjs/bull';
-import { RedisQueueEnum } from 'src/redis-queues';
-import { ArticleGateway } from './gateways/article.gateway';
-import { EventEmitterModule } from '@nestjs/event-emitter';
-import { PvzModule } from '../pvz';
+import { ArticleGateway } from './gateways';
+import { TownsDestructor } from './utils';
 
 @Module({
   imports: [
@@ -20,23 +18,16 @@ import { PvzModule } from '../pvz';
     FetchModule,
     KeysModule,
     PvzModule,
-    EventEmitterModule.forRoot(),
-    BullModule.registerQueue({
-      name: RedisQueueEnum.ARTICLE_QUEUE,
-      defaultJobOptions: {
-        attempts: 1,
-        removeOnFail: true,
-      },
-    }),
+    EventEmitterModule.forRoot({ global: true, maxListeners: 100 }),
   ],
   controllers: [ArticleController],
   providers: [
     ArticleService,
     ArticleRepository,
     JwtStrategy,
-    ArticleProcessor,
     ArticleGateway,
+    TownsDestructor,
   ],
   exports: [ArticleService],
 })
-export class ArticleModule {}
+export class ArticleModule { }

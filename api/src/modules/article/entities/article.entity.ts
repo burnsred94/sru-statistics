@@ -19,8 +19,6 @@ export class ArticleEntity {
     this.productRef = data.productRef;
     this.productImg = data.productImg;
     this.active = true;
-    this.city_id = data.city_id;
-    this.city = data.city;
     this.productName = data.productName;
     this.keys = data.keys?.length > 0 ? data.keys : [];
   }

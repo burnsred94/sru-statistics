@@ -1,14 +1,13 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from './modules/database/database.module';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { CronModule } from './modules/cron/cron.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
-import { jwtOptions } from './modules/configs/jwt.config';
+import { jwtOptions } from './configs/jwt.config';
 import { ArticleModule } from './modules/article/article.module';
 import { FetchModule } from './modules/fetch/fetch.module';
 import { KeysModule } from './modules/keys/keys.module';
-import { BullModule } from '@nestjs/bull';
 import { PvzModule } from './modules/pvz/pvz.module';
 import { PeriodsModule } from './modules/periods/periods.module';
 import { AverageModule } from './modules/average/average.module';
@@ -20,13 +19,6 @@ import { AverageModule } from './modules/average/average.module';
       envFilePath: '.env',
     }),
     DatabaseModule,
-    BullModule.forRootAsync({
-      useFactory: (configService: ConfigService) => ({
-        url: configService.get('REDIS_URL'),
-        prefix: 'statistics',
-      }),
-      inject: [ConfigService],
-    }),
     CronModule,
     JwtModule.registerAsync(jwtOptions),
     PassportModule,
@@ -38,4 +30,4 @@ import { AverageModule } from './modules/average/average.module';
     AverageModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

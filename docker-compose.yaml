@@ -11,32 +11,13 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-      target: production
+      target: development
+    command: npm run start:dev
     env_file:
       - ./api/.env
     ports:
       - $PORT:$PORT_DEV
     volumes:
       - ./api/:/usr/src/app
-    networks:
-      - geo_default
-
-  redis:
-    container_name: redis
-    image: redis
-    restart: unless-stopped
-    ports:
-      - 6379:6379
-    volumes:
-      - ./api/redis:/data
-    networks:
-      - geo_default
-
-  redisinsight:
-    image: redislabs/redisinsight:latest
-    ports:
-      - '8001:8001'
-    volumes:
-      - ./api/redis/data/redisinsight:/db
     networks:
       - geo_default

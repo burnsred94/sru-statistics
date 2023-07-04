@@ -8,9 +8,8 @@ import {
 import { pullAt } from 'lodash';
 import { Server, Socket } from 'socket.io';
 import { ArticleService } from '../services';
-import { SMFindByCityDto } from './dto';
-import { FindByCityQueryDto } from '../dto';
-import { EventsWS } from './events';
+import { FindByCityQueryDto, SMFindByCityDto } from '../dto';
+import { EventsWS } from '../events';
 
 @WebSocketGateway({
   cors: {
@@ -20,7 +19,7 @@ import { EventsWS } from './events';
 export class ArticleGateway {
   private logger: Logger = new Logger('MessageGateway');
 
-  constructor(private readonly articleService: ArticleService) { }
+  constructor(private readonly articleService: ArticleService) {}
 
   clients = [];
 
@@ -36,29 +35,17 @@ export class ArticleGateway {
 
     await this.checkClient(find, payload, client);
 
-    if (payload.data.city_id === 'all') {
-      const findAll = await this.articleService.findAllCity(
-        { periods: payload.data.periods },
-        payload.data.userId,
-        payload.query,
-      );
-      const hasKeys = findAll.every(object => object.hasOwnProperty('keys'));
-      if (hasKeys) {
-        client.emit('findByCity', findAll);
-      }
-    } else {
-      const findCity = await this.articleService.findByCity(
-        { city: payload.data.city_id, periods: payload.data.periods },
-        payload.data.userId,
-        payload.query as FindByCityQueryDto,
-      );
+    const findCity = await this.articleService.findByCity(
+      {
+        city: payload.data.city,
+        periods: payload.data.periods,
+        userId: payload.data.userId,
+      },
+      payload.data.userId,
+      payload.query as FindByCityQueryDto,
+    );
 
-      const hasKeys = findCity.every(object => object.hasOwnProperty('keys'));
-      if (hasKeys) {
-        client.emit('findByCity', findCity);
-      }
-
-    }
+    client.emit('findByCity', findCity);
   }
 
   afterInit(server: Server) {
@@ -79,6 +66,7 @@ export class ArticleGateway {
 
   @OnEvent(EventsWS.CREATE_ARTICLE)
   async sendCity(payload) {
+    console.log(payload);
     await this.sender(payload);
   }
 
@@ -89,12 +77,12 @@ export class ArticleGateway {
 
   @OnEvent(EventsWS.REMOVE_KEY)
   async sendCityRemoveKey(payload) {
-    await this.sender({ userId: payload.userId });
+    await this.sender(payload);
   }
 
   @OnEvent(EventsWS.REMOVE_ARTICLE)
   async sendCityRemoveArticle(payload) {
-    await this.sender({ userId: payload.userId });
+    await this.sender(payload);
   }
 
   async sender(send) {
@@ -102,31 +90,16 @@ export class ArticleGateway {
       client => client.data?.userId === send.userId,
     );
 
-    if (findClient) {
-      if (findClient.data.city_id === 'all') {
-        const findAll = await this.articleService.findAllCity(
-          { periods: findClient.data.periods },
-          findClient.data.userId,
-          findClient.query,
-        );
-
-        const hasKeys = findAll.every(object => object.hasOwnProperty('keys'));
-        if (hasKeys) {
-          await findClient.client.emit('findByCity', findAll);
-        }
-
-      } else {
-        const findByCity = await this.articleService.findByCity(
-          { city: findClient.data.city_id, periods: findClient.data.periods },
-          findClient.data.userId,
-          findClient.query,
-        );
-        const hasKeys = findByCity.every(object => object.hasOwnProperty('keys'));
-        if (hasKeys) {
-          await findClient.client.emit('findByCity', findByCity);
-        }
-      }
-    }
+    const findByCity = await this.articleService.findByCity(
+      {
+        city: findClient.data.city,
+        periods: findClient.data.periods,
+        userId: findClient.data.userId,
+      },
+      findClient.data.userId,
+      findClient.query,
+    );
+    await findClient.client.emit('findByCity', findByCity);
   }
 
   async checkClient(index: number, payload: SMFindByCityDto, client: Socket) {

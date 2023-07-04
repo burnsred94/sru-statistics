@@ -1,18 +1,21 @@
 import mongoose from 'mongoose';
+import { StatusPvz } from 'src/interfaces';
 
 export class PeriodsEntity {
-  position: number | string;
+  position: string;
   timestamp: string;
   difference: string;
+  status: string;
   options: {
     day: '2-digit';
     month: '2-digit';
     year: 'numeric';
   };
 
-  constructor(position: number | string, difference = '0') {
-    this.position = String(position);
+  constructor(position: string, difference = '0') {
+    this.position = position;
     this.difference = difference;
+    this.status = StatusPvz.PENDING;
     this.timestamp = this.date();
   }
 

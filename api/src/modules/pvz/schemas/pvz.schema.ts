@@ -11,6 +11,18 @@ export class Pvz {
   userId: User;
 
   @Prop({ type: String })
+  city: string;
+
+  @Prop({ type: String })
+  status: string;
+
+  @Prop({ type: Types.ObjectId })
+  key_id: Types.ObjectId
+
+  @Prop({ type: String })
+  city_id: string;
+
+  @Prop({ type: String })
   article: string;
 
   @Prop({ type: Boolean, default: true })

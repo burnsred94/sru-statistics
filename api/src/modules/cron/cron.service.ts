@@ -6,10 +6,10 @@ import { ArticleService } from '../article';
 export class CronService {
   constructor(private readonly articleService: ArticleService) {}
 
-  @Cron(CronExpression.EVERY_DAY_AT_6AM, {
-    timeZone: 'Europe/Moscow',
-  })
-  async updateKey() {
-    await this.articleService.cronUpdate();
-  }
+  // @Cron(CronExpression.EVERY_DAY_AT_6AM, {
+  //   timeZone: 'Europe/Moscow',
+  // })
+  // async updateKey() {
+  //   await this.articleService.cronUpdate();
+  // }
 }

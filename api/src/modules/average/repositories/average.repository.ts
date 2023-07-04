@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Average } from '../schemas';
 import { Model, Types } from 'mongoose';
-import { IAverage } from '../interfaces';
 import { AverageEntity } from '../entities';
+import { IAverage } from 'src/interfaces';
 
 @Injectable()
 export class AverageRepository {

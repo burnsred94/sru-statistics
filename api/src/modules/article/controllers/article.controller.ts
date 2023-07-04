@@ -5,23 +5,17 @@ import {
   HttpStatus,
   Logger,
   Post,
-  Query,
   Res,
   UseGuards,
 } from '@nestjs/common';
 import { ApiAcceptedResponse } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/modules/auth/auth.guard';
-import { CurrentUser } from 'src/modules/auth/user.decorator';
 import {
   AddKeyDto,
   CreateArticleDto,
-  FindByCityDto,
-  FindByCityQueryDto,
   RemoveKeyDto,
-  UpdateFromProfileDto,
-  UpdateStatusDto,
+  RemoveArticleDto,
 } from '../dto';
-import { User } from 'src/modules';
+import { CurrentUser, JwtAuthGuard, User } from 'src/modules';
 import { ArticleService } from '../services';
 import { Response } from 'express';
 
@@ -29,7 +23,7 @@ import { Response } from 'express';
 export class ArticleController {
   protected readonly logger = new Logger(ArticleController.name);
 
-  constructor(private readonly articleService: ArticleService) { }
+  constructor(private readonly articleService: ArticleService) {}
 
   @ApiAcceptedResponse({ description: 'Create Statistic' })
   @UseGuards(JwtAuthGuard)
@@ -40,10 +34,12 @@ export class ArticleController {
     @Res() response: Response,
   ) {
     try {
-      const newArticle = await this.articleService.create(data, user);
+      const tick = process.nextTick(
+        async () => await this.articleService.create(data, user),
+      );
 
       return response.status(HttpStatus.OK).send({
-        data: newArticle,
+        data: tick,
         error: [],
         status: response.statusCode,
       });
@@ -57,47 +53,16 @@ export class ArticleController {
     }
   }
 
-  @ApiAcceptedResponse({ description: 'Find by city' })
-  @UseGuards(JwtAuthGuard)
-  @Post('find-by-city')
-  async findByCity(
-    @Body() data: FindByCityDto,
-    @CurrentUser() user: User,
-    @Query() query: FindByCityQueryDto,
-    @Res() response: Response,
-  ) {
-    try {
-      const findByCity = await this.articleService.findByCity(
-        data,
-        user as unknown as number,
-        query,
-      );
-
-      return response.status(HttpStatus.OK).send({
-        status: HttpStatus.OK,
-        data: findByCity,
-        errors: [],
-      });
-    } catch (error) {
-      this.logger.error(error);
-      return response.status(HttpStatus.OK).send({
-        data: [],
-        error: [{ message: error.message }],
-        status: error.statusCode,
-      });
-    }
-  }
-
   @ApiAcceptedResponse({ description: 'Added keys by article' })
   @UseGuards(JwtAuthGuard)
-  @Post('add-key-by-article-from-city')
-  async addKeysByCity(
+  @Post('add-key-by-article')
+  async addKeys(
     @Body() dto: AddKeyDto,
     @CurrentUser() user: User,
     @Res() response: Response,
   ) {
     try {
-      const addKey = await this.articleService.addKeysByArticle(dto, user);
+      const addKey = await this.articleService.addKeys(dto, user);
       return response.status(HttpStatus.OK).send({
         status: HttpStatus.OK,
         data: addKey,
@@ -117,12 +82,12 @@ export class ArticleController {
   @UseGuards(JwtAuthGuard)
   @Delete('remove-article')
   async removeArticle(
-    @Body() dto: UpdateStatusDto,
+    @Body() dto: RemoveArticleDto,
     @CurrentUser() user: User,
     @Res() response: Response,
   ) {
     try {
-      const remove = await this.articleService.updateStatus(dto, user);
+      const remove = await this.articleService.removeArticle(dto, user);
 
       return response.status(HttpStatus.OK).send({
         status: HttpStatus.OK,
@@ -162,18 +127,6 @@ export class ArticleController {
         error: [{ message: error.message }],
         status: error.statusCode,
       });
-    }
-  }
-
-  @ApiAcceptedResponse({ description: 'Update article from profile' })
-  @Post('update-from-profile')
-  async updateFromProfile(@Body() data) {
-    try {
-      const { userId, towns } = data;
-      console.log(userId, towns)
-      await this.articleService.updateStatsFromProfile(userId, towns);
-    } catch (error) {
-      this.logger.error(error.message);
     }
   }
 }

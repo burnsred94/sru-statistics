@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { map } from 'lodash';
-import { IPwz } from 'src/modules/article';
+import { IPwz } from 'src/interfaces';
 
 @Injectable()
 export class FetchSearchProvider {

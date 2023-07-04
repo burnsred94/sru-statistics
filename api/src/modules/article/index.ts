@@ -5,5 +5,5 @@ export * from './entities';
 export * from './services';
 export * from './schemas';
 export * from './repositories';
-export * from './processors';
-export * from './interfaces';
+export * from './utils';
+export * from './gateways';

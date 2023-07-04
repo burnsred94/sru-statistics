@@ -11,6 +11,9 @@ export class Periods {
   timestamp: string;
 
   @Prop({ type: String })
+  status: string;
+
+  @Prop({ type: String })
   difference: string;
 }
 

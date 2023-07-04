@@ -17,14 +17,17 @@ export class Keys {
   @Prop({ type: Number })
   userId: User;
 
-  @Prop({ type: String })
-  city_id: string;
+  @Prop({ type: Boolean, default: true })
+  active: boolean;
+
+  @Prop({ type: Number, default: 0 })
+  countPvz: number;
 
   @Prop({ type: [Types.ObjectId], ref: Average.name })
   average: Types.ObjectId[];
 
   @Prop({ type: [Types.ObjectId], ref: Pvz.name })
-  pwz: Types.ObjectId[];
+  pwz?: Types.ObjectId[];
 }
 
 export const KeysSchema = SchemaFactory.createForClass(Keys);

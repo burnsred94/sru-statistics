@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { IAverage } from '../interfaces';
+import { IAverage } from 'src/interfaces';
 
 export class AverageEntity {
   timestamp: string;
