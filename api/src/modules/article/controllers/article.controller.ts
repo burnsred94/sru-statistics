@@ -41,7 +41,7 @@ export class ArticleController {
 
       const initArticle = initArticleMessage(data.article);
       return response.status(HttpStatus.OK).send({
-        data: initArticle,
+        data: { message: initArticle },
         error: [],
         status: response.statusCode,
       });
