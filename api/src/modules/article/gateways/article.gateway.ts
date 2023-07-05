@@ -20,6 +20,7 @@ import { EventsWS } from '../events';
 export class ArticleGateway {
   private logger: Logger = new Logger('MessageGateway');
 
+
   constructor(private readonly articleService: ArticleService) { }
 
   clients = [];
@@ -46,7 +47,8 @@ export class ArticleGateway {
       payload.query as FindByCityQueryDto,
     );
 
-    process.nextTick(() => client.compress(true).emit('findByCity', findCity));
+    const reverse = findCity.reverse();
+    process.nextTick(() => client.compress(true).emit('findByCity', reverse));
   }
 
   afterInit(server: Server) {
@@ -102,7 +104,8 @@ export class ArticleGateway {
         findClient.query,
       );
 
-      process.nextTick(() => findClient.client.compress(true).emit('findByCity', findByCity.reverse()));
+      const reverse = findByCity.reverse();
+      process.nextTick(() => findClient.client.compress(true).emit('findByCity', reverse));
     }
   }
 
