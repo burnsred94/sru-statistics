@@ -19,6 +19,7 @@ export class PeriodsRepository {
   }
 
   async update(id: Types.ObjectId, position: string) {
+
     return await this.periodModel.findByIdAndUpdate(
       { _id: id },
       { position: position, status: StatusPvz.SUCCESS }
