@@ -52,11 +52,10 @@ export class KeysService {
   }
 
   @OnEvent(EventsAverage.UPDATE_AVERAGE)
-  async updateAverage(payload: { average: number, key_id: string }) {
+  async updateAverage(payload: { average: string, key_id: string }) {
     const id = payload.key_id as unknown as Types.ObjectId
     const key = await this.keysRepository.findById(id, 'all');
-    await this.averageService.update(key.average.at(-1)._id, String(payload.average));
-    console.log(key)
+    await this.averageService.update(key.average.at(-1)._id, payload.average);
 
     this.eventEmitter.emit(EventsWS.CREATE_ARTICLE, { userId: key.userId });
   }

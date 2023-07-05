@@ -12,7 +12,7 @@ export class PeriodsService {
     return await this.periodRepository.create(value, difference);
   }
 
-  async update(id: Types.ObjectId, position: string) {
+  async update(id: Types.ObjectId, position: number) {
     await this.periodRepository.update(id, position);
   }
 }

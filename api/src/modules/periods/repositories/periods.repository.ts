@@ -18,11 +18,11 @@ export class PeriodsRepository {
     return newPeriodSave._id;
   }
 
-  async update(id: Types.ObjectId, position: string) {
-
+  async update(id: Types.ObjectId, position: number) {
+    const pos = position === 0 ? '1000+' : String(position)
     return await this.periodModel.findByIdAndUpdate(
       { _id: id },
-      { position: position, status: StatusPvz.SUCCESS }
+      { position: pos, status: StatusPvz.SUCCESS }
     );
   }
 }

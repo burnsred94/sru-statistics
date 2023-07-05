@@ -51,7 +51,8 @@ export class PvzService {
   async calculateAverage(payload: string) {
     const data = await this.pvzRepository.findActive(payload)
     const average = await this.pvzUtils.calculateAverage(data);
-    this.eventEmitter.emit(EventsAverage.UPDATE_AVERAGE, { average: average, key_id: payload });
+    const checkAverage = average === 0 ? '1000+' : String(average);
+    this.eventEmitter.emit(EventsAverage.UPDATE_AVERAGE, { average: checkAverage, key_id: payload });
   }
 
   // async updatePeriod(position, difference, id) {

@@ -16,7 +16,7 @@ export class UpdatePvzDto {
   periodId: Types.ObjectId;
   @IsNotEmpty()
   @IsString()
-  position: string;
+  position: number;
   @IsNotEmpty()
   @IsString()
   key: string;
