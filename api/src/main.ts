@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
+import * as compression from 'compression'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -11,6 +12,8 @@ async function bootstrap() {
   app.setGlobalPrefix(`${configService.get('PROJECT')}`);
 
   app.enableCors();
+
+  app.use(compression())
 
   app.useGlobalPipes(new ValidationPipe());
 

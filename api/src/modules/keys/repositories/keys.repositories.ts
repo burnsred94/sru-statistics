@@ -12,10 +12,12 @@ import { forEach } from 'lodash';
 export class KeysRepository {
   constructor(
     @InjectModel(Keys.name) private readonly keysModel: Model<Keys>,
-  ) {}
+  ) { }
 
   async findByName(userId: string, name: string) {
-    const find = await this.keysModel.find({ userId: userId, key: name });
+    const find = await this.keysModel.find({ userId: userId, key: name })
+      .lean()
+      .exec();
     forEach(find, async key => {
       await this.keysModel.findByIdAndDelete(key._id);
     });
@@ -27,7 +29,9 @@ export class KeysRepository {
         userId: data.userId,
         city_id: data.cityId,
       })
-      .populate({ path: 'pwz', select: 'name article', model: Pvz.name });
+      .populate({ path: 'pwz', select: 'name article', model: Pvz.name })
+      .lean()
+      .exec();
   }
 
   async create(data: Omit<Keys, 'active'>) {
@@ -37,31 +41,31 @@ export class KeysRepository {
   }
 
   async findById(id: Types.ObjectId, searchObject: string) {
-    let query = this.keysModel.findById({ _id: id });
+    let query = this.keysModel.findById({ _id: id })
 
     query =
       searchObject === 'all'
         ? query.populate({
-            path: 'pwz',
-            select: 'name position city city_id',
-            model: Pvz.name,
-            populate: {
-              path: 'position',
-              select: 'position timestamp difference',
-              model: Periods.name,
-            },
-          })
+          path: 'pwz',
+          select: 'name position city city_id',
+          model: Pvz.name,
+          populate: {
+            path: 'position',
+            select: 'position timestamp difference',
+            model: Periods.name,
+          },
+        })
         : query.populate({
-            path: 'pwz',
-            select: 'name position city city_id',
-            match: { city: searchObject },
-            model: Pvz.name,
-            populate: {
-              path: 'position',
-              select: 'position timestamp difference',
-              model: Periods.name,
-            },
-          });
+          path: 'pwz',
+          select: 'name position city city_id',
+          match: { city: searchObject },
+          model: Pvz.name,
+          populate: {
+            path: 'position',
+            select: 'position timestamp difference',
+            model: Periods.name,
+          },
+        });
 
     query = query.populate({
       path: 'average',
@@ -69,7 +73,7 @@ export class KeysRepository {
       model: Average.name,
     });
 
-    return await query.lean();
+    return await query.lean().exec();
   }
 
   async removeKey(id: Types.ObjectId) {

@@ -15,6 +15,7 @@ import { EventsWS } from '../events';
   cors: {
     origin: '*',
   },
+  perMessageDeflate: true,
 })
 export class ArticleGateway {
   private logger: Logger = new Logger('MessageGateway');
@@ -45,7 +46,7 @@ export class ArticleGateway {
       payload.query as FindByCityQueryDto,
     );
 
-    client.emit('findByCity', findCity);
+    client.compress(true).emit('findByCity', findCity);
   }
 
   afterInit(server: Server) {
@@ -100,7 +101,7 @@ export class ArticleGateway {
         findClient.data.userId,
         findClient.query,
       );
-      await findClient.client.emit('findByCity', findByCity.reverse());
+      await findClient.client.compress(true).emit('findByCity', findByCity.reverse());
     }
   }
 
