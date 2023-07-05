@@ -35,15 +35,14 @@ export class PvzService {
   }
 
   async update(data: UpdatePvzDto) {
+    console.log(data.position)
     await this.periodsService.update(data.periodId, data.position);
-    console.log('update', data)
     await this.pvzRepository.updateStatus(data.addressId);
 
     const findNonActive = await this.pvzRepository.findNonActive(data.key_id);
 
 
     if (findNonActive === 0) {
-      console.log(findNonActive);
       this.eventEmitter.emit(EventsAverage.CALCULATE_AVERAGE, data.key_id);
     }
   }
@@ -51,9 +50,7 @@ export class PvzService {
   @OnEvent(EventsAverage.CALCULATE_AVERAGE)
   async calculateAverage(payload: string) {
     const data = await this.pvzRepository.findActive(payload)
-    console.log(data);
     const average = await this.pvzUtils.calculateAverage(data);
-    console.log(average);
     this.eventEmitter.emit(EventsAverage.UPDATE_AVERAGE, { average: average, key_id: payload });
   }
 
