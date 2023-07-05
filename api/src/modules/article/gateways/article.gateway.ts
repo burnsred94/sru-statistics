@@ -46,7 +46,7 @@ export class ArticleGateway {
       payload.query as FindByCityQueryDto,
     );
 
-    client.compress(true).emit('findByCity', findCity);
+    process.nextTick(() => client.compress(true).emit('findByCity', findCity));
   }
 
   afterInit(server: Server) {
@@ -101,7 +101,8 @@ export class ArticleGateway {
         findClient.data.userId,
         findClient.query,
       );
-      await findClient.client.compress(true).emit('findByCity', findByCity.reverse());
+
+      process.nextTick(() => findClient.client.compress(true).emit('findByCity', findByCity.reverse()));
     }
   }
 
