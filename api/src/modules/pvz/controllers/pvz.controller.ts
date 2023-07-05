@@ -18,6 +18,7 @@ export class PvzController {
     @Res() response: Response,
   ) {
     try {
+      console.log(data);
       await this.pvzService.update(data)
 
       return response.status(HttpStatus.OK).send({

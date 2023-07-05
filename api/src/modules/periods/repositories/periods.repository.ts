@@ -20,6 +20,7 @@ export class PeriodsRepository {
 
   async update(id: Types.ObjectId, position: number) {
     const pos = position === 0 ? '1000+' : String(position)
+    // const result = pos.length === 3 ? pos.slice()
     return await this.periodModel.findByIdAndUpdate(
       { _id: id },
       { position: pos, status: StatusPvz.SUCCESS }
