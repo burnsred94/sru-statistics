@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { Types } from 'mongoose';
 
 export class UpdatePvzDto {
@@ -15,7 +15,7 @@ export class UpdatePvzDto {
   @IsString()
   periodId: Types.ObjectId;
   @IsNotEmpty()
-  @IsString()
+  @IsNumber()
   position: number;
   @IsNotEmpty()
   @IsString()
