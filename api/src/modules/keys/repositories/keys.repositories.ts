@@ -23,13 +23,27 @@ export class KeysRepository {
     });
   }
 
+  async findAll() {
+    return await this.keysModel.find({ active: true })
+      .populate({
+        path: 'pwz', select: 'name position city city_id', model: Pvz.name,
+        populate: {
+          path: 'position',
+          select: 'position timestamp difference',
+          model: Periods.name,
+        },
+      })
+      .lean()
+      .exec();
+  }
+
   async find(data: { userId: number; cityId: string }) {
     return await this.keysModel
       .find({
         userId: data.userId,
         city_id: data.cityId,
       })
-      .populate({ path: 'pwz', select: 'name article', model: Pvz.name })
+      .populate({ path: 'pwz', select: 'name article', model: Pvz.name, })
       .lean()
       .exec();
   }

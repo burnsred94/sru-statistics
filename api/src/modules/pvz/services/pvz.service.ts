@@ -1,16 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { User } from 'src/modules/auth/user';
 import { PvzRepository } from '../repositories';
-import { PeriodsService } from 'src/modules/periods';
+import { PeriodsEntity, PeriodsService } from 'src/modules/periods';
 import { StatusPvz } from 'src/interfaces';
 import { UpdatePvzDto } from '../dto';
 import { Types } from 'mongoose';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { EventsAverage } from 'src/modules/article/events';
 import { PvzUtils } from '../utils';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { forEach } from 'lodash';
 
 @Injectable()
 export class PvzService {
+  protected readonly logger = new Logger(PvzService.name);
+
+
   constructor(
     private readonly pvzRepository: PvzRepository,
     private readonly periodsService: PeriodsService,
@@ -35,7 +40,6 @@ export class PvzService {
   }
 
   async update(data: UpdatePvzDto) {
-    console.log(data.position)
     await this.periodsService.update(data.periodId, data.position);
     await this.pvzRepository.updateStatus(data.addressId);
 
@@ -53,6 +57,16 @@ export class PvzService {
     const average = await this.pvzUtils.calculateAverage(data);
     const checkAverage = average === 0 ? '1000+' : String(average);
     this.eventEmitter.emit(EventsAverage.UPDATE_AVERAGE, { average: checkAverage, key_id: payload });
+  }
+
+  async findAndCreate() {
+    const findPvz = await this.pvzRepository.findAll()
+    forEach(findPvz, async (pvz) => {
+      const period = await this.periodsService.create('Ожидается');
+      await this.pvzRepository.update(pvz._id, period._id)
+    })
+
+    return { status: true }
   }
 
   // async updatePeriod(position, difference, id) {

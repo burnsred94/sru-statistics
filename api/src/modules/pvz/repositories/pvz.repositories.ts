@@ -16,6 +16,10 @@ export class PvzRepository {
     return createPwz;
   }
 
+  async findAll() {
+    return await this.pvzModel.find({ status: StatusPvz.SUCCESS, active: true })
+  }
+
   async update(id, data) {
     await this.pvzModel.updateOne(
       {

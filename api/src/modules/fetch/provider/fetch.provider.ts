@@ -11,6 +11,7 @@ import { KeysService } from 'src/modules/keys';
 import { PeriodsEntity } from 'src/modules/periods';
 import { FetchUtils } from '../utils';
 import axios from 'axios';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class FetchProvider {
@@ -48,6 +49,22 @@ export class FetchProvider {
         setTimeout(resolve, 50);
       });
       await axios.post(url, element)
+    })
+  }
+
+  @Cron(CronExpression.EVERY_2_HOURS, { timeZone: 'Europe/Moscow' })
+  async fetchUpdates() {
+    const url = await this.configService.get('SEARCH_API_URL');
+    const keys = await this.keysService.findAndNewPeriod()
+    const formatted = await this.fetchUtils.formatDataToParse(keys);
+
+    process.nextTick(() => {
+      forEach(formatted, async element => {
+        await new Promise(resolve => {
+          setTimeout(resolve, 200);
+        });
+        await axios.post(url, element)
+      })
     })
   }
 }

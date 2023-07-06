@@ -45,10 +45,17 @@ export class KeysService {
       return newKey._id;
     });
 
-
     const resolvedKeys = await Promise.all(keys);
 
     return resolvedKeys;
+  }
+
+  async findAndNewPeriod() {
+    const newPeriod = await this.pvzService.findAndCreate()
+    console.log(newPeriod);
+    if (newPeriod.status) {
+      return await this.keysRepository.findAll()
+    }
   }
 
   @OnEvent(EventsAverage.UPDATE_AVERAGE)
@@ -74,6 +81,7 @@ export class KeysService {
     const resolved = await Promise.all(keysIterator);
     return resolved;
   }
+
 
   async removeKey(id: Types.ObjectId) {
     return await this.keysRepository.removeKey(id);

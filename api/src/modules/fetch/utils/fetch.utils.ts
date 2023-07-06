@@ -7,10 +7,11 @@ export class FetchUtils {
     return map(data, item => {
       const { key, pwz, article } = item;
       const addresses = map(pwz, element => {
+        const length = element.position.length
         return {
           name: element.name,
           addressId: String(element._id),
-          periodId: String(element.position[0]._id),
+          periodId: String(element.position[length - 1]._id),
         };
       });
       return {
