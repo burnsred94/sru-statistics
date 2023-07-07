@@ -14,11 +14,11 @@ export class ArticleRepository {
   constructor(
     @InjectModel(Article.name) private readonly modelArticle: Model<Article>,
     private readonly keysService: KeysService,
-  ) {}
+  ) { }
 
   async findDataByUser(user: User) {
     const find = await this.modelArticle.find({ userId: user }).lean().exec();
-    return { data: true, total: find.length };
+    return { total: find.length };
   }
 
   async findArticle(article: string, userId: User) {
@@ -69,23 +69,23 @@ export class ArticleRepository {
 
       return query.articleId === String(_id)
         ? {
-            ...stats,
-            keys: chunks[query.page - 1],
-            meta: {
-              page: query.page,
-              total: chunks.length,
-              page_size: query.limit,
-            },
-          }
+          ...stats,
+          keys: chunks[query.page - 1],
+          meta: {
+            page: query.page,
+            total: chunks.length,
+            page_size: query.limit,
+          },
+        }
         : {
-            ...stats,
-            keys: chunks[0],
-            meta: {
-              page: 1,
-              total: chunks.length,
-              page_size: query.limit,
-            },
-          };
+          ...stats,
+          keys: chunks[0],
+          meta: {
+            page: 1,
+            total: chunks.length,
+            page_size: query.limit,
+          },
+        };
     });
 
     const resolved = await Promise.all(generateData);
