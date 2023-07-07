@@ -1,5 +1,5 @@
-import { Logger, UseGuards } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { Logger } from '@nestjs/common';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import {
   SubscribeMessage,
   WebSocketGateway,
@@ -8,7 +8,6 @@ import {
 import { Server, Socket } from 'socket.io';
 import { ArticleService } from '../services';
 import { EventsWS } from '../events';
-import { AuthGuard } from '@nestjs/passport';
 
 @WebSocketGateway({
   cors: {
@@ -19,7 +18,10 @@ import { AuthGuard } from '@nestjs/passport';
 export class ArticleGateway {
   private logger: Logger = new Logger('MessageGateway');
 
-  constructor(private readonly articleService: ArticleService) {}
+  constructor(
+    private readonly articleService: ArticleService,
+    private eventEmitter: EventEmitter2
+  ) { }
 
   clients = new Map();
 
@@ -27,26 +29,16 @@ export class ArticleGateway {
   @SubscribeMessage('findByCity')
   async handleSendMessage(
     client: Socket,
-    payload: { userId: number },
+    payload
   ): Promise<void> {
-    const parseCookie = await this.parseCookie(client.handshake.headers.cookie);
     this.clients.set(client.id, {
       sockets: client,
-      userId: payload.userId,
-      pagination: parseCookie,
+      userId: payload.data.userId,
+      pagination: payload,
     });
+    this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: payload.data.userId })
   }
 
-  async parseCookie(cookie: string): Promise<{ [key: string]: string }> {
-    const cookieObject: { [key: string]: string } = {};
-
-    cookie.split(';').forEach(pair => {
-      const [key, value] = pair.trim().split('=');
-      cookieObject[key] = decodeURIComponent(value);
-    });
-
-    return cookieObject;
-  }
 
   afterInit(server: Server) {
     this.logger.log('Initialized');
@@ -70,7 +62,7 @@ export class ArticleGateway {
           {
             userId: client.userId,
             city: client.pagination.city,
-            periods: client.pagination.periods.split(','),
+            periods: client.pagination.periods,
           },
           send.userId,
           {
@@ -83,34 +75,8 @@ export class ArticleGateway {
       }
     });
 
-    // if (findClient) {
-    //   const findByCity = await this.articleService.findByCity(
-    //     {
-    //       city: findClient.data.city,
-    //       periods: findClient.data.periods,
-    //       userId: findClient.data.userId,
-    //     },
-    //     findClient.data.userId,
-    //     findClient.query,
-    //   );
 
-    // const reverse = findByCity.reverse();
-    // process.nextTick(() => findClient.client.compress(true).emit('findByCity', reverse));
   }
 }
 
-//   async checkClient(index: number, userId: number, client: Socket) {
-//     if (index === -1) {
-//       this.clients.push({
-//         client: client,
-//         userId: userId,
-//       });
-//     } else {
-//       pullAt(this.clients, index);
-//       this.clients.push({
-//         client: client,
-//         userId: userId,
-//       });
-//     }
-//   }
-// }
+
