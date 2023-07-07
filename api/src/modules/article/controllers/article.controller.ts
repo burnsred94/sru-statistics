@@ -98,13 +98,8 @@ export class ArticleController {
 
       return response
         .status(HttpStatus.OK)
-        .cookie('articleId', `${data.query.articleId}`)
-        .cookie('limit', `${data.query.limit}`)
-        .cookie('page', `${data.query.page}`)
-        .cookie('city', `${data.data.city}`)
-        .cookie('periods', `${data.data.periods}`)
         .send({
-          data: { message: 'Send data' },
+          data: { cookie: `articleId=${data.query.articleId}; city=${data.data.city}; limit=${data.query.limit}; page=${data.query.page}; periods=${data.data.periods.join(',')}` },
           error: [],
           status: response.statusCode,
         });
