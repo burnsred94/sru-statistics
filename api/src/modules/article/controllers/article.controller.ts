@@ -27,7 +27,7 @@ import { initArticleMessage } from 'src/constatnts';
 export class ArticleController {
   protected readonly logger = new Logger(ArticleController.name);
 
-  constructor(private readonly articleService: ArticleService) {}
+  constructor(private readonly articleService: ArticleService) { }
 
   @ApiAcceptedResponse({ description: 'Create Statistic' })
   @UseGuards(JwtAuthGuard)
@@ -98,11 +98,11 @@ export class ArticleController {
 
       return response
         .status(HttpStatus.OK)
-        .cookie('articleId', `${data.query.articleId}`, { httpOnly: true })
-        .cookie('limit', `${data.query.limit}`, { httpOnly: true })
-        .cookie('page', `${data.query.page}`, { httpOnly: true })
-        .cookie('city', `${data.data.city}`, { httpOnly: true })
-        .cookie('periods', `${data.data.periods}`, { httpOnly: true })
+        .cookie('articleId', `${data.query.articleId}`)
+        .cookie('limit', `${data.query.limit}`)
+        .cookie('page', `${data.query.page}`)
+        .cookie('city', `${data.data.city}`)
+        .cookie('periods', `${data.data.periods}`)
         .send({
           data: { message: 'Send data' },
           error: [],
