@@ -12,11 +12,15 @@ import { PeriodsEntity } from 'src/modules/periods';
 import { FetchUtils } from '../utils';
 import axios from 'axios';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { RabbitMqPublisher } from 'src/modules/rabbitmq/services';
+import { RmqExchanges } from 'src/modules/rabbitmq/exchanges';
+import { SearchPositionRMQ } from 'src/modules/rabbitmq/contracts/search';
 
 @Injectable()
 export class FetchProvider {
   constructor(
     private readonly gotService: GotService,
+    private readonly rmqPublisher: RabbitMqPublisher,
     private readonly configService: ConfigService,
     private readonly keysService: KeysService,
     private readonly fetchUtils: FetchUtils,
@@ -37,34 +41,35 @@ export class FetchProvider {
 
   @OnEvent(EventsParser.SEND_TO_PARSE)
   async fetchParser(payload: { keysId: Types.ObjectId[] }) {
-    const url = await this.configService.get('SEARCH_API_URL');
     const { keysId } = payload;
+    console.log(payload)
     const keys = map(keysId, key => ({ _id: key, active: true }));
     const currentDate = new PeriodsEntity('-').date();
     const getKeys = await this.keysService.findById(keys, [currentDate], 'all');
     const formatted = await this.fetchUtils.formatDataToParse(getKeys);
 
     forEach(formatted, async element => {
-      await new Promise(resolve => {
-        setTimeout(resolve, 50);
-      });
-      await axios.post(url, element)
-    })
+      await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
+        exchange: RmqExchanges.SEARCH,
+        routingKey: SearchPositionRMQ.routingKey,
+        payload: element,
+      })
+    });
   }
 
-  @Cron(CronExpression.EVERY_2_HOURS, { timeZone: 'Europe/Moscow' })
+  @Cron(CronExpression.EVERY_12_HOURS, { timeZone: 'Europe/Moscow' })
   async fetchUpdates() {
-    const url = await this.configService.get('SEARCH_API_URL');
-    const keys = await this.keysService.findAndNewPeriod()
+    const keys = await this.keysService.findAndNewPeriod();
     const formatted = await this.fetchUtils.formatDataToParse(keys);
-
     process.nextTick(() => {
       forEach(formatted, async element => {
-        await new Promise(resolve => {
-          setTimeout(resolve, 200);
-        });
-        await axios.post(url, element)
-      })
-    })
+        console.log(element.pvz);
+        await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
+          exchange: RmqExchanges.SEARCH,
+          routingKey: SearchPositionRMQ.routingKey,
+          payload: element,
+        })
+      });
+    });
   }
 }

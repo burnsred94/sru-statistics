@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ArticleRepository } from '../repositories';
 import {
   AddKeyDto,
@@ -16,8 +16,10 @@ import { EventsParser, EventsWS } from '../events';
 import { KeysService } from 'src/modules/keys';
 import { TownsDestructor } from '../utils';
 
-@Injectable({})
+@Injectable()
 export class ArticleService {
+  protected readonly logger = new Logger(ArticleService.name);
+
   constructor(
     private readonly articleRepository: ArticleRepository,
     private readonly fetchProvider: FetchProvider,
@@ -26,9 +28,23 @@ export class ArticleService {
     private readonly eventEmitter: EventEmitter2,
   ) { }
 
-  //Cделано, осталось добавить запросы на парсер
-  async create(data: CreateArticleDto, user: User) {
+  async checkData(user: User) {
+    return await this.articleRepository.findDataByUser(user);
+  }
+
+  //Cделано
+  async create(data: CreateArticleDto, user: User, query) {
     const { article, keys } = data;
+    const findArticle = await this.articleRepository.findArticle(article, user);
+
+    if (findArticle) {
+      await this.addKeys(
+        { articleId: String(findArticle._id), keys: keys },
+        user,
+      );
+      return findArticle;
+    }
+
     const { data: productNameData } = await this.fetchProvider.fetchArticleName(
       article,
     );
@@ -54,7 +70,7 @@ export class ArticleService {
       keys: newKeys,
     });
 
-    this.eventEmitter.emit(EventsWS.CREATE_ARTICLE, { userId: user });
+    this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user });
     this.eventEmitter.emit(EventsParser.SEND_TO_PARSE, { keysId: newKeys });
 
     return newArticle;
@@ -62,7 +78,12 @@ export class ArticleService {
 
   //Cделано
   async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto) {
-    return await this.articleRepository.findByCity(data, id, query);
+    const payload = await this.articleRepository.findByCity(data, id, query);
+    return payload.reverse();
+  }
+
+  async emitSender(user: User) {
+    this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user });
   }
 
   //Cделано
@@ -81,21 +102,22 @@ export class ArticleService {
 
     await this.articleRepository.update(newKeys, find._id);
 
-    this.eventEmitter.emit(EventsWS.ADDED_KEYS, { userId: user });
+    this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user });
+    this.eventEmitter.emit(EventsParser.SEND_TO_PARSE, { keysId: newKeys });
   }
 
   //Cделано
   async removeArticle(data: RemoveArticleDto, id: User) {
     await this.articleRepository.removeArticle(data, id);
 
-    this.eventEmitter.emit(EventsWS.REMOVE_ARTICLE, { userId: id });
+    this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: id });
   }
 
   //Cделано
   async removeKey(data: RemoveKeyDto, user: User) {
     await this.keyService.removeKey(data.keyId);
 
-    this.eventEmitter.emit(EventsWS.REMOVE_KEY, {
+    this.eventEmitter.emit(EventsWS.SEND_ARTICLES, {
       userId: user,
     });
   }

@@ -1,6 +1,11 @@
 import { Transform } from 'class-transformer';
 import { IsArray, IsInt, IsNumber, IsString } from 'class-validator';
 
+export class ArticlePaginationDto {
+  data: FindByCityDto;
+  query: FindByCityQueryDto;
+}
+
 export class FindByCityDto {
   @IsNumber()
   userId: number;

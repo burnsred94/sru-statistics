@@ -19,11 +19,17 @@ export class PeriodsRepository {
   }
 
   async update(id: Types.ObjectId, position: number) {
-    const pos = position === 0 ? '1000+' : String(position)
-    // const result = pos.length === 3 ? pos.slice()
+    const pos = position === 0 ? '1000+' : String(position);
     return await this.periodModel.findByIdAndUpdate(
       { _id: id },
-      { position: pos, status: StatusPvz.SUCCESS }
+      { position: pos, status: StatusPvz.SUCCESS },
     );
+  }
+
+  async updateDiff(id: Types.ObjectId, diff: string) {
+    await this.periodModel.findByIdAndUpdate(
+      { _id: id },
+      { difference: diff }
+    )
   }
 }

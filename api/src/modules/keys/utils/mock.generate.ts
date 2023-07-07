@@ -50,6 +50,7 @@ export class MockGenerator {
         _id: pwz._id,
         name: pwz.name,
         city: pwz.city,
+        geo_address_id: pwz.geo_address_id,
         city_id: pwz.city_id,
         position: pwzPositionIterator,
       };

@@ -17,7 +17,7 @@ export class KeysService {
     private readonly pvzService: PvzService,
     private readonly mockGenerator: MockGenerator,
     private readonly averageService: AverageService,
-    private readonly eventEmitter: EventEmitter2
+    private readonly eventEmitter: EventEmitter2,
   ) { }
 
   async create(data: IKey) {
@@ -35,7 +35,12 @@ export class KeysService {
       });
 
       const pvz = map(data.pvz, async pvz => {
-        return await this.pvzService.create(pvz, data.article, data.userId, String(newKey));
+        return await this.pvzService.create(
+          pvz,
+          data.article,
+          data.userId,
+          String(newKey),
+        );
       });
 
       const resolved = await Promise.all(pvz);
@@ -51,20 +56,19 @@ export class KeysService {
   }
 
   async findAndNewPeriod() {
-    const newPeriod = await this.pvzService.findAndCreate()
-    console.log(newPeriod);
+    const newPeriod = await this.pvzService.findAndCreate();
     if (newPeriod.status) {
-      return await this.keysRepository.findAll()
+      return await this.keysRepository.findAll();
     }
   }
 
   @OnEvent(EventsAverage.UPDATE_AVERAGE)
-  async updateAverage(payload: { average: string, key_id: string }) {
-    const id = payload.key_id as unknown as Types.ObjectId
+  async updateAverage(payload: { average: string; key_id: string }) {
+    const id = payload.key_id as unknown as Types.ObjectId;
     const key = await this.keysRepository.findById(id, 'all');
     await this.averageService.update(key.average.at(-1)._id, payload.average);
 
-    this.eventEmitter.emit(EventsWS.CREATE_ARTICLE, { userId: key.userId });
+    this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: key.userId });
   }
 
   async findById(
@@ -81,7 +85,6 @@ export class KeysService {
     const resolved = await Promise.all(keysIterator);
     return resolved;
   }
-
 
   async removeKey(id: Types.ObjectId) {
     return await this.keysRepository.removeKey(id);

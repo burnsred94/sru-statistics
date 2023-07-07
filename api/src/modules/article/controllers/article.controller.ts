@@ -2,9 +2,11 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpStatus,
   Logger,
   Post,
+  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -14,17 +16,18 @@ import {
   CreateArticleDto,
   RemoveKeyDto,
   RemoveArticleDto,
+  ArticlePaginationDto,
 } from '../dto';
 import { CurrentUser, JwtAuthGuard, User } from 'src/modules';
 import { ArticleService } from '../services';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { initArticleMessage } from 'src/constatnts';
 
 @Controller('v1')
 export class ArticleController {
   protected readonly logger = new Logger(ArticleController.name);
 
-  constructor(private readonly articleService: ArticleService) { }
+  constructor(private readonly articleService: ArticleService) {}
 
   @ApiAcceptedResponse({ description: 'Create Statistic' })
   @UseGuards(JwtAuthGuard)
@@ -32,11 +35,13 @@ export class ArticleController {
   async create(
     @CurrentUser() user: User,
     @Body() data: CreateArticleDto,
+    @Req() request: Request,
     @Res() response: Response,
   ) {
     try {
       process.nextTick(
-        async () => await this.articleService.create(data, user),
+        async () =>
+          await this.articleService.create(data, user, request.cookies),
       );
 
       const initArticle = initArticleMessage(data.article);
@@ -76,6 +81,61 @@ export class ArticleController {
         data: [],
         error: [{ message: error.message }],
         status: error.statusCode,
+      });
+    }
+  }
+
+  @ApiAcceptedResponse({ description: 'Send length articles' })
+  @UseGuards(JwtAuthGuard)
+  @Post('/send-pagination')
+  async sendPagination(
+    @CurrentUser() user: User,
+    @Body() data: ArticlePaginationDto,
+    @Res() response: Response,
+  ) {
+    try {
+      await this.articleService.emitSender(user);
+
+      return response
+        .status(HttpStatus.OK)
+        .cookie('articleId', `${data.query.articleId}`, { httpOnly: true })
+        .cookie('limit', `${data.query.limit}`, { httpOnly: true })
+        .cookie('page', `${data.query.page}`, { httpOnly: true })
+        .cookie('city', `${data.data.city}`, { httpOnly: true })
+        .cookie('periods', `${data.data.periods}`, { httpOnly: true })
+        .send({
+          data: { message: 'Send data' },
+          error: [],
+          status: response.statusCode,
+        });
+    } catch (error) {
+      this.logger.error(error);
+      return response.status(HttpStatus.OK).send({
+        data: [],
+        error: [{ message: error.message }],
+        status: response.statusCode,
+      });
+    }
+  }
+
+  @ApiAcceptedResponse({ description: 'Send length articles' })
+  @UseGuards(JwtAuthGuard)
+  @Get('/check-articles')
+  async checkArticles(@CurrentUser() user: User, @Res() response: Response) {
+    try {
+      const checkData = await this.articleService.checkData(user);
+
+      return response.status(HttpStatus.OK).send({
+        data: checkData,
+        error: [],
+        status: response.statusCode,
+      });
+    } catch (error) {
+      this.logger.error(error);
+      return response.status(HttpStatus.OK).send({
+        data: [],
+        error: [{ message: error.message }],
+        status: response.statusCode,
       });
     }
   }

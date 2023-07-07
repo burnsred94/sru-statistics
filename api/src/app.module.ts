@@ -11,6 +11,9 @@ import { KeysModule } from './modules/keys/keys.module';
 import { PvzModule } from './modules/pvz/pvz.module';
 import { PeriodsModule } from './modules/periods/periods.module';
 import { AverageModule } from './modules/average/average.module';
+import { RmqModule } from './modules/rabbitmq/rabbitmq.module';
+import { RmqExchanges } from './modules/rabbitmq/exchanges';
+import { RabbitRpcParamsFactory } from '@golevelup/nestjs-rabbitmq';
 
 @Module({
   imports: [

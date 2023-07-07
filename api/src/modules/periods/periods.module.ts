@@ -13,4 +13,4 @@ import { PvzModule } from '../pvz';
   providers: [PeriodsService, PeriodsRepository],
   exports: [PeriodsService],
 })
-export class PeriodsModule { }
+export class PeriodsModule {}

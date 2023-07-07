@@ -3,7 +3,10 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
-import * as compression from 'compression'
+import * as compression from 'compression';
+import * as cookieParser from 'cookie-parser';
+import { RabbitMqPublisher } from './modules/rabbitmq/services';
+import { RpcExceptionFilter } from './modules/rabbitmq/utils';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -12,10 +15,13 @@ async function bootstrap() {
   app.setGlobalPrefix(`${configService.get('PROJECT')}`);
 
   app.enableCors();
+  app.use(cookieParser());
 
-  app.use(compression())
+  app.use(compression());
 
+  app.get(RabbitMqPublisher);
   app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalFilters(new RpcExceptionFilter());
 
   const config = new DocumentBuilder()
     .setTitle(configService.get('SWAGGER_TITLE'))

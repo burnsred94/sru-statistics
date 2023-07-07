@@ -17,7 +17,10 @@ export class PvzRepository {
   }
 
   async findAll() {
-    return await this.pvzModel.find({ status: StatusPvz.SUCCESS, active: true })
+    return await this.pvzModel.find({
+      status: StatusPvz.SUCCESS,
+      active: true,
+    });
   }
 
   async update(id, data) {
@@ -34,20 +37,32 @@ export class PvzRepository {
   }
 
   async updateStatus(id: Types.ObjectId) {
-    await this.pvzModel.findByIdAndUpdate({ _id: id }, { $set: { status: StatusPvz.SUCCESS } })
+    await this.pvzModel.findByIdAndUpdate(
+      { _id: id },
+      { $set: { status: StatusPvz.SUCCESS } },
+    );
   }
 
   async findNonActive(id: string) {
-    const data = await this.pvzModel.find({ key_id: id, status: StatusPvz.PENDING })
+    const data = await this.pvzModel
+      .find({ key_id: id, status: StatusPvz.PENDING })
       .lean();
     return data.length;
   }
 
   async findActive(id: string) {
-    const query = await this.pvzModel.find({ key_id: id, status: StatusPvz.SUCCESS })
+    const query = await this.pvzModel
+      .find({ key_id: id, status: StatusPvz.SUCCESS })
       .populate({ path: 'position', select: 'position', model: Periods.name })
       .lean();
 
     return query;
+  }
+
+  async findPvz(id: string) {
+    return await this.pvzModel.findById({ _id: id })
+      .populate({ path: 'position', select: "position", model: Periods.name })
+      .lean()
+      .exec();
   }
 }

@@ -1,9 +1,8 @@
-import { Body, Controller, HttpStatus, Logger, Put, Res } from '@nestjs/common';
-import { ApiAcceptedResponse } from '@nestjs/swagger';
-import { Response } from 'express';
-import { TICK_UPDATED_PERIOD } from 'src/constatnts';
-import { UpdatePvzDto } from '../dto';
+import { Controller, Logger } from '@nestjs/common';
 import { PvzService } from '../services';
+import { RabbitMqSubscriber } from 'src/modules/rabbitmq/decorators';
+import { RmqExchanges, RmqServices } from 'src/modules/rabbitmq/exchanges';
+import { StatisticsUpdateRMQ } from 'src/modules/rabbitmq/contracts/statistics';
 
 @Controller('pvz')
 export class PvzController {
@@ -11,28 +10,19 @@ export class PvzController {
 
   constructor(private readonly pvzService: PvzService) { }
 
-  @ApiAcceptedResponse({ description: 'Update periods' })
-  @Put('update')
-  async updatePeriod(
-    @Body() data: UpdatePvzDto,
-    @Res() response: Response,
-  ) {
+  @RabbitMqSubscriber({
+    exchange: RmqExchanges.STATISTICS,
+    routingKey: StatisticsUpdateRMQ.routingKey,
+    queue: StatisticsUpdateRMQ.queue,
+    currentService: RmqServices.STATISTICS,
+  })
+  async updatePeriod(payload: StatisticsUpdateRMQ.Payload) {
     try {
-      console.log(data);
-      await this.pvzService.update(data)
+      await this.pvzService.update(payload);
 
-      return response.status(HttpStatus.OK).send({
-        data: TICK_UPDATED_PERIOD,
-        error: [],
-        status: response.statusCode,
-      });
     } catch (error) {
       this.logger.error(error);
-      return response.status(HttpStatus.OK).send({
-        data: [],
-        error: [{ message: error.message }],
-        status: response.statusCode,
-      });
+
     }
   }
 }

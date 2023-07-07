@@ -18,6 +18,7 @@ export interface IPwzGenerator {
   _id: string;
   name: string;
   city: string;
+  geo_address_id: string;
   city_id: string;
   position: IPositionGenerator[];
 }

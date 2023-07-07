@@ -16,6 +16,18 @@ export class ArticleRepository {
     private readonly keysService: KeysService,
   ) {}
 
+  async findDataByUser(user: User) {
+    const find = await this.modelArticle.find({ userId: user }).lean().exec();
+    return { data: true, total: find.length };
+  }
+
+  async findArticle(article: string, userId: User) {
+    return await this.modelArticle.findOne({
+      article: article,
+      userId: userId,
+    });
+  }
+
   async create(article: Article) {
     const newArticle = new ArticleEntity(article);
     const articleCreate = await this.modelArticle.create(newArticle);
@@ -31,7 +43,7 @@ export class ArticleRepository {
     });
   }
 
-  async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto) {
+  async findByCity(data: FindByCityDto, id: number, query) {
     const find = await this.modelArticle
       .find({
         userId: id,
@@ -60,18 +72,18 @@ export class ArticleRepository {
             ...stats,
             keys: chunks[query.page - 1],
             meta: {
-              count: query.page,
-              pages_count: chunks.length,
-              total_keys: genKeys.length,
+              page: query.page,
+              total: chunks.length,
+              page_size: query.limit,
             },
           }
         : {
             ...stats,
             keys: chunks[0],
             meta: {
-              count: 1,
-              pages_count: chunks.length,
-              total_keys: genKeys.length,
+              page: 1,
+              total: chunks.length,
+              page_size: query.limit,
             },
           };
     });
