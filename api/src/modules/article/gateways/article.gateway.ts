@@ -61,14 +61,14 @@ export class ArticleGateway {
         const findByCity = await this.articleService.findByCity(
           {
             userId: client.userId,
-            city: client.pagination.city,
-            periods: client.pagination.periods,
+            city: client.pagination.data.city,
+            periods: client.pagination.data.periods,
           },
           send.userId,
           {
-            limit: Number(client.pagination.limit),
-            page: Number(client.pagination.page),
-            articleId: client.pagination.articleId,
+            limit: client.pagination.query.limit,
+            page: client.pagination.query.page,
+            articleId: client.pagination.query.articleId,
           },
         );
         client.sockets.compress(true).emit('findByCity', findByCity);
