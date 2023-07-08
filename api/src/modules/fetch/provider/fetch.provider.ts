@@ -57,7 +57,7 @@ export class FetchProvider {
     });
   }
 
-  @Cron(CronExpression.EVERY_12_HOURS, { timeZone: 'Europe/Moscow' })
+  @Cron(CronExpression.EVERY_5_MINUTES, { timeZone: 'Europe/Moscow' })
   async fetchUpdates() {
     const keys = await this.keysService.findAndNewPeriod();
     const formatted = await this.fetchUtils.formatDataToParse(keys);
