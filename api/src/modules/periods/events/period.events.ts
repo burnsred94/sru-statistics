@@ -1,3 +1,3 @@
 export enum EventsPeriods {
-    CALCULATE_DIFF = 'calculate.diff'
+  CALCULATE_DIFF = 'calculate.diff',
 }

@@ -8,6 +8,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { ArticleService } from '../services';
 import { EventsWS } from '../events';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @WebSocketGateway({
   cors: {
@@ -20,25 +21,21 @@ export class ArticleGateway {
 
   constructor(
     private readonly articleService: ArticleService,
-    private eventEmitter: EventEmitter2
+    private eventEmitter: EventEmitter2,
   ) { }
 
   clients = new Map();
 
   @WebSocketServer() server: Server;
   @SubscribeMessage('findByCity')
-  async handleSendMessage(
-    client: Socket,
-    payload
-  ): Promise<void> {
+  async handleSendMessage(client: Socket, payload): Promise<void> {
     this.clients.set(client.id, {
       sockets: client,
       userId: payload.data.userId,
       pagination: payload,
     });
-    this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: payload.data.userId })
-  }
 
+  }
 
   afterInit(server: Server) {
     this.logger.log('Initialized');
@@ -54,29 +51,23 @@ export class ArticleGateway {
     this.logger.log(`Client Connected WS server: ${client.id}`);
   }
 
-  @OnEvent(EventsWS.SEND_ARTICLES)
-  async sender(send: { userId: number }) {
+  @Cron(CronExpression.EVERY_5_SECONDS)
+  async sender() {
     this.clients.forEach(async client => {
-      if (client.userId === send.userId) {
-        const findByCity = await this.articleService.findByCity(
-          {
-            userId: client.userId,
-            city: client.pagination.data.city,
-            periods: client.pagination.data.periods,
-          },
-          send.userId,
-          {
-            limit: client.pagination.query.limit,
-            page: client.pagination.query.page,
-            articleId: client.pagination.query.articleId,
-          },
-        );
-        client.sockets.compress(true).emit('findByCity', findByCity);
-      }
+      const findByCity = await this.articleService.findByCity(
+        {
+          userId: client.userId,
+          city: client.pagination.data.city,
+          periods: client.pagination.data.periods,
+        },
+        client.userId,
+        {
+          limit: client.pagination.query.limit,
+          page: client.pagination.query.page,
+          articleId: client.pagination.query.articleId,
+        },
+      );
+      client.sockets.compress(true).emit('findByCity', findByCity);
     });
-
-
   }
 }
-
-

@@ -12,7 +12,7 @@ import { forEach } from 'lodash';
 export class KeysRepository {
   constructor(
     @InjectModel(Keys.name) private readonly keysModel: Model<Keys>,
-  ) { }
+  ) {}
 
   async findByName(userId: string, name: string) {
     const find = await this.keysModel
@@ -64,26 +64,26 @@ export class KeysRepository {
     query =
       searchObject === 'all'
         ? query.populate({
-          path: 'pwz',
-          select: 'name position city city_id geo_address_id',
-          model: Pvz.name,
-          populate: {
-            path: 'position',
-            select: 'position timestamp difference',
-            model: Periods.name,
-          },
-        })
+            path: 'pwz',
+            select: 'name position city city_id geo_address_id',
+            model: Pvz.name,
+            populate: {
+              path: 'position',
+              select: 'position timestamp difference',
+              model: Periods.name,
+            },
+          })
         : query.populate({
-          path: 'pwz',
-          select: 'name position city city_id geo_address_id',
-          match: { city: searchObject },
-          model: Pvz.name,
-          populate: {
-            path: 'position',
-            select: 'position timestamp difference',
-            model: Periods.name,
-          },
-        });
+            path: 'pwz',
+            select: 'name position city city_id geo_address_id',
+            match: { city: searchObject },
+            model: Pvz.name,
+            populate: {
+              path: 'position',
+              select: 'position timestamp difference',
+              model: Periods.name,
+            },
+          });
 
     query = query.populate({
       path: 'average',

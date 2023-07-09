@@ -21,4 +21,4 @@ import { RabbitRpcParamsFactory } from '@golevelup/nestjs-rabbitmq';
   ],
   exports: [FetchSearchProvider, FetchProvider],
 })
-export class FetchModule { }
+export class FetchModule {}

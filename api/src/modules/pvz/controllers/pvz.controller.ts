@@ -8,7 +8,7 @@ import { StatisticsUpdateRMQ } from 'src/modules/rabbitmq/contracts/statistics';
 export class PvzController {
   private readonly logger = new Logger(PvzController.name);
 
-  constructor(private readonly pvzService: PvzService) { }
+  constructor(private readonly pvzService: PvzService) {}
 
   @RabbitMqSubscriber({
     exchange: RmqExchanges.STATISTICS,
@@ -18,11 +18,9 @@ export class PvzController {
   })
   async updatePeriod(payload: StatisticsUpdateRMQ.Payload) {
     try {
-      await this.pvzService.update(payload);
-
+      process.nextTick(async () => await this.pvzService.update(payload));
     } catch (error) {
       this.logger.error(error);
-
     }
   }
 }

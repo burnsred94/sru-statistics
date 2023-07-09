@@ -33,4 +33,4 @@ import { RabbitRpcParamsFactory } from '@golevelup/nestjs-rabbitmq';
     AverageModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}

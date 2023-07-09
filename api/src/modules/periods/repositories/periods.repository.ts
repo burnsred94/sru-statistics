@@ -9,7 +9,7 @@ import { StatusPvz } from 'src/interfaces';
 export class PeriodsRepository {
   constructor(
     @InjectModel(Periods.name) private readonly periodModel: Model<Periods>,
-  ) { }
+  ) {}
 
   async create(position: string, difference?: string) {
     const newPeriod = new PeriodsEntity(position, difference);
@@ -27,9 +27,6 @@ export class PeriodsRepository {
   }
 
   async updateDiff(id: Types.ObjectId, diff: string) {
-    await this.periodModel.findByIdAndUpdate(
-      { _id: id },
-      { difference: diff }
-    )
+    await this.periodModel.findByIdAndUpdate({ _id: id }, { difference: diff });
   }
 }

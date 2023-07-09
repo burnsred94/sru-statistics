@@ -8,7 +8,7 @@ export class FetchUtils {
       const { key, pwz, article } = item;
       const addresses = map(pwz, element => {
         const length = element.position.length;
-        console.log(element.pwz)
+        console.log(element.pwz);
         return {
           name: element.name,
           addressId: String(element._id),

@@ -4,7 +4,7 @@ import { Types } from 'mongoose';
 
 @Injectable()
 export class PeriodsService {
-  constructor(private readonly periodRepository: PeriodsRepository) { }
+  constructor(private readonly periodRepository: PeriodsRepository) {}
 
   async create(value: string, difference?: string) {
     return await this.periodRepository.create(value, difference);

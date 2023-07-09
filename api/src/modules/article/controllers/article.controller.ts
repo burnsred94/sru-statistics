@@ -87,34 +87,6 @@ export class ArticleController {
 
   @ApiAcceptedResponse({ description: 'Send length articles' })
   @UseGuards(JwtAuthGuard)
-  @Post('/send-pagination')
-  async sendPagination(
-    @CurrentUser() user: User,
-    @Body() data: ArticlePaginationDto,
-    @Res() response: Response,
-  ) {
-    try {
-      await this.articleService.emitSender(user);
-
-      return response
-        .status(HttpStatus.OK)
-        .send({
-          data: { cookie: `articleId=${data.query.articleId}; city=${data.data.city}; limit=${data.query.limit}; page=${data.query.page}; periods=${data.data.periods.join(',')}` },
-          error: [],
-          status: response.statusCode,
-        });
-    } catch (error) {
-      this.logger.error(error);
-      return response.status(HttpStatus.OK).send({
-        data: [],
-        error: [{ message: error.message }],
-        status: response.statusCode,
-      });
-    }
-  }
-
-  @ApiAcceptedResponse({ description: 'Send length articles' })
-  @UseGuards(JwtAuthGuard)
   @Get('/check-articles')
   async checkArticles(@CurrentUser() user: User, @Res() response: Response) {
     try {

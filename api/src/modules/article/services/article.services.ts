@@ -82,10 +82,6 @@ export class ArticleService {
     return payload.reverse();
   }
 
-  async emitSender(user: User) {
-    this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user });
-  }
-
   //Cделано
   async addKeys(data: AddKeyDto, user: User): Promise<void> {
     const { articleId, keys } = data;
@@ -101,24 +97,17 @@ export class ArticleService {
     });
 
     await this.articleRepository.update(newKeys, find._id);
-
-    this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user });
-    this.eventEmitter.emit(EventsParser.SEND_TO_PARSE, { keysId: newKeys });
+    await this.fetchProvider.fetchParser({ keysId: newKeys })
   }
 
   //Cделано
   async removeArticle(data: RemoveArticleDto, id: User) {
     await this.articleRepository.removeArticle(data, id);
-
-    this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: id });
   }
 
   //Cделано
   async removeKey(data: RemoveKeyDto, user: User) {
     await this.keyService.removeKey(data.keyId);
 
-    this.eventEmitter.emit(EventsWS.SEND_ARTICLES, {
-      userId: user,
-    });
   }
 }

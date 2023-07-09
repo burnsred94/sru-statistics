@@ -1,1 +1,1 @@
-export * from './period.events'
+export * from './period.events';
