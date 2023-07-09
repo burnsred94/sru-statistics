@@ -79,7 +79,7 @@ export class PvzService {
       const secondItem = data.position.at(-2);
       console.log(firstItem, secondItem)
       const result = await this.pvzUtils.calculateDiff(firstItem, secondItem);
-      await this.periodsService.updateDiff(firstItem, result);
+      await this.periodsService.updateDiff(firstItem._id, result);
     }
   }
 }
