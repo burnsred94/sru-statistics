@@ -8,6 +8,8 @@ import { PvzUtils } from '../utils';
 import { map } from 'lodash';
 import { Types } from 'mongoose';
 import { KeysService } from 'src/modules/keys';
+import { OnEvent } from '@nestjs/event-emitter';
+import { EventsPeriods } from 'src/modules/periods/events';
 
 @Injectable()
 export class PvzService {
@@ -58,6 +60,7 @@ export class PvzService {
     })
   }
 
+  @OnEvent(EventsPeriods.CREATE_NEW)
   async findAndCreate() {
     const findPvz = await this.pvzRepository.findAll();
     const data = map(findPvz, async (pvz, index) => {

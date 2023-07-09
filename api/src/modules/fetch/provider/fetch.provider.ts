@@ -58,14 +58,16 @@ export class FetchProvider {
 
   @Cron(CronExpression.EVERY_10_MINUTES, { timeZone: 'Europe/Moscow' })
   async fetchUpdates() {
-    const keys = await this.keysService.findAndNewPeriod();
-    const formatted = await this.fetchUtils.formatDataToParse(keys);
-    forEach(formatted, async element => {
-      await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
-        exchange: RmqExchanges.SEARCH,
-        routingKey: SearchPositionRMQ.routingKey,
-        payload: element,
+    process.nextTick(async () => {
+      const keys = await this.keysService.findAndNewPeriod();
+      const formatted = await this.fetchUtils.formatDataToParse(keys);
+      forEach(formatted, async element => {
+        await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
+          exchange: RmqExchanges.SEARCH,
+          routingKey: SearchPositionRMQ.routingKey,
+          payload: element,
+        });
       });
-    });
+    })
   }
 }
