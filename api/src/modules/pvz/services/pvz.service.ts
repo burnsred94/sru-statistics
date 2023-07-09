@@ -75,10 +75,11 @@ export class PvzService {
   async updatePeriod(pvzId: Types.ObjectId) {
     const data = await this.pvzRepository.findPvz(pvzId);
     if (data.position.length > 0) {
-      const firstItem = data.position[-1];
-      const secondItem = data.position[-2];
+      const firstItem = data.position.at(-1);
+      const secondItem = data.position.at(-2);
+      console.log(firstItem, secondItem)
       const result = await this.pvzUtils.calculateDiff(firstItem, secondItem);
-      await this.periodsService.updateDiff(firstItem._id, result);
+      await this.periodsService.updateDiff(firstItem, result);
     }
   }
 }
