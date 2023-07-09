@@ -7,9 +7,8 @@ import { MockGenerator } from '../utils';
 import { AverageService } from 'src/modules/average';
 import { IKey } from 'src/interfaces';
 import { PvzService } from 'src/modules/pvz';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { OnEvent } from '@nestjs/event-emitter';
 import { EventsAverage } from 'src/modules/article/events';
-import { EventsPeriods } from 'src/modules/periods/events';
 
 @Injectable()
 export class KeysService {
@@ -18,7 +17,6 @@ export class KeysService {
     private readonly pvzService: PvzService,
     private readonly mockGenerator: MockGenerator,
     private readonly averageService: AverageService,
-    private readonly eventEmitter: EventEmitter2,
   ) { }
 
   async create(data: IKey) {
@@ -57,9 +55,10 @@ export class KeysService {
   }
 
   async findAndNewPeriod() {
-    this.eventEmitter.emit(EventsPeriods.CREATE_NEW)
-    await new Promise((resolve) => { setTimeout(resolve, 50_000) })
-    return await this.keysRepository.findAll();
+    const newPeriod = await this.pvzService.findAndCreate();
+    if (newPeriod.status) {
+      return await this.keysRepository.findAll();
+    }
   }
 
   @OnEvent(EventsAverage.UPDATE_AVERAGE)

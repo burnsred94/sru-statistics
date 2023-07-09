@@ -34,7 +34,7 @@ export class ArticleGateway {
       userId: payload.data.userId,
       pagination: payload,
     });
-
+    await this.sender()
   }
 
   afterInit(server: Server) {
@@ -51,7 +51,7 @@ export class ArticleGateway {
     this.logger.log(`Client Connected WS server: ${client.id}`);
   }
 
-  @Cron(CronExpression.EVERY_5_SECONDS)
+  @Cron(CronExpression.EVERY_30_SECONDS)
   async sender() {
     this.clients.forEach(async client => {
       const findByCity = await this.articleService.findByCity(

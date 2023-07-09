@@ -5,11 +5,8 @@ import { PeriodsService } from 'src/modules/periods';
 import { StatusPvz } from 'src/interfaces';
 import { UpdatePvzDto } from '../dto';
 import { PvzUtils } from '../utils';
-import { map } from 'lodash';
 import { Types } from 'mongoose';
 import { KeysService } from 'src/modules/keys';
-import { OnEvent } from '@nestjs/event-emitter';
-import { EventsPeriods } from 'src/modules/periods/events';
 
 @Injectable()
 export class PvzService {
@@ -60,18 +57,17 @@ export class PvzService {
     })
   }
 
-  @OnEvent(EventsPeriods.CREATE_NEW)
   async findAndCreate() {
     const findPvz = await this.pvzRepository.findAll();
-    const data = map(findPvz, async (pvz, index) => {
+    let count = 0
+    while (findPvz.length > count) {
       const period = await this.periodsService.create('Ожидается');
-      await this.pvzRepository.update(pvz._id, period._id);
-      return index;
-    });
+      await this.pvzRepository.update(findPvz[count]._id, period._id);
+      count++;
+    }
 
-    const resolved = await Promise.all(data);
 
-    if (resolved.length === findPvz.length) {
+    if (count === findPvz.length) {
       return { status: true };
     }
   }
