@@ -29,12 +29,14 @@ export class ArticleGateway {
   @WebSocketServer() server: Server;
   @SubscribeMessage('findByCity')
   async handleSendMessage(client: Socket, payload): Promise<void> {
-    this.clients.set(client.id, {
-      sockets: client,
-      userId: payload.data.userId,
-      pagination: payload,
-    });
-    await this.sender()
+    process.nextTick(async () => {
+      this.clients.set(client.id, {
+        sockets: client,
+        userId: payload.data.userId,
+        pagination: payload,
+      });
+      await this.sender()
+    })
   }
 
   afterInit(server: Server) {
