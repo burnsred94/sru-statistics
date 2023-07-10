@@ -8,7 +8,6 @@ import { FindByCityDto, FindByCityQueryDto, RemoveArticleDto } from '../dto';
 import { Keys, KeysService } from 'src/modules/keys';
 import { chunk, compact, map, uniqBy } from 'lodash';
 import { Pvz } from 'src/modules/pvz';
-import { resolve } from 'path';
 
 @Injectable()
 export class ArticleRepository {
@@ -66,37 +65,35 @@ export class ArticleRepository {
         data.city,
       );
 
-      const genResult = map(query, async (value) => {
-        if (value.articleId === String(_id)) {
-          const chunks = chunk(genKeys, value.limit);
-          return {
-            ...stats,
-            keys: chunks[value.page - 1],
-            meta: {
-              page: value.page,
-              total: chunks.length,
-              page_size: value.limit,
-            },
-          }
-        } else {
-          const chunks = chunk(genKeys, 10)
-          return {
-            ...stats,
-            keys: chunks[0],
-            meta: {
-              page: 1,
-              total: chunks.length,
-              page_size: 10,
-            },
-          }
+      const value = query.find(pagination => pagination.articleId === String(_id))
+
+      if (value.articleId === String(_id)) {
+        const chunks = chunk(genKeys, value.limit);
+        return {
+          ...stats,
+          keys: chunks[value.page - 1],
+          meta: {
+            page: value.page,
+            total: chunks.length,
+            page_size: value.limit,
+          },
         }
+      } else {
+        const chunks = chunk(genKeys, 10)
+        return {
+          ...stats,
+          keys: chunks[0],
+          meta: {
+            page: 1,
+            total: chunks.length,
+            page_size: 10,
+          },
+        }
+      }
 
 
-      })
+    })
 
-      const resolved = await Promise.all(genResult)
-      return resolved
-    });
 
     const resolved = await Promise.all(generateData)
     const result = resolved.flat()
