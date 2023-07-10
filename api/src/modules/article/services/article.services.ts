@@ -11,8 +11,6 @@ import {
 import { User } from 'src/modules/auth';
 import { FetchProvider } from 'src/modules/fetch/provider';
 import { DEFAULT_PRODUCT_NAME } from '../constants';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { EventsParser, EventsWS } from '../events';
 import { KeysService } from 'src/modules/keys';
 import { TownsDestructor } from '../utils';
 import { compact } from 'lodash';
@@ -26,7 +24,6 @@ export class ArticleService {
     private readonly fetchProvider: FetchProvider,
     private readonly keyService: KeysService,
     private readonly utilsDestructor: TownsDestructor,
-    private readonly eventEmitter: EventEmitter2,
   ) { }
 
   async checkData(user: User) {

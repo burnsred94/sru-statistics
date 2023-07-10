@@ -30,7 +30,6 @@ export class ArticleGateway {
   @SubscribeMessage('findByCity')
   async handleSendMessage(client: Socket, payload): Promise<void> {
     process.nextTick(async () => {
-
       this.clients.set(client.id, {
         sockets: client,
         userId: payload.data.userId,

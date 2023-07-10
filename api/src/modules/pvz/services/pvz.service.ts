@@ -66,7 +66,6 @@ export class PvzService {
       count++;
     }
 
-
     if (count === findPvz.length) {
       return { status: true };
     }
@@ -77,7 +76,6 @@ export class PvzService {
     if (data.position.length > 0) {
       const firstItem = data.position.at(-1);
       const secondItem = data.position.at(-2);
-      console.log(firstItem, secondItem)
       const result = await this.pvzUtils.calculateDiff(firstItem, secondItem);
       await this.periodsService.updateDiff(firstItem._id, result);
     }

@@ -64,7 +64,8 @@ export class KeysService {
   async addedNewAverage(keys) {
     let iterator = 0
     while (keys.length > iterator) {
-
+      const average = await this.averageService.create({ average: 'Ожидается' })
+      await this.keysRepository.updateAverage(keys[iterator], average._id)
       iterator++
     }
   }

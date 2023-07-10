@@ -23,7 +23,19 @@ export class PvzUtils {
       const second =
         secondItem.position === '1000+' ? 0 : Number(secondItem.position);
       const result = second - first
-      return result > 0 ? `+${String(result)}` : `${String(result)}`
+
+      if (firstItem.position === '1000+') {
+        const result = 1000 - second;
+        return `${result}`;
+      }
+
+      if (secondItem.position === '1000+') {
+        const result = second - 1000;
+        return `+${result}`;
+      }
+
+      return result > 0 ? `+${String(result)}` : `${String(result)}`;
+
     } else {
       return '-';
     }

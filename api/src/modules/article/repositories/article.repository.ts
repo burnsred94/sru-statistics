@@ -65,7 +65,7 @@ export class ArticleRepository {
         data.city,
       );
 
-      const value = query.find(pagination => pagination.articleId === String(_id))
+      const value = query?.find(pagination => pagination.articleId === String(_id))
 
       if (value.articleId === String(_id)) {
         const chunks = chunk(genKeys, value.limit);
@@ -78,7 +78,7 @@ export class ArticleRepository {
             page_size: value.limit,
           },
         }
-      } else {
+      } else if (value.articleId === undefined) {
         const chunks = chunk(genKeys, 10)
         return {
           ...stats,
