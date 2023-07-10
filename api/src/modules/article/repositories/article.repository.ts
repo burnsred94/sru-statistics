@@ -67,6 +67,19 @@ export class ArticleRepository {
 
       const value = query?.find(pagination => pagination.articleId === String(_id))
 
+      if (value.articleId === undefined) {
+        const chunks = chunk(genKeys, 10)
+        return {
+          ...stats,
+          keys: chunks[0],
+          meta: {
+            page: 1,
+            total: chunks.length,
+            page_size: 10,
+          },
+        }
+      }
+
       if (value.articleId === String(_id)) {
         const chunks = chunk(genKeys, value.limit);
         return {
@@ -76,17 +89,6 @@ export class ArticleRepository {
             page: value.page,
             total: chunks.length,
             page_size: value.limit,
-          },
-        }
-      } else if (value.articleId === undefined) {
-        const chunks = chunk(genKeys, 10)
-        return {
-          ...stats,
-          keys: chunks[0],
-          meta: {
-            page: 1,
-            total: chunks.length,
-            page_size: 10,
           },
         }
       }
