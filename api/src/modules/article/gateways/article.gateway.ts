@@ -57,6 +57,7 @@ export class ArticleGateway {
   @Cron(CronExpression.EVERY_30_SECONDS)
   async sender() {
     this.clients.forEach(async client => {
+      console.log(client.pagination)
       const findByCity = await this.articleService.findByCity(
         {
           userId: client.data.userId,

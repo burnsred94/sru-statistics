@@ -65,7 +65,7 @@ export class ArticleRepository {
         data.city,
       );
 
-      const genResult = map(query, (value) => {
+      const genResult = map(query, async (value) => {
         const chunks = chunk(genKeys, value.limit);
         return value.articleId === String(_id) ? {
           ...stats,
@@ -79,15 +79,15 @@ export class ArticleRepository {
           ...stats,
           keys: chunks[0],
           meta: {
-            page: value.page,
+            page: 1,
             total: chunks.length,
             page_size: value.limit,
           },
         };
       })
 
-
-      return genResult
+      const resolved = await Promise.all(genResult)
+      return resolved
     });
 
     const resolved = await Promise.all(generateData);
