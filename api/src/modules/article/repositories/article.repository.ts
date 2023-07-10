@@ -66,24 +66,31 @@ export class ArticleRepository {
       );
 
       const genResult = map(query, async (value) => {
-        const chunks = chunk(genKeys, value.limit);
-        return value.articleId === String(_id) ? {
-          ...stats,
-          keys: chunks[value.page - 1],
-          meta: {
-            page: value.page,
-            total: chunks.length,
-            page_size: value.limit,
-          },
-        } : {
-          ...stats,
-          keys: chunks[0],
-          meta: {
-            page: 1,
-            total: chunks.length,
-            page_size: value.limit,
-          },
-        };
+        if (value.articleId === String(_id)) {
+          const chunks = chunk(genKeys, value.limit);
+          return {
+            ...stats,
+            keys: chunks[value.page - 1],
+            meta: {
+              page: value.page,
+              total: chunks.length,
+              page_size: value.limit,
+            },
+          }
+        } else {
+          const chunks = chunk(genKeys, 10)
+          return {
+            ...stats,
+            keys: chunks[0],
+            meta: {
+              page: 1,
+              total: chunks.length,
+              page_size: 10,
+            },
+          }
+        }
+
+
       })
 
       const resolved = await Promise.all(genResult)
