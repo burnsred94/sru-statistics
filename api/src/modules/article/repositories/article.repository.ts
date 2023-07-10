@@ -67,7 +67,7 @@ export class ArticleRepository {
 
       const value = query?.find(pagination => pagination.articleId === String(_id))
 
-      if (value.articleId === undefined) {
+      if (value?.articleId === undefined) {
         const chunks = chunk(genKeys, 10)
         return {
           ...stats,
