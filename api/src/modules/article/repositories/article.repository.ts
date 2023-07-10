@@ -66,19 +66,24 @@ export class ArticleRepository {
       );
 
       const genResult = map(query, (value) => {
-        if (value.articleId === String(_id)) {
-          const chunks = chunk(genKeys, value.limit);
-
-          return {
-            ...stats,
-            keys: chunks[value.page - 1],
-            meta: {
-              page: value.page,
-              total: chunks.length,
-              page_size: value.limit,
-            },
-          }
-        }
+        const chunks = chunk(genKeys, value.limit);
+        return value.articleId === String(_id) ? {
+          ...stats,
+          keys: chunks[value.page - 1],
+          meta: {
+            page: value.page,
+            total: chunks.length,
+            page_size: value.limit,
+          },
+        } : {
+          ...stats,
+          keys: chunks[value.page - 1],
+          meta: {
+            page: value.page,
+            total: chunks.length,
+            page_size: value.limit,
+          },
+        };
       })
 
       return genResult
