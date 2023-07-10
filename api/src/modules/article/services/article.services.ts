@@ -15,6 +15,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventsParser, EventsWS } from '../events';
 import { KeysService } from 'src/modules/keys';
 import { TownsDestructor } from '../utils';
+import { compact } from 'lodash';
 
 @Injectable()
 export class ArticleService {
@@ -70,16 +71,14 @@ export class ArticleService {
       keys: newKeys,
     });
 
-    this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user });
-    this.eventEmitter.emit(EventsParser.SEND_TO_PARSE, { keysId: newKeys });
-
+    await this.fetchProvider.fetchParser({ keysId: newKeys })
     return newArticle;
   }
 
   //Cделано
   async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto[]) {
     const payload = await this.articleRepository.findByCity(data, id, query);
-    return payload.reverse();
+    return compact(payload).reverse();
   }
 
   //Cделано
@@ -108,6 +107,5 @@ export class ArticleService {
   //Cделано
   async removeKey(data: RemoveKeyDto, user: User) {
     await this.keyService.removeKey(data.keyId);
-
   }
 }

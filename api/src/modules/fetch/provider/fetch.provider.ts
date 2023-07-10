@@ -41,22 +41,25 @@ export class FetchProvider {
 
   @OnEvent(EventsParser.SEND_TO_PARSE)
   async fetchParser(payload: { keysId: Types.ObjectId[] }) {
-    const { keysId } = payload;
-    const keys = map(keysId, key => ({ _id: key, active: true }));
-    const currentDate = new PeriodsEntity('-').date();
-    const getKeys = await this.keysService.findById(keys, [currentDate], 'all');
-    const formatted = await this.fetchUtils.formatDataToParse(getKeys);
+    process.nextTick(async () => {
 
-    forEach(formatted, async element => {
-      await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
-        exchange: RmqExchanges.SEARCH,
-        routingKey: SearchPositionRMQ.routingKey,
-        payload: element,
+      const { keysId } = payload;
+      const keys = map(keysId, key => ({ _id: key, active: true }));
+      const currentDate = new PeriodsEntity('-').date();
+      const getKeys = await this.keysService.findById(keys, [currentDate], 'all');
+      const formatted = await this.fetchUtils.formatDataToParse(getKeys);
+
+      forEach(formatted, async element => {
+        await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
+          exchange: RmqExchanges.SEARCH,
+          routingKey: SearchPositionRMQ.routingKey,
+          payload: element,
+        });
       });
-    });
+    })
   }
 
-  // @Cron(CronExpression.EVERY_DAY_AT_1AM, { timeZone: 'Europe/Moscow' })
+  @Cron(CronExpression.EVERY_DAY_AT_1AM, { timeZone: 'Europe/Moscow' })
   async fetchUpdates() {
     process.nextTick(async () => {
       const keys = await this.keysService.findAndNewPeriod();
