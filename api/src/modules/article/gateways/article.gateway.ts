@@ -15,6 +15,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
     origin: '*',
   },
   perMessageDeflate: true,
+  transports: ['polling', 'websocket']
 })
 export class ArticleGateway {
   private logger: Logger = new Logger('MessageGateway');
