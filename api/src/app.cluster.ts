@@ -4,8 +4,7 @@
 import * as os from 'node:os';
 import * as cluster from 'node:cluster';
 import { Injectable, Logger } from '@nestjs/common';
-import * as net from 'node:net';
-import * as sio from 'socket.io';
+import * as sticky from 'sticky-session';
 
 
 
@@ -30,7 +29,7 @@ export class AppClustersService {
             });
         } else {
             this.logger.log(`Clustering service is starting pid ${process.pid}`);
-            callback();
+            sticky.listen(callback());
         }
     }
 }
