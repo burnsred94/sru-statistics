@@ -6,8 +6,9 @@ import { ArticleEntity } from '../entities';
 import { User } from 'src/modules/auth';
 import { FindByCityDto, FindByCityQueryDto, RemoveArticleDto } from '../dto';
 import { Keys, KeysService } from 'src/modules/keys';
-import { chunk, compact, map } from 'lodash';
+import { chunk, compact, map, uniqBy } from 'lodash';
 import { Pvz } from 'src/modules/pvz';
+import { resolve } from 'path';
 
 @Injectable()
 export class ArticleRepository {
@@ -97,8 +98,9 @@ export class ArticleRepository {
       return resolved
     });
 
-    const resolved = await Promise.all(generateData);
-    return resolved.flat();
+    const resolved = await Promise.all(generateData)
+    const result = resolved.flat()
+    return uniqBy(result, '_id');
   }
 
   async findById(articleId: string) {
