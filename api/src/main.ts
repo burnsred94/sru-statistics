@@ -35,4 +35,5 @@ async function bootstrap() {
   await app.listen(configService.get('PORT'));
 }
 
-AppClustersService.clustering(bootstrap);
+// AppClustersService.clustering(bootstrap);
+bootstrap();
