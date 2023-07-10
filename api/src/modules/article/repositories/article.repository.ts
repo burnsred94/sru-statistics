@@ -6,7 +6,7 @@ import { ArticleEntity } from '../entities';
 import { User } from 'src/modules/auth';
 import { FindByCityDto, FindByCityQueryDto, RemoveArticleDto } from '../dto';
 import { Keys, KeysService } from 'src/modules/keys';
-import { chunk, map } from 'lodash';
+import { chunk, compact, map } from 'lodash';
 import { Pvz } from 'src/modules/pvz';
 
 @Injectable()
@@ -77,7 +77,7 @@ export class ArticleRepository {
           },
         } : {
           ...stats,
-          keys: chunks[value.page - 1],
+          keys: chunks[0],
           meta: {
             page: value.page,
             total: chunks.length,
@@ -85,6 +85,7 @@ export class ArticleRepository {
           },
         };
       })
+
 
       return genResult
     });

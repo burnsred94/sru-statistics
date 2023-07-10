@@ -63,6 +63,7 @@ export class FetchProvider {
   async fetchUpdates() {
     process.nextTick(async () => {
       const keys = await this.keysService.findAndNewPeriod();
+      await this.keysService.addedNewAverage(keys);
       const formatted = await this.fetchUtils.formatDataToParse(keys);
       forEach(formatted, async element => {
         await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({

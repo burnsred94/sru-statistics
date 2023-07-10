@@ -61,6 +61,14 @@ export class KeysService {
     }
   }
 
+  async addedNewAverage(keys) {
+    let iterator = 0
+    while (keys.length > iterator) {
+
+      iterator++
+    }
+  }
+
   @OnEvent(EventsAverage.UPDATE_AVERAGE)
   async updateAverage(payload: { average: string; key_id: string }) {
     const id = payload.key_id as unknown as Types.ObjectId;
