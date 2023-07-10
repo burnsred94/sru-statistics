@@ -22,7 +22,6 @@ export class ArticleGateway {
 
   constructor(
     private readonly articleService: ArticleService,
-    private eventEmitter: EventEmitter2,
   ) { }
 
   clients = new Map();
@@ -34,7 +33,8 @@ export class ArticleGateway {
       this.clients.set(client.id, {
         sockets: client,
         userId: payload.data.userId,
-        pagination: payload,
+        data: payload.data,
+        pagination: payload.query,
       });
       await this.sender()
     })
@@ -59,16 +59,12 @@ export class ArticleGateway {
     this.clients.forEach(async client => {
       const findByCity = await this.articleService.findByCity(
         {
-          userId: client.userId,
-          city: client.pagination.data.city,
-          periods: client.pagination.data.periods,
+          userId: client.data.userId,
+          city: client.data.city,
+          periods: client.data.periods,
         },
         client.userId,
-        {
-          limit: client.pagination.query.limit,
-          page: client.pagination.query.page,
-          articleId: client.pagination.query.articleId,
-        },
+        client.pagination
       );
       client.sockets.compress(true).emit('findByCity', findByCity);
     });

@@ -14,7 +14,7 @@ export class ArticleRepository {
   constructor(
     @InjectModel(Article.name) private readonly modelArticle: Model<Article>,
     private readonly keysService: KeysService,
-  ) {}
+  ) { }
 
   async findDataByUser(user: User) {
     const find = await this.modelArticle.find({ userId: user }).lean().exec();
@@ -43,7 +43,7 @@ export class ArticleRepository {
     });
   }
 
-  async findByCity(data: FindByCityDto, id: number, query) {
+  async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto[]) {
     const find = await this.modelArticle
       .find({
         userId: id,
@@ -65,31 +65,27 @@ export class ArticleRepository {
         data.city,
       );
 
-      const chunks = chunk(genKeys, query.limit);
+      const genResult = map(query, (value) => {
+        if (value.articleId === String(_id)) {
+          const chunks = chunk(genKeys, value.limit);
 
-      return query.articleId === String(_id)
-        ? {
+          return {
             ...stats,
-            keys: chunks[query.page - 1],
+            keys: chunks[value.page - 1],
             meta: {
-              page: query.page,
+              page: value.page,
               total: chunks.length,
-              page_size: query.limit,
+              page_size: value.limit,
             },
           }
-        : {
-            ...stats,
-            keys: chunks[0],
-            meta: {
-              page: 1,
-              total: chunks.length,
-              page_size: query.limit,
-            },
-          };
+        }
+      })
+
+      return genResult
     });
 
     const resolved = await Promise.all(generateData);
-    return resolved;
+    return resolved.flat();
   }
 
   async findById(articleId: string) {

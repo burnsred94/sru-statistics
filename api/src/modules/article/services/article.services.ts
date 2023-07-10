@@ -77,7 +77,7 @@ export class ArticleService {
   }
 
   //Cделано
-  async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto) {
+  async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto[]) {
     const payload = await this.articleRepository.findByCity(data, id, query);
     return payload.reverse();
   }
