@@ -15,6 +15,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { RabbitMqPublisher } from 'src/modules/rabbitmq/services';
 import { RmqExchanges } from 'src/modules/rabbitmq/exchanges';
 import { SearchPositionRMQ } from 'src/modules/rabbitmq/contracts/search';
+import { resolve } from 'node:path';
 
 @Injectable()
 export class FetchProvider {
@@ -59,13 +60,14 @@ export class FetchProvider {
     })
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_1AM, { timeZone: 'Europe/Moscow' })
+  @Cron(CronExpression.EVERY_DAY_AT_2AM, { timeZone: 'Europe/Moscow' })
   async fetchUpdates() {
     process.nextTick(async () => {
       const keys = await this.keysService.findAndNewPeriod();
       await this.keysService.addedNewAverage(keys);
       const formatted = await this.fetchUtils.formatDataToParse(keys);
       forEach(formatted, async element => {
+        await new Promise((resolve) => { setTimeout(resolve, 100) })
         await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
           exchange: RmqExchanges.SEARCH,
           routingKey: SearchPositionRMQ.routingKey,
