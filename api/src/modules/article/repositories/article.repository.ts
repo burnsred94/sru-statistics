@@ -17,7 +17,7 @@ export class ArticleRepository {
   ) { }
 
   async findDataByUser(user: User) {
-    const find = await this.modelArticle.find({ userId: user }).lean().exec();
+    const find = await this.modelArticle.find({ userId: user, active: true }).lean().exec();
     return { total: find.length };
   }
 
