@@ -29,15 +29,13 @@ export class ArticleGateway {
   @WebSocketServer() server: Server;
   @SubscribeMessage('findByCity')
   async handleSendMessage(client: Socket, payload): Promise<void> {
-    process.nextTick(async () => {
-      this.clients.set(client.id, {
-        sockets: client,
-        userId: payload.data.userId,
-        data: payload.data,
-        pagination: payload.query,
-      });
-      await this.sender()
-    })
+    this.clients.set(client.id, {
+      sockets: client,
+      userId: payload.data.userId,
+      data: payload.data,
+      pagination: payload.query,
+    });
+    await this.sender()
   }
 
   afterInit(server: Server) {
@@ -54,19 +52,21 @@ export class ArticleGateway {
     this.logger.log(`Client Connected WS server: ${client.id}`);
   }
 
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  @Cron(CronExpression.EVERY_MINUTE)
   async sender() {
-    this.clients.forEach(async client => {
-      const findByCity = await this.articleService.findByCity(
-        {
-          userId: client.data.userId,
-          city: client.data.city,
-          periods: client.data.periods,
-        },
-        client.userId,
-        client.pagination
-      );
-      client.sockets.compress(true).emit('findByCity', findByCity);
+    process.nextTick(async () => {
+      this.clients.forEach(async client => {
+        const findByCity = await this.articleService.findByCity(
+          {
+            userId: client.data.userId,
+            city: client.data.city,
+            periods: client.data.periods,
+          },
+          client.userId,
+          client.pagination
+        );
+        client.sockets.compress(true).emit('findByCity', findByCity);
+      });
     });
   }
 }
