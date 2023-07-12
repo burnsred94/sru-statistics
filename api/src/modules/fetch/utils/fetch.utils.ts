@@ -8,7 +8,7 @@ export class FetchUtils {
       const { key, pwz, article } = item;
       const addresses = map(pwz, element => {
         const length = element.position.length;
-        if (element.position[length - 1]._id !== undefined) {
+        if (element.position[length - 1] !== undefined) {
           return {
             name: element.name,
             addressId: String(element._id),
