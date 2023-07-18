@@ -1,4 +1,4 @@
-import { Module, forwardRef, } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Pvz, PvzSchema } from './schemas';
 import { PvzService } from './services';
@@ -15,10 +15,10 @@ import { KeysModule } from '../keys';
     MongooseModule.forFeature([{ name: Pvz.name, schema: PvzSchema }]),
     PeriodsModule,
     RmqModule.register({ exchanges: [RmqExchanges.STATISTICS] }),
-    forwardRef(() => KeysModule)
+    forwardRef(() => KeysModule),
   ],
   providers: [PvzService, PvzRepository, PvzUtils],
   controllers: [PvzController],
   exports: [PvzService],
 })
-export class PvzModule { }
+export class PvzModule {}

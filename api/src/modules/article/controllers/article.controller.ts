@@ -26,7 +26,7 @@ import { initArticleMessage } from 'src/constatnts';
 export class ArticleController {
   protected readonly logger = new Logger(ArticleController.name);
 
-  constructor(private readonly articleService: ArticleService) { }
+  constructor(private readonly articleService: ArticleService) {}
 
   @ApiAcceptedResponse({ description: 'Create Statistic' })
   @UseGuards(JwtAuthGuard)
@@ -38,8 +38,7 @@ export class ArticleController {
   ) {
     try {
       process.nextTick(
-        async () =>
-          await this.articleService.create(data, user),
+        async () => await this.articleService.create(data, user),
       );
 
       const initArticle = initArticleMessage(data.article);

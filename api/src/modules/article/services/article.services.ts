@@ -24,7 +24,7 @@ export class ArticleService {
     private readonly fetchProvider: FetchProvider,
     private readonly keyService: KeysService,
     private readonly utilsDestructor: TownsDestructor,
-  ) { }
+  ) {}
 
   async checkData(user: User) {
     return await this.articleRepository.findDataByUser(user);
@@ -33,7 +33,10 @@ export class ArticleService {
   //Cделано
   async create(data: CreateArticleDto, user: User) {
     const { article, keys } = data;
-    const findArticleActive = await this.articleRepository.findArticleActive(article, user);
+    const findArticleActive = await this.articleRepository.findArticleActive(
+      article,
+      user,
+    );
 
     if (findArticleActive) {
       await this.addKeys(
@@ -43,15 +46,17 @@ export class ArticleService {
       return findArticleActive;
     }
 
-    const findArticleNonActive = await this.articleRepository.findArticleNonActive(article, user);
+    const findArticleNonActive =
+      await this.articleRepository.findArticleNonActive(article, user);
 
     if (findArticleNonActive) {
-      return await this.articleRepository.backOldArticle(findArticleNonActive._id, user);
+      return await this.articleRepository.backOldArticle(
+        findArticleNonActive._id,
+        user,
+      );
     }
 
-    const { data: productNameData } = await this.fetchProvider.fetchArticleName(
-      article,
-    );
+    const productNameData = await this.fetchProvider.fetchArticleName(article);
 
     const towns = await this.fetchProvider.fetchProfileTowns(user);
     const destructTowns = await this.utilsDestructor.destruct(towns);
@@ -75,12 +80,16 @@ export class ArticleService {
       keys: newKeys,
     });
 
-    await this.fetchProvider.fetchParser({ keysId: newKeys })
+    await this.fetchProvider.fetchParser({ keysId: newKeys });
     return newArticle;
   }
 
   //Cделано
-  async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto[]) {
+  async findByCity(
+    data: FindByCityDto,
+    id: number,
+    query: FindByCityQueryDto[],
+  ) {
     const payload = await this.articleRepository.findByCity(data, id, query);
     return compact(payload).reverse();
   }
@@ -100,7 +109,7 @@ export class ArticleService {
     });
 
     await this.articleRepository.update(newKeys, find._id);
-    await this.fetchProvider.fetchParser({ keysId: newKeys })
+    await this.fetchProvider.fetchParser({ keysId: newKeys });
   }
 
   //Cделано

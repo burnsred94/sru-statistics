@@ -8,7 +8,6 @@ import { RmqModule } from '../rabbitmq/rabbitmq.module';
 import { RmqExchanges } from '../rabbitmq/exchanges';
 import { RabbitRpcParamsFactory } from '@golevelup/nestjs-rabbitmq';
 
-
 @Module({
   providers: [FetchProvider, FetchUtils],
   imports: [
@@ -22,4 +21,4 @@ import { RabbitRpcParamsFactory } from '@golevelup/nestjs-rabbitmq';
   ],
   exports: [FetchProvider],
 })
-export class FetchModule { }
+export class FetchModule {}

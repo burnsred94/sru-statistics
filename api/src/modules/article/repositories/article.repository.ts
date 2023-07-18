@@ -14,10 +14,13 @@ export class ArticleRepository {
   constructor(
     @InjectModel(Article.name) private readonly modelArticle: Model<Article>,
     private readonly keysService: KeysService,
-  ) { }
+  ) {}
 
   async findDataByUser(user: User) {
-    const find = await this.modelArticle.find({ userId: user, active: true }).lean().exec();
+    const find = await this.modelArticle
+      .find({ userId: user, active: true })
+      .lean()
+      .exec();
     return { total: find.length };
   }
 
@@ -25,12 +28,16 @@ export class ArticleRepository {
     return await this.modelArticle.findOne({
       article: article,
       userId: userId,
-      active: true
+      active: true,
     });
   }
 
   async findArticleNonActive(article: string, userId: User) {
-    return await this.modelArticle.findOne({ article: article, userId: userId, active: false });
+    return await this.modelArticle.findOne({
+      article: article,
+      userId: userId,
+      active: false,
+    });
   }
 
   async create(article: Article) {
@@ -48,7 +55,11 @@ export class ArticleRepository {
     });
   }
 
-  async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto[]) {
+  async findByCity(
+    data: FindByCityDto,
+    id: number,
+    query: FindByCityQueryDto[],
+  ) {
     const find = await this.modelArticle
       .find({
         userId: id,
@@ -70,10 +81,12 @@ export class ArticleRepository {
         data.city,
       );
 
-      const value = query?.find(pagination => pagination.articleId === String(_id))
+      const value = query?.find(
+        pagination => pagination.articleId === String(_id),
+      );
 
       if (value === undefined) {
-        const chunks = chunk(genKeys, 10)
+        const chunks = chunk(genKeys, 10);
         return {
           ...stats,
           keys: chunks[0],
@@ -82,7 +95,7 @@ export class ArticleRepository {
             total: chunks.length,
             page_size: 10,
           },
-        }
+        };
       }
 
       if (value.articleId === String(_id)) {
@@ -95,15 +108,12 @@ export class ArticleRepository {
             total: chunks.length,
             page_size: value.limit,
           },
-        }
+        };
       }
+    });
 
-
-    })
-
-
-    const resolved = await Promise.all(generateData)
-    const result = resolved.flat()
+    const resolved = await Promise.all(generateData);
+    const result = resolved.flat();
     return uniqBy(result, '_id');
   }
 
@@ -118,7 +128,10 @@ export class ArticleRepository {
   }
 
   async backOldArticle(articleId: Types.ObjectId, id: User) {
-    return await this.modelArticle.findOneAndUpdate({ _id: articleId, userId: id }, { active: true });
+    return await this.modelArticle.findOneAndUpdate(
+      { _id: articleId, userId: id },
+      { active: true },
+    );
   }
 
   async removeArticle(data: RemoveArticleDto, id: User) {

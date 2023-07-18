@@ -15,14 +15,12 @@ import { Cron, CronExpression } from '@nestjs/schedule';
     origin: '*',
   },
   perMessageDeflate: true,
-  transports: ['polling', 'websocket']
+  transports: ['polling', 'websocket'],
 })
 export class ArticleGateway {
   private logger: Logger = new Logger('MessageGateway');
 
-  constructor(
-    private readonly articleService: ArticleService,
-  ) { }
+  constructor(private readonly articleService: ArticleService) {}
 
   clients = [];
 
@@ -36,7 +34,7 @@ export class ArticleGateway {
       data: payload.data,
       pagination: payload.query,
     });
-    await this.sender()
+    await this.sender();
   }
 
   afterInit(server: Server) {
@@ -63,7 +61,7 @@ export class ArticleGateway {
             periods: client.data.periods,
           },
           client.userId,
-          client.pagination
+          client.pagination,
         );
         client.sockets.compress(true).emit('findByCity', findByCity);
       });

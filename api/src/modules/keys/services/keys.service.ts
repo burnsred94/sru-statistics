@@ -62,11 +62,13 @@ export class KeysService {
   }
 
   async addedNewAverage(keys) {
-    let iterator = 0
+    let iterator = 0;
     while (keys.length > iterator) {
-      const average = await this.averageService.create({ average: 'Ожидается' })
-      await this.keysRepository.updateAverage(keys[iterator], average._id)
-      iterator++
+      const average = await this.averageService.create({
+        average: 'Ожидается',
+      });
+      await this.keysRepository.updateAverage(keys[iterator], average._id);
+      iterator++;
     }
   }
 
@@ -84,8 +86,8 @@ export class KeysService {
   ) {
     const keysIterator = map(ids, async item => {
       const key = await this.keysRepository.findById(item._id, searchObject);
-      const keyGenerator = await this.mockGenerator.keyGenerator(key, periods);
-      return keyGenerator;
+      // const keyGenerator = await this.mockGenerator.keyGenerator(key, periods);
+      return key;
     });
 
     const resolved = await Promise.all(keysIterator);

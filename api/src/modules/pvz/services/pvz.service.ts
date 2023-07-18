@@ -12,11 +12,12 @@ import { KeysService } from 'src/modules/keys';
 export class PvzService {
   protected readonly logger = new Logger(PvzService.name);
   constructor(
-    @Inject(forwardRef(() => KeysService)) private readonly keysService: KeysService,
+    @Inject(forwardRef(() => KeysService))
+    private readonly keysService: KeysService,
     private readonly pvzRepository: PvzRepository,
     private readonly periodsService: PeriodsService,
     private readonly pvzUtils: PvzUtils,
-  ) { }
+  ) {}
 
   async create(value, article: string, userId: User, keyId: string) {
     const period = await this.periodsService.create('Ожидается');
@@ -54,12 +55,12 @@ export class PvzService {
     await this.keysService.updateAverage({
       average: checkAverage,
       key_id: payload,
-    })
+    });
   }
 
   async findAndCreate() {
     const findPvz = await this.pvzRepository.findAll();
-    let count = 0
+    let count = 0;
     while (findPvz.length > count) {
       const period = await this.periodsService.create('Ожидается');
       await this.pvzRepository.update(findPvz[count]._id, period._id);

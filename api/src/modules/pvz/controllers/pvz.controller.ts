@@ -8,7 +8,7 @@ import { StatisticsUpdateRMQ } from 'src/modules/rabbitmq/contracts/statistics';
 export class PvzController {
   private readonly logger = new Logger(PvzController.name);
 
-  constructor(private readonly pvzService: PvzService) { }
+  constructor(private readonly pvzService: PvzService) {}
 
   @RabbitMqSubscriber({
     exchange: RmqExchanges.STATISTICS,

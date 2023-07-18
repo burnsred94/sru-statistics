@@ -10,46 +10,61 @@ import { User } from 'src/modules/auth/user';
 import { KeysService } from 'src/modules/keys';
 import { PeriodsEntity } from 'src/modules/periods';
 import { FetchUtils } from '../utils';
-import axios from 'axios';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { RabbitMqPublisher } from 'src/modules/rabbitmq/services';
+import {
+  RabbitMqPublisher,
+  RabbitMqRequester,
+} from 'src/modules/rabbitmq/services';
 import { RmqExchanges } from 'src/modules/rabbitmq/exchanges';
 import { SearchPositionRMQ } from 'src/modules/rabbitmq/contracts/search';
-
+import { GetProductRMQ } from 'src/modules/rabbitmq/contracts/products';
+import { GetProfileRMQ } from 'src/modules/rabbitmq/contracts/profile/get-profile.contract';
 
 @Injectable()
 export class FetchProvider {
   constructor(
     private readonly gotService: GotService,
     private readonly rmqPublisher: RabbitMqPublisher,
+    private readonly rmqRequester: RabbitMqRequester,
     private readonly configService: ConfigService,
     private readonly keysService: KeysService,
     private readonly fetchUtils: FetchUtils,
-  ) { }
+  ) {}
 
   count = 0;
 
   async fetchArticleName(article: string) {
-    const url = await this.configService.get('PRODUCT_SERVICE_GET_ARTICLE');
-    const data = await this.gotService.gotRef(url + article);
-    return JSON.parse(data.body);
+    return await this.rmqRequester.request<
+      GetProductRMQ.Payload,
+      GetProductRMQ.Response
+    >({
+      exchange: RmqExchanges.PRODUCT,
+      routingKey: GetProductRMQ.routingKey,
+      payload: { article: article },
+    });
   }
 
   async fetchProfileTowns(id: User): Promise<IProfileApiResponse> {
-    const url = await this.configService.get('PROFILE_API_URL');
-    const data = await this.gotService.gotRef(url + id);
-    const dataProfile = JSON.parse(data.body);
-    return dataProfile.data as IProfileApiResponse;
+    return await this.rmqRequester.request<
+      GetProfileRMQ.Payload,
+      GetProfileRMQ.Response
+    >({
+      exchange: RmqExchanges.PROFILE,
+      routingKey: GetProfileRMQ.routingKey,
+      payload: { userId: id as unknown as number },
+    });
   }
 
   @OnEvent(EventsParser.SEND_TO_PARSE)
   async fetchParser(payload: { keysId: Types.ObjectId[] }) {
     process.nextTick(async () => {
-
       const { keysId } = payload;
       const keys = map(keysId, key => ({ _id: key, active: true }));
       const currentDate = new PeriodsEntity('-').date();
-      const getKeys = await this.keysService.findById(keys, [currentDate], 'all');
+      const getKeys = await this.keysService.findById(
+        keys,
+        [currentDate],
+        'all',
+      );
       const formatted = await this.fetchUtils.formatDataToParse(getKeys);
 
       forEach(formatted, async element => {
@@ -59,7 +74,7 @@ export class FetchProvider {
           payload: element,
         });
       });
-    })
+    });
   }
 
   // @Cron(CronExpression.EVERY_10_MINUTES, { timeZone: 'Europe/Moscow' })
@@ -69,15 +84,17 @@ export class FetchProvider {
       await this.keysService.addedNewAverage(keys);
       const formatted = await this.fetchUtils.formatDataToParse(keys);
       forEach(formatted, async element => {
-        await new Promise((resolve) => { setTimeout(resolve, 100) })
-        this.count += 1
-        console.log(this.count)
+        await new Promise(resolve => {
+          setTimeout(resolve, 100);
+        });
+        this.count += 1;
+        console.log(this.count);
         await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
           exchange: RmqExchanges.SEARCH,
           routingKey: SearchPositionRMQ.routingKey,
           payload: element,
         });
       });
-    })
+    });
   }
 }
