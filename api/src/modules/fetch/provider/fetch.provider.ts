@@ -28,7 +28,7 @@ export class FetchProvider {
     private readonly configService: ConfigService,
     private readonly keysService: KeysService,
     private readonly fetchUtils: FetchUtils,
-  ) {}
+  ) { }
 
   count = 0;
 

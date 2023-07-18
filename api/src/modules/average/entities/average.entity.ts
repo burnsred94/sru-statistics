@@ -20,9 +20,10 @@ export class AverageEntity {
     date = new Date(
       date.toLocaleString('en-US', { timeZone: 'Europe/Moscow' }),
     );
-    const formattedDate = new Date(
-      date.setDate(date.getDate() + 1),
-    ).toLocaleDateString('ru-RU', this.options);
+    // const formattedDate = new Date(
+    //   date.setDate(date.getDate() + 1),
+    // )
+    const formattedDate = date.toLocaleDateString('ru-RU', this.options);
     return formattedDate;
   }
 
