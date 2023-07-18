@@ -21,11 +21,16 @@ export class ArticleRepository {
     return { total: find.length };
   }
 
-  async findArticle(article: string, userId: User) {
+  async findArticleActive(article: string, userId: User) {
     return await this.modelArticle.findOne({
       article: article,
       userId: userId,
+      active: true
     });
+  }
+
+  async findArticleNonActive(article: string, userId: User) {
+    return await this.modelArticle.findOne({ article: article, userId: userId, active: false });
   }
 
   async create(article: Article) {
@@ -110,6 +115,10 @@ export class ArticleRepository {
       model: Keys.name,
       populate: { path: 'pwz', select: 'name', model: Pvz.name },
     });
+  }
+
+  async backOldArticle(articleId: Types.ObjectId, id: User) {
+    return await this.modelArticle.findOneAndUpdate({ _id: articleId, userId: id }, { active: true });
   }
 
   async removeArticle(data: RemoveArticleDto, id: User) {

@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { GotModule } from '@t00nday/nestjs-got';
-import { FetchSearchProvider, FetchProvider } from './provider';
+import { FetchProvider } from './provider';
 import { KeysModule } from '../keys';
 import { FetchUtils } from './utils';
 import { RmqModule } from '../rabbitmq/rabbitmq.module';
 import { RmqExchanges } from '../rabbitmq/exchanges';
 import { RabbitRpcParamsFactory } from '@golevelup/nestjs-rabbitmq';
 
+
 @Module({
-  providers: [FetchSearchProvider, FetchProvider, FetchUtils],
+  providers: [FetchProvider, FetchUtils],
   imports: [
     ConfigModule,
     GotModule,
@@ -19,6 +20,6 @@ import { RabbitRpcParamsFactory } from '@golevelup/nestjs-rabbitmq';
       exchanges: [RmqExchanges.SEARCH],
     }),
   ],
-  exports: [FetchSearchProvider, FetchProvider],
+  exports: [FetchProvider],
 })
-export class FetchModule {}
+export class FetchModule { }

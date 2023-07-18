@@ -16,7 +16,7 @@ export class RmqModule {
       module: RabbitMQModule,
       imports: [
         RabbitMQModule.forRootAsync(RabbitMQModule, {
-          useFactory: () => {
+          useFactory: (configService: ConfigService) => {
             return {
               exchanges: exchanges.map(exchange => {
                 return {
@@ -25,7 +25,7 @@ export class RmqModule {
                   options: {},
                 };
               }),
-              uri: 'amqp://admin:changeme@64.226.124.194:5672',
+              uri: configService.get('RABBIT_URI_CONNECTION'),
               connectionInitOptions: { wait: false },
               enableControllerDiscovery: true,
               validateMessage: true,

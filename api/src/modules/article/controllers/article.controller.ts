@@ -16,7 +16,6 @@ import {
   CreateArticleDto,
   RemoveKeyDto,
   RemoveArticleDto,
-  ArticlePaginationDto,
 } from '../dto';
 import { CurrentUser, JwtAuthGuard, User } from 'src/modules';
 import { ArticleService } from '../services';
@@ -35,13 +34,12 @@ export class ArticleController {
   async create(
     @CurrentUser() user: User,
     @Body() data: CreateArticleDto,
-    @Req() request: Request,
     @Res() response: Response,
   ) {
     try {
       process.nextTick(
         async () =>
-          await this.articleService.create(data, user, request.cookies),
+          await this.articleService.create(data, user),
       );
 
       const initArticle = initArticleMessage(data.article);

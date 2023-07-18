@@ -24,12 +24,13 @@ export class ArticleGateway {
     private readonly articleService: ArticleService,
   ) { }
 
-  clients = new Map();
+  clients = [];
 
   @WebSocketServer() server: Server;
   @SubscribeMessage('findByCity')
   async handleSendMessage(client: Socket, payload): Promise<void> {
-    this.clients.set(client.id, {
+    this.clients.push({
+      clientId: client.id,
       sockets: client,
       userId: payload.data.userId,
       data: payload.data,
@@ -44,7 +45,6 @@ export class ArticleGateway {
 
   async handleDisconnect(client: Socket) {
     this.logger.log(`Client Disconnected: ${client.id}`);
-    this.clients.delete(client.id);
     console.log(this.clients);
   }
 

@@ -31,21 +31,28 @@ export class ArticleService {
   }
 
   //Cделано
-  async create(data: CreateArticleDto, user: User, query) {
+  async create(data: CreateArticleDto, user: User) {
     const { article, keys } = data;
-    const findArticle = await this.articleRepository.findArticle(article, user);
+    const findArticleActive = await this.articleRepository.findArticleActive(article, user);
 
-    if (findArticle) {
+    if (findArticleActive) {
       await this.addKeys(
-        { articleId: String(findArticle._id), keys: keys },
+        { articleId: String(findArticleActive._id), keys: keys },
         user,
       );
-      return findArticle;
+      return findArticleActive;
+    }
+
+    const findArticleNonActive = await this.articleRepository.findArticleNonActive(article, user);
+
+    if (findArticleNonActive) {
+      return await this.articleRepository.backOldArticle(findArticleNonActive._id, user);
     }
 
     const { data: productNameData } = await this.fetchProvider.fetchArticleName(
       article,
     );
+
     const towns = await this.fetchProvider.fetchProfileTowns(user);
     const destructTowns = await this.utilsDestructor.destruct(towns);
 
