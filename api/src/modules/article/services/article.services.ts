@@ -24,7 +24,7 @@ export class ArticleService {
     private readonly fetchProvider: FetchProvider,
     private readonly keyService: KeysService,
     private readonly utilsDestructor: TownsDestructor,
-  ) {}
+  ) { }
 
   async checkData(user: User) {
     return await this.articleRepository.findDataByUser(user);
@@ -59,6 +59,7 @@ export class ArticleService {
     const productNameData = await this.fetchProvider.fetchArticleName(article);
 
     const towns = await this.fetchProvider.fetchProfileTowns(user);
+    console.log(towns)
     const destructTowns = await this.utilsDestructor.destruct(towns);
 
     const newKeys = await this.keyService.create({
