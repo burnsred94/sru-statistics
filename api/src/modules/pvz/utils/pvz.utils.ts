@@ -36,7 +36,7 @@ export class PvzUtils {
 
       return result > 0 ? `+${String(result)}` : `${String(result)}`;
     } else {
-      return '-';
+      return '0';
     }
   }
 }

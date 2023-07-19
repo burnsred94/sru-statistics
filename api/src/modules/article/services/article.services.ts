@@ -59,7 +59,6 @@ export class ArticleService {
     const productNameData = await this.fetchProvider.fetchArticleName(article);
 
     const towns = await this.fetchProvider.fetchProfileTowns(user);
-    console.log(towns)
     const destructTowns = await this.utilsDestructor.destruct(towns);
 
     const newKeys = await this.keyService.create({

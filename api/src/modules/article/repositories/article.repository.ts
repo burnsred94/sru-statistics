@@ -22,10 +22,7 @@ export class ArticleRepository {
       .lean()
       .exec();
 
-    const keysLength = find.reduce((accumulator, item) => {
-      accumulator + item.keys.length
-      return accumulator
-    }, 0)
+    const keysLength = find.reduce((accumulator, item) => accumulator + item.keys.length, 0)
 
     return { total: find.length, total_keys: keysLength };
   }
