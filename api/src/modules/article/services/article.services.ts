@@ -80,6 +80,7 @@ export class ArticleService {
       keys: newKeys,
     });
 
+    await this.fetchProvider.startTrialPeriod(user);
     await this.fetchProvider.fetchParser({ keysId: newKeys });
     return newArticle;
   }

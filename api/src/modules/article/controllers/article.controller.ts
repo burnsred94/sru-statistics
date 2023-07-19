@@ -19,7 +19,7 @@ import {
 } from '../dto';
 import { CurrentUser, JwtAuthGuard, User } from 'src/modules';
 import { ArticleService } from '../services';
-import { Response, Request } from 'express';
+import { Response } from 'express';
 import { initArticleMessage } from 'src/constatnts';
 
 @Controller('v1')

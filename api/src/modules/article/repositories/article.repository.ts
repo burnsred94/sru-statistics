@@ -14,7 +14,7 @@ export class ArticleRepository {
   constructor(
     @InjectModel(Article.name) private readonly modelArticle: Model<Article>,
     private readonly keysService: KeysService,
-  ) { }
+  ) {}
 
   async findDataByUser(user: User) {
     const find = await this.modelArticle
@@ -22,7 +22,10 @@ export class ArticleRepository {
       .lean()
       .exec();
 
-    const keysLength = find.reduce((accumulator, item) => accumulator + item.keys.length, 0)
+    const keysLength = find.reduce(
+      (accumulator, item) => accumulator + item.keys.length,
+      0,
+    );
 
     return { total: find.length, total_keys: keysLength };
   }

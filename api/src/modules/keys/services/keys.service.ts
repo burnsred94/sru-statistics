@@ -17,7 +17,7 @@ export class KeysService {
     private readonly pvzService: PvzService,
     private readonly mockGenerator: MockGenerator,
     private readonly averageService: AverageService,
-  ) { }
+  ) {}
 
   async create(data: IKey) {
     const keys = map(data.keys, async key => {

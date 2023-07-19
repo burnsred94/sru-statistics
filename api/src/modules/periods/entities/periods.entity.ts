@@ -27,7 +27,7 @@ export class PeriodsEntity {
     // const formattedDate = new Date(
     //   date.setDate(date.getDate() + 1),
     // ).toLocaleDateString('ru-RU', this.options);
-    const formattedDate = date.toLocaleDateString('ru-RU', this.options)
+    const formattedDate = date.toLocaleDateString('ru-RU', this.options);
     return formattedDate;
   }
 

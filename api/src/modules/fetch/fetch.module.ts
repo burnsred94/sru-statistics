@@ -16,9 +16,13 @@ import { RabbitRpcParamsFactory } from '@golevelup/nestjs-rabbitmq';
     KeysModule,
     RabbitRpcParamsFactory,
     RmqModule.register({
-      exchanges: [RmqExchanges.SEARCH, RmqExchanges.PROFILE, RmqExchanges.PRODUCT],
+      exchanges: [
+        RmqExchanges.SEARCH,
+        RmqExchanges.PROFILE,
+        RmqExchanges.PRODUCT,
+      ],
     }),
   ],
   exports: [FetchProvider],
 })
-export class FetchModule { }
+export class FetchModule {}

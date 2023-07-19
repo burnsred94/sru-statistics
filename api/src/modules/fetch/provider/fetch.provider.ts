@@ -15,7 +15,10 @@ import {
 import { RmqExchanges } from 'src/modules/rabbitmq/exchanges';
 import { SearchPositionRMQ } from 'src/modules/rabbitmq/contracts/search';
 import { GetProductRMQ } from 'src/modules/rabbitmq/contracts/products';
-import { GetProfileRMQ } from 'src/modules/rabbitmq/contracts/profile/get-profile.contract';
+import {
+  GetProfileRMQ,
+  StartTrialProfileRMQ,
+} from 'src/modules/rabbitmq/contracts/profile';
 
 @Injectable()
 export class FetchProvider {
@@ -24,9 +27,17 @@ export class FetchProvider {
     private readonly rmqRequester: RabbitMqRequester,
     private readonly keysService: KeysService,
     private readonly fetchUtils: FetchUtils,
-  ) { }
+  ) {}
 
   count = 0;
+
+  async startTrialPeriod(userId: User) {
+    await this.rmqPublisher.publish({
+      exchange: RmqExchanges.PROFILE,
+      routingKey: StartTrialProfileRMQ.routingKey,
+      payload: { userId: userId },
+    });
+  }
 
   async fetchArticleName(article: string) {
     return await this.rmqRequester.request<
