@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
-import { GotService } from '@t00nday/nestjs-got';
 import { forEach, map } from 'lodash';
 import { Types } from 'mongoose';
 import { IProfileApiResponse } from 'src/interfaces/response/profile-api-response.interface';
@@ -22,10 +20,8 @@ import { GetProfileRMQ } from 'src/modules/rabbitmq/contracts/profile/get-profil
 @Injectable()
 export class FetchProvider {
   constructor(
-    private readonly gotService: GotService,
     private readonly rmqPublisher: RabbitMqPublisher,
     private readonly rmqRequester: RabbitMqRequester,
-    private readonly configService: ConfigService,
     private readonly keysService: KeysService,
     private readonly fetchUtils: FetchUtils,
   ) { }
@@ -39,6 +35,7 @@ export class FetchProvider {
     >({
       exchange: RmqExchanges.PRODUCT,
       routingKey: GetProductRMQ.routingKey,
+      timeout: 5000 * 10,
       payload: { article: article },
     });
   }
