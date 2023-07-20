@@ -17,7 +17,7 @@ export class KeysService {
     private readonly pvzService: PvzService,
     private readonly mockGenerator: MockGenerator,
     private readonly averageService: AverageService,
-  ) {}
+  ) { }
 
   async create(data: IKey) {
     const keys = map(data.keys, async key => {
@@ -81,12 +81,10 @@ export class KeysService {
 
   async findById(
     ids: Array<{ _id: Types.ObjectId; active: boolean }>,
-    periods: string[],
     searchObject: string,
   ) {
     const keysIterator = map(ids, async item => {
       const key = await this.keysRepository.findById(item._id, searchObject);
-      // const keyGenerator = await this.mockGenerator.keyGenerator(key, periods);
       return key;
     });
 

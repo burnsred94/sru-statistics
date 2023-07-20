@@ -14,7 +14,7 @@ export class ArticleRepository {
   constructor(
     @InjectModel(Article.name) private readonly modelArticle: Model<Article>,
     private readonly keysService: KeysService,
-  ) {}
+  ) { }
 
   async findDataByUser(user: User) {
     const find = await this.modelArticle
@@ -83,7 +83,6 @@ export class ArticleRepository {
       const { keys, _id } = stats;
       const genKeys = await this.keysService.findById(
         keys as unknown as Array<{ _id: Types.ObjectId; active: boolean }>,
-        data.periods,
         data.city,
       );
 

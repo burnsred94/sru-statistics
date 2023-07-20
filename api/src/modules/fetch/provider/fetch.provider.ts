@@ -13,12 +13,10 @@ import {
   RabbitMqRequester,
 } from 'src/modules/rabbitmq/services';
 import { RmqExchanges } from 'src/modules/rabbitmq/exchanges';
-import { SearchPositionRMQ } from 'src/modules/rabbitmq/contracts/search';
+import { GetPositionWidgetsRMQ, SearchPositionRMQ } from 'src/modules/rabbitmq/contracts/search';
 import { GetProductRMQ } from 'src/modules/rabbitmq/contracts/products';
-import {
-  GetProfileRMQ,
-  StartTrialProfileRMQ,
-} from 'src/modules/rabbitmq/contracts/profile';
+import { GetProfileRMQ, StartTrialProfileRMQ } from 'src/modules/rabbitmq/contracts/profile';
+import { GetPositionDto } from '../dto';
 
 @Injectable()
 export class FetchProvider {
@@ -27,16 +25,20 @@ export class FetchProvider {
     private readonly rmqRequester: RabbitMqRequester,
     private readonly keysService: KeysService,
     private readonly fetchUtils: FetchUtils,
-  ) {}
+  ) { }
 
   count = 0;
 
   async startTrialPeriod(userId: User) {
-    await this.rmqPublisher.publish({
-      exchange: RmqExchanges.PROFILE,
-      routingKey: StartTrialProfileRMQ.routingKey,
-      payload: { userId: userId },
-    });
+    await this.rmqPublisher.publish({ exchange: RmqExchanges.PROFILE, routingKey: StartTrialProfileRMQ.routingKey, payload: { userId: userId } })
+  }
+
+  async getPositionWidget(dto: GetPositionDto) {
+    return await this.rmqRequester.request({
+      exchange: RmqExchanges.SEARCH,
+      routingKey: GetPositionWidgetsRMQ.routingKey,
+      payload: dto
+    })
   }
 
   async fetchArticleName(article: string) {
@@ -67,10 +69,8 @@ export class FetchProvider {
     process.nextTick(async () => {
       const { keysId } = payload;
       const keys = map(keysId, key => ({ _id: key, active: true }));
-      const currentDate = new PeriodsEntity('-').date();
       const getKeys = await this.keysService.findById(
         keys,
-        [currentDate],
         'all',
       );
       const formatted = await this.fetchUtils.formatDataToParse(getKeys);
