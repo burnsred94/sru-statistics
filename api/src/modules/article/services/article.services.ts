@@ -24,7 +24,7 @@ export class ArticleService {
     private readonly fetchProvider: FetchProvider,
     private readonly keyService: KeysService,
     private readonly utilsDestructor: TownsDestructor,
-  ) { }
+  ) {}
 
   async checkData(user: User) {
     return await this.articleRepository.findDataByUser(user);

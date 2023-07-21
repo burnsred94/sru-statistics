@@ -14,7 +14,7 @@ export class ArticleRepository {
   constructor(
     @InjectModel(Article.name) private readonly modelArticle: Model<Article>,
     private readonly keysService: KeysService,
-  ) { }
+  ) {}
 
   async findDataByUser(user: User) {
     const find = await this.modelArticle

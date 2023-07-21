@@ -30,4 +30,4 @@ import { AverageModule } from './modules/average/average.module';
     AverageModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}

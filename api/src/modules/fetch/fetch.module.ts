@@ -25,6 +25,6 @@ import { FetchController } from './controllers';
     }),
   ],
   exports: [FetchProvider],
-  controllers: [FetchController]
+  controllers: [FetchController],
 })
-export class FetchModule { }
+export class FetchModule {}

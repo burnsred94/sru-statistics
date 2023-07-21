@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { forEach, map } from 'lodash';
 import { Types } from 'mongoose';
@@ -6,20 +6,27 @@ import { IProfileApiResponse } from 'src/interfaces/response/profile-api-respons
 import { EventsParser } from 'src/modules/article/events';
 import { User } from 'src/modules/auth/user';
 import { KeysService } from 'src/modules/keys';
-import { PeriodsEntity } from 'src/modules/periods';
 import { FetchUtils } from '../utils';
 import {
   RabbitMqPublisher,
   RabbitMqRequester,
 } from 'src/modules/rabbitmq/services';
 import { RmqExchanges } from 'src/modules/rabbitmq/exchanges';
-import { GetPositionWidgetsRMQ, SearchPositionRMQ } from 'src/modules/rabbitmq/contracts/search';
+import {
+  GetPositionWidgetsRMQ,
+  SearchPositionRMQ,
+} from 'src/modules/rabbitmq/contracts/search';
 import { GetProductRMQ } from 'src/modules/rabbitmq/contracts/products';
-import { GetProfileRMQ, StartTrialProfileRMQ } from 'src/modules/rabbitmq/contracts/profile';
+import {
+  GetProfileRMQ,
+  StartTrialProfileRMQ,
+} from 'src/modules/rabbitmq/contracts/profile';
 import { GetPositionDto } from '../dto';
 
 @Injectable()
 export class FetchProvider {
+  protected readonly logger = new Logger(FetchProvider.name);
+
   constructor(
     private readonly rmqPublisher: RabbitMqPublisher,
     private readonly rmqRequester: RabbitMqRequester,
@@ -30,16 +37,45 @@ export class FetchProvider {
   count = 0;
 
   async startTrialPeriod(userId: User) {
-    await this.rmqPublisher.publish({ exchange: RmqExchanges.PROFILE, routingKey: StartTrialProfileRMQ.routingKey, payload: { userId: userId } })
+    await this.rmqPublisher.publish({
+      exchange: RmqExchanges.PROFILE,
+      routingKey: StartTrialProfileRMQ.routingKey,
+      payload: { userId: userId },
+    });
   }
 
   async getPositionWidget(dto: GetPositionDto) {
-    return await this.rmqRequester.request({
-      exchange: RmqExchanges.SEARCH,
-      routingKey: GetPositionWidgetsRMQ.routingKey,
+
+    const product = await this.rmqRequester.request<
+      GetProductRMQ.Payload,
+      GetProductRMQ.Response
+    >({
+      exchange: RmqExchanges.PRODUCT,
+      routingKey: GetProductRMQ.routingKey,
       timeout: 5000 * 10,
-      payload: dto
-    })
+      payload: { article: dto.article },
+    });
+
+    if (product.status === true) {
+      const data = await this.rmqRequester.request({
+        exchange: RmqExchanges.SEARCH,
+        routingKey: GetPositionWidgetsRMQ.routingKey,
+        timeout: 5000 * 10,
+        payload: dto,
+      });
+
+      if (data) {
+        return {
+          product: product,
+          find_data: data,
+        };
+      }
+    } else {
+
+      throw new BadRequestException(
+        `Мы не смогли найти товар по артикулу: ${dto.article}`,
+      );
+    }
   }
 
   async fetchArticleName(article: string) {
@@ -70,10 +106,7 @@ export class FetchProvider {
     process.nextTick(async () => {
       const { keysId } = payload;
       const keys = map(keysId, key => ({ _id: key, active: true }));
-      const getKeys = await this.keysService.findById(
-        keys,
-        'all',
-      );
+      const getKeys = await this.keysService.findById(keys, 'all');
       const formatted = await this.fetchUtils.formatDataToParse(getKeys);
 
       forEach(formatted, async element => {

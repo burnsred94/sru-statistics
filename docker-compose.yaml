@@ -1,9 +1,9 @@
 version: '3.8'
 
 networks:
-  geo_default:
+  sru-geo_default:
     external:
-      name: geo_default
+      name: sru-geo_default
 
 services:
   api:
