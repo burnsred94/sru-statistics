@@ -19,4 +19,4 @@ services:
     volumes:
       - ./api/:/usr/src/app
     networks:
-      - geo_default
+      - sru-geo_default
