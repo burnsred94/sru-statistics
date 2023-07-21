@@ -37,6 +37,7 @@ export class FetchProvider {
     return await this.rmqRequester.request({
       exchange: RmqExchanges.SEARCH,
       routingKey: GetPositionWidgetsRMQ.routingKey,
+      timeout: 5000 * 10,
       payload: dto
     })
   }
