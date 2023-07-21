@@ -66,7 +66,10 @@ export class FetchProvider {
 
       if (data) {
         return {
-          product: product,
+          product: {
+            article: dto.article,
+            ...product,
+          },
           find_data: data,
         };
       }
