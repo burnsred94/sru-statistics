@@ -7,9 +7,7 @@ import { StatusPvz } from 'src/interfaces';
 
 @Injectable()
 export class PeriodsRepository {
-  constructor(
-    @InjectModel(Periods.name) private readonly periodModel: Model<Periods>,
-  ) {}
+  constructor(@InjectModel(Periods.name) private readonly periodModel: Model<Periods>) {}
 
   async create(position: string, difference?: string) {
     const newPeriod = new PeriodsEntity(position, difference);

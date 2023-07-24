@@ -18,10 +18,8 @@ export class PvzUtils {
 
   async calculateDiff(firstItem: any, secondItem: any) {
     if (firstItem !== undefined && secondItem !== undefined) {
-      const first =
-        firstItem.position === '1000+' ? 0 : Number(firstItem.position);
-      const second =
-        secondItem.position === '1000+' ? 0 : Number(secondItem.position);
+      const first = firstItem.position === '1000+' ? 0 : Number(firstItem.position);
+      const second = secondItem.position === '1000+' ? 0 : Number(secondItem.position);
       const result = second - first;
 
       if (firstItem.position === '1000+') {

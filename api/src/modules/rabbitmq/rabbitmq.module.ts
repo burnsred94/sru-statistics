@@ -1,9 +1,6 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import {
-  RabbitMQModule,
-  RabbitRpcParamsFactory,
-} from '@golevelup/nestjs-rabbitmq';
+import { RabbitMQModule, RabbitRpcParamsFactory } from '@golevelup/nestjs-rabbitmq';
 import { RabbitMqPublisher } from './services/rabbitmq.publisher';
 import { RabbitMqRequester } from './services/rabbitmq.requester';
 import { RabbitMqModuleConfig } from './interfaces';

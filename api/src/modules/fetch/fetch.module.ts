@@ -8,6 +8,7 @@ import { RmqModule } from '../rabbitmq/rabbitmq.module';
 import { RmqExchanges } from '../rabbitmq/exchanges';
 import { RabbitRpcParamsFactory } from '@golevelup/nestjs-rabbitmq';
 import { FetchController } from './controllers';
+import { PvzModule } from '../pvz';
 
 @Module({
   providers: [FetchProvider, FetchUtils],
@@ -15,13 +16,10 @@ import { FetchController } from './controllers';
     ConfigModule,
     GotModule,
     KeysModule,
+    PvzModule,
     RabbitRpcParamsFactory,
     RmqModule.register({
-      exchanges: [
-        RmqExchanges.SEARCH,
-        RmqExchanges.PROFILE,
-        RmqExchanges.PRODUCT,
-      ],
+      exchanges: [RmqExchanges.SEARCH, RmqExchanges.PROFILE, RmqExchanges.PRODUCT],
     }),
   ],
   exports: [FetchProvider],

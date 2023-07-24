@@ -33,27 +33,17 @@ export class ArticleService {
   //Cделано
   async create(data: CreateArticleDto, user: User) {
     const { article, keys } = data;
-    const findArticleActive = await this.articleRepository.findArticleActive(
-      article,
-      user,
-    );
+    const findArticleActive = await this.articleRepository.findArticleActive(article, user);
 
     if (findArticleActive) {
-      await this.addKeys(
-        { articleId: String(findArticleActive._id), keys: keys },
-        user,
-      );
+      await this.addKeys({ articleId: String(findArticleActive._id), keys: keys }, user);
       return findArticleActive;
     }
 
-    const findArticleNonActive =
-      await this.articleRepository.findArticleNonActive(article, user);
+    const findArticleNonActive = await this.articleRepository.findArticleNonActive(article, user);
 
     if (findArticleNonActive) {
-      return await this.articleRepository.backOldArticle(
-        findArticleNonActive._id,
-        user,
-      );
+      return await this.articleRepository.backOldArticle(findArticleNonActive._id, user);
     }
 
     const productNameData = await this.fetchProvider.fetchArticleName(article);
@@ -74,9 +64,7 @@ export class ArticleService {
       userId: user,
       article: data.article,
       active: true,
-      productName: productNameData.status
-        ? productNameData.product_name
-        : DEFAULT_PRODUCT_NAME,
+      productName: productNameData.status ? productNameData.product_name : DEFAULT_PRODUCT_NAME,
       keys: newKeys,
     });
 
@@ -86,11 +74,7 @@ export class ArticleService {
   }
 
   //Cделано
-  async findByCity(
-    data: FindByCityDto,
-    id: number,
-    query: FindByCityQueryDto[],
-  ) {
+  async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto[]) {
     const payload = await this.articleRepository.findByCity(data, id, query);
     return compact(payload).reverse();
   }

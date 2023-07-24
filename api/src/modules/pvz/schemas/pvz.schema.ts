@@ -11,9 +11,6 @@ export class Pvz {
   userId: User;
 
   @Prop({ type: String })
-  city: string;
-
-  @Prop({ type: String })
   status: string;
 
   @Prop({ type: String })
@@ -23,12 +20,9 @@ export class Pvz {
   geo_address_id: string;
 
   @Prop({ type: String })
-  city_id: string;
-
-  @Prop({ type: String })
   article: string;
 
-  @Prop({ type: Boolean, default: true })
+  @Prop({ type: Boolean })
   active: boolean;
 
   @Prop({ type: String })

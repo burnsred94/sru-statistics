@@ -21,13 +21,7 @@ import { TownsDestructor } from './utils';
     EventEmitterModule.forRoot({ global: true, maxListeners: 100 }),
   ],
   controllers: [ArticleController],
-  providers: [
-    ArticleService,
-    ArticleRepository,
-    JwtStrategy,
-    ArticleGateway,
-    TownsDestructor,
-  ],
+  providers: [ArticleService, ArticleRepository, JwtStrategy, ArticleGateway, TownsDestructor],
   exports: [ArticleService],
 })
 export class ArticleModule {}

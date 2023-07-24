@@ -17,7 +17,7 @@ export class PvzService {
     private readonly pvzRepository: PvzRepository,
     private readonly periodsService: PeriodsService,
     private readonly pvzUtils: PvzUtils,
-  ) {}
+  ) { }
 
   async create(value, article: string, userId: User, keyId: string) {
     const period = await this.periodsService.create('Ожидается');
@@ -30,8 +30,6 @@ export class PvzService {
       status: StatusPvz.PENDING,
       active: true,
       key_id: keyId,
-      city: value.city,
-      city_id: value.city_id,
     });
     return pvz._id;
   }
@@ -81,4 +79,13 @@ export class PvzService {
       await this.periodsService.updateDiff(firstItem._id, result);
     }
   }
+
+  async findById(id: Types.ObjectId) {
+    return await this.pvzRepository.findPvz(id);
+  }
+
+  async initStatus(id: string, active: boolean) {
+    await this.pvzRepository.initStatus(id, active);
+  }
+
 }

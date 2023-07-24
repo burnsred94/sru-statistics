@@ -17,15 +17,9 @@ export class ArticleRepository {
   ) {}
 
   async findDataByUser(user: User) {
-    const find = await this.modelArticle
-      .find({ userId: user, active: true })
-      .lean()
-      .exec();
+    const find = await this.modelArticle.find({ userId: user, active: true }).lean().exec();
 
-    const keysLength = find.reduce(
-      (accumulator, item) => accumulator + item.keys.length,
-      0,
-    );
+    const keysLength = find.reduce((accumulator, item) => accumulator + item.keys.length, 0);
 
     return { total: find.length, total_keys: keysLength };
   }
@@ -61,11 +55,7 @@ export class ArticleRepository {
     });
   }
 
-  async findByCity(
-    data: FindByCityDto,
-    id: number,
-    query: FindByCityQueryDto[],
-  ) {
+  async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto[]) {
     const find = await this.modelArticle
       .find({
         userId: id,
@@ -86,9 +76,7 @@ export class ArticleRepository {
         data.city,
       );
 
-      const value = query?.find(
-        pagination => pagination.articleId === String(_id),
-      );
+      const value = query?.find(pagination => pagination.articleId === String(_id));
 
       if (value === undefined) {
         const chunks = chunk(genKeys, 10);

@@ -34,12 +34,7 @@ export class KeysService {
       });
 
       const pvz = map(data.pvz, async pvz => {
-        return await this.pvzService.create(
-          pvz,
-          data.article,
-          data.userId,
-          String(newKey),
-        );
+        return await this.pvzService.create(pvz, data.article, data.userId, String(newKey));
       });
 
       const resolved = await Promise.all(pvz);
@@ -52,6 +47,10 @@ export class KeysService {
     const resolvedKeys = await Promise.all(keys);
 
     return resolvedKeys;
+  }
+
+  async findKeysByUser(userId: string) {
+    return await this.keysRepository.findKeysByUser(userId);
   }
 
   async findAndNewPeriod() {
@@ -79,10 +78,7 @@ export class KeysService {
     await this.averageService.update(key.average.at(-1)._id, payload.average);
   }
 
-  async findById(
-    ids: Array<{ _id: Types.ObjectId; active: boolean }>,
-    searchObject: string,
-  ) {
+  async findById(ids: Array<{ _id: Types.ObjectId; active: boolean }>, searchObject: string) {
     const keysIterator = map(ids, async item => {
       const key = await this.keysRepository.findById(item._id, searchObject);
       return key;
@@ -90,6 +86,10 @@ export class KeysService {
 
     const resolved = await Promise.all(keysIterator);
     return resolved;
+  }
+
+  async findKey(id: string) {
+    return await this.keysRepository.findKey(id);
   }
 
   async removeKey(id: Types.ObjectId) {

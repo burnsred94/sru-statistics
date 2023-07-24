@@ -7,21 +7,13 @@ import { EventsParser } from 'src/modules/article/events';
 import { User } from 'src/modules/auth/user';
 import { KeysService } from 'src/modules/keys';
 import { FetchUtils } from '../utils';
-import {
-  RabbitMqPublisher,
-  RabbitMqRequester,
-} from 'src/modules/rabbitmq/services';
+import { RabbitMqPublisher, RabbitMqRequester } from 'src/modules/rabbitmq/services';
 import { RmqExchanges } from 'src/modules/rabbitmq/exchanges';
-import {
-  GetPositionWidgetsRMQ,
-  SearchPositionRMQ,
-} from 'src/modules/rabbitmq/contracts/search';
+import { GetPositionWidgetsRMQ, SearchPositionRMQ } from 'src/modules/rabbitmq/contracts/search';
 import { GetProductRMQ } from 'src/modules/rabbitmq/contracts/products';
-import {
-  GetProfileRMQ,
-  StartTrialProfileRMQ,
-} from 'src/modules/rabbitmq/contracts/profile';
+import { GetProfileRMQ, StartTrialProfileRMQ } from 'src/modules/rabbitmq/contracts/profile';
 import { GetPositionDto } from '../dto';
+import { PvzService } from 'src/modules/pvz';
 
 @Injectable()
 export class FetchProvider {
@@ -31,8 +23,9 @@ export class FetchProvider {
     private readonly rmqPublisher: RabbitMqPublisher,
     private readonly rmqRequester: RabbitMqRequester,
     private readonly keysService: KeysService,
+    private readonly pvzService: PvzService,
     private readonly fetchUtils: FetchUtils,
-  ) { }
+  ) {}
 
   count = 0;
 
@@ -45,11 +38,7 @@ export class FetchProvider {
   }
 
   async getPositionWidget(dto: GetPositionDto) {
-
-    const product = await this.rmqRequester.request<
-      GetProductRMQ.Payload,
-      GetProductRMQ.Response
-    >({
+    const product = await this.rmqRequester.request<GetProductRMQ.Payload, GetProductRMQ.Response>({
       exchange: RmqExchanges.PRODUCT,
       routingKey: GetProductRMQ.routingKey,
       timeout: 5000 * 10,
@@ -74,18 +63,12 @@ export class FetchProvider {
         };
       }
     } else {
-
-      throw new BadRequestException(
-        `Мы не смогли найти товар по артикулу: ${dto.article}`,
-      );
+      throw new BadRequestException(`Мы не смогли найти товар по артикулу: ${dto.article}`);
     }
   }
 
   async fetchArticleName(article: string) {
-    return await this.rmqRequester.request<
-      GetProductRMQ.Payload,
-      GetProductRMQ.Response
-    >({
+    return await this.rmqRequester.request<GetProductRMQ.Payload, GetProductRMQ.Response>({
       exchange: RmqExchanges.PRODUCT,
       routingKey: GetProductRMQ.routingKey,
       timeout: 5000 * 10,
@@ -94,10 +77,7 @@ export class FetchProvider {
   }
 
   async fetchProfileTowns(id: User): Promise<IProfileApiResponse> {
-    return await this.rmqRequester.request<
-      GetProfileRMQ.Payload,
-      GetProfileRMQ.Response
-    >({
+    return await this.rmqRequester.request<GetProfileRMQ.Payload, GetProfileRMQ.Response>({
       exchange: RmqExchanges.PROFILE,
       routingKey: GetProfileRMQ.routingKey,
       payload: { userId: id as unknown as number },
@@ -106,7 +86,7 @@ export class FetchProvider {
 
   @OnEvent(EventsParser.SEND_TO_PARSE)
   async fetchParser(payload: { keysId: Types.ObjectId[] }) {
-    process.nextTick(async () => {
+    setImmediate(async () => {
       const { keysId } = payload;
       const keys = map(keysId, key => ({ _id: key, active: true }));
       const getKeys = await this.keysService.findById(keys, 'all');
@@ -117,6 +97,34 @@ export class FetchProvider {
           exchange: RmqExchanges.SEARCH,
           routingKey: SearchPositionRMQ.routingKey,
           payload: element,
+        });
+      });
+    });
+  }
+
+  @OnEvent(EventsParser.ONE_PWZ_PARSE)
+  async onePwzParse(payload: { pwzIds: Types.ObjectId[] }) {
+    setImmediate(async () => {
+      forEach(payload.pwzIds, async id => {
+        const pvz = await this.pvzService.findById(id);
+        const getKey = await this.keysService.findKey(pvz.key_id);
+
+        await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
+          exchange: RmqExchanges.SEARCH,
+          routingKey: SearchPositionRMQ.routingKey,
+          payload: {
+            article: pvz.article,
+            key: getKey.key,
+            key_id: pvz.key_id,
+            pvz: [
+              {
+                name: pvz.name,
+                addressId: pvz._id as unknown as string,
+                geo_address_id: pvz.geo_address_id,
+                periodId: pvz.position.at(-1)._id as unknown as string,
+              },
+            ],
+          },
         });
       });
     });

@@ -7,9 +7,7 @@ import { IAverage } from 'src/interfaces';
 
 @Injectable()
 export class AverageRepository {
-  constructor(
-    @InjectModel(Average.name) private readonly averageModel: Model<Average>,
-  ) {}
+  constructor(@InjectModel(Average.name) private readonly averageModel: Model<Average>) {}
 
   async create(data: IAverage) {
     const averageEntity = new AverageEntity(data);

@@ -8,7 +8,7 @@ import { Periods } from 'src/modules/periods';
 
 @Injectable()
 export class PvzRepository {
-  constructor(@InjectModel(Pvz.name) private readonly pvzModel: Model<Pvz>) {}
+  constructor(@InjectModel(Pvz.name) private readonly pvzModel: Model<Pvz>) { }
 
   async create(data: Pvz) {
     const newPwz = new PvzEntity(data);
@@ -21,6 +21,10 @@ export class PvzRepository {
       status: StatusPvz.SUCCESS,
       active: true,
     });
+  }
+
+  async initStatus(id: string, active: boolean) {
+    await this.pvzModel.findByIdAndUpdate({ _id: id }, { active: active });
   }
 
   async update(id, data) {
@@ -38,16 +42,11 @@ export class PvzRepository {
   }
 
   async updateStatus(id: Types.ObjectId) {
-    await this.pvzModel.findByIdAndUpdate(
-      { _id: id },
-      { $set: { status: StatusPvz.SUCCESS } },
-    );
+    await this.pvzModel.findByIdAndUpdate({ _id: id }, { $set: { status: StatusPvz.SUCCESS } });
   }
 
   async findNonActive(id: string) {
-    const data = await this.pvzModel
-      .find({ key_id: id, status: StatusPvz.PENDING })
-      .lean();
+    const data = await this.pvzModel.find({ key_id: id, status: StatusPvz.PENDING }).lean();
     return data.length;
   }
 
@@ -59,6 +58,7 @@ export class PvzRepository {
 
     return query;
   }
+
 
   async findPvz(id: Types.ObjectId) {
     return await this.pvzModel

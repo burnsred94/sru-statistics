@@ -1,7 +1,4 @@
-import {
-  MessageHandlerErrorBehavior,
-  RabbitSubscribe,
-} from '@golevelup/nestjs-rabbitmq';
+import { MessageHandlerErrorBehavior, RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
 import { applyDecorators } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { RabbitMqSubscribeParam } from '../interfaces';

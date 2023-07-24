@@ -1,5 +1,5 @@
 import { Controller, Logger } from '@nestjs/common';
-import { KeysService } from '../services';
+import { KeysPvzService, KeysService } from '../services';
 import { RabbitMqSubscriber } from 'src/modules/rabbitmq/decorators';
 import { RmqExchanges, RmqServices } from 'src/modules/rabbitmq/exchanges';
 import {
@@ -12,7 +12,10 @@ import {
 export class KeysController {
   protected readonly logger = new Logger(KeysController.name);
 
-  constructor(private readonly keysService: KeysService) {}
+  constructor(
+    private readonly keysService: KeysService,
+    private readonly keysPvzService: KeysPvzService,
+  ) { }
 
   @RabbitMqSubscriber({
     exchange: RmqExchanges.STATISTICS,
@@ -41,6 +44,9 @@ export class KeysController {
     currentService: RmqServices.STATISTICS,
   })
   async statisticUpdatePwz(payload) {
-    this.logger.log(payload.userId);
+    const keysUser = await this.keysService.findKeysByUser(payload.userId);
+    if (keysUser.length > 0) {
+      setImmediate(async () => await this.keysPvzService.updateFromProfile(payload, keysUser))
+    }
   }
 }

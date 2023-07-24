@@ -5,9 +5,7 @@ import { Average, AverageSchema } from './schemas';
 import { AverageRepository } from './repositories';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: Average.name, schema: AverageSchema }]),
-  ],
+  imports: [MongooseModule.forFeature([{ name: Average.name, schema: AverageSchema }])],
   providers: [AverageService, AverageRepository],
   exports: [AverageService],
 })

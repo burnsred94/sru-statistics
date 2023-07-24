@@ -1,10 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { map } from 'lodash';
-import {
-  IAverageGenerator,
-  IKeyGenerator,
-  IPwzGenerator,
-} from 'src/interfaces';
+import { IAverageGenerator, IKeyGenerator, IPwzGenerator } from 'src/interfaces';
 import { AverageEntity } from 'src/modules/average';
 import { PeriodsEntity } from 'src/modules/periods';
 
