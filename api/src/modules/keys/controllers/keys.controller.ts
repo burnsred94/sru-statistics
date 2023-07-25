@@ -15,7 +15,7 @@ export class KeysController {
   constructor(
     private readonly keysService: KeysService,
     private readonly keysPvzService: KeysPvzService,
-  ) { }
+  ) {}
 
   @RabbitMqSubscriber({
     exchange: RmqExchanges.STATISTICS,
@@ -46,7 +46,7 @@ export class KeysController {
   async statisticUpdatePwz(payload) {
     const keysUser = await this.keysService.findKeysByUser(payload.userId);
     if (keysUser.length > 0) {
-      setImmediate(async () => await this.keysPvzService.updateFromProfile(payload, keysUser))
+      setImmediate(async () => await this.keysPvzService.updateFromProfile(payload, keysUser));
     }
   }
 }

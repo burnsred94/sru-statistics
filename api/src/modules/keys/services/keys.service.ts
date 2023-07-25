@@ -7,17 +7,17 @@ import { MockGenerator } from '../utils';
 import { AverageService } from 'src/modules/average';
 import { IKey } from 'src/interfaces';
 import { PvzService } from 'src/modules/pvz';
-import { OnEvent } from '@nestjs/event-emitter';
-import { EventsAverage } from 'src/modules/article/events';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { EventsAverage, EventsWS } from 'src/modules/article/events';
 
 @Injectable()
 export class KeysService {
   constructor(
     private readonly keysRepository: KeysRepository,
     private readonly pvzService: PvzService,
-    private readonly mockGenerator: MockGenerator,
+    private readonly eventEmitter: EventEmitter2,
     private readonly averageService: AverageService,
-  ) {}
+  ) { }
 
   async create(data: IKey) {
     const keys = map(data.keys, async key => {
@@ -76,6 +76,8 @@ export class KeysService {
     const id = payload.key_id as unknown as Types.ObjectId;
     const key = await this.keysRepository.findById(id, 'all');
     await this.averageService.update(key.average.at(-1)._id, payload.average);
+
+    setImmediate(async () => this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: key.userId }))
   }
 
   async findById(ids: Array<{ _id: Types.ObjectId; active: boolean }>, searchObject: string) {

@@ -16,7 +16,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 export class ArticleGateway {
   private logger: Logger = new Logger('MessageGateway');
 
-  constructor(private readonly articleService: ArticleService) {}
+  constructor(private readonly articleService: ArticleService) { }
 
   clients = [];
 
@@ -30,7 +30,8 @@ export class ArticleGateway {
       data: payload.data,
       pagination: payload.query,
     });
-    await this.sender();
+
+    await this.sender({ userId: payload.data.userId });
   }
 
   afterInit(server: Server) {
@@ -46,21 +47,15 @@ export class ArticleGateway {
     this.logger.log(`Client Connected WS server: ${client.id}`);
   }
 
-  @Cron(CronExpression.EVERY_MINUTE)
-  async sender() {
-    process.nextTick(async () => {
-      this.clients.forEach(async client => {
-        const findByCity = await this.articleService.findByCity(
-          {
-            userId: client.data.userId,
-            city: client.data.city,
-            periods: client.data.periods,
-          },
-          client.userId,
-          client.pagination,
-        );
-        client.sockets.compress(true).emit('findByCity', findByCity);
-      });
-    });
+  @OnEvent(EventsWS.SEND_ARTICLES)
+  async sender(payload: { userId: number }) {
+    const find = this.clients.find(userClient => userClient.userId === payload.userId);
+
+    if (find) {
+      setImmediate(async () => {
+        const data = await this.articleService.findByCity(find.data, payload.userId, find.query);
+        find.sockets.compress(true).emit('findByCity', data);
+      })
+    }
   }
 }

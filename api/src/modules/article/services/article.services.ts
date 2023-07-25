@@ -14,6 +14,8 @@ import { DEFAULT_PRODUCT_NAME } from '../constants';
 import { KeysService } from 'src/modules/keys';
 import { TownsDestructor } from '../utils';
 import { compact } from 'lodash';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventsParser, EventsWS } from '../events';
 
 @Injectable()
 export class ArticleService {
@@ -24,7 +26,8 @@ export class ArticleService {
     private readonly fetchProvider: FetchProvider,
     private readonly keyService: KeysService,
     private readonly utilsDestructor: TownsDestructor,
-  ) {}
+    private readonly eventEmitter: EventEmitter2,
+  ) { }
 
   async checkData(user: User) {
     return await this.articleRepository.findDataByUser(user);
@@ -51,26 +54,34 @@ export class ArticleService {
     const towns = await this.fetchProvider.fetchProfileTowns(user);
     const destructTowns = await this.utilsDestructor.destruct(towns);
 
-    const newKeys = await this.keyService.create({
-      pvz: destructTowns,
-      keys: keys,
-      userId: user,
-      article: article,
-    });
+    return new Promise(resolve =>
+      setImmediate(async () => {
+        const newKeys = await this.keyService.create({
+          pvz: destructTowns,
+          keys: keys,
+          userId: user,
+          article: article,
+        });
 
-    const newArticle = await this.articleRepository.create({
-      productImg: productNameData.status ? productNameData.img : null,
-      productRef: productNameData.status ? productNameData.product_url : null,
-      userId: user,
-      article: data.article,
-      active: true,
-      productName: productNameData.status ? productNameData.product_name : DEFAULT_PRODUCT_NAME,
-      keys: newKeys,
-    });
+        const newArticle = await this.articleRepository.create({
+          productImg: productNameData.status ? productNameData.img : null,
+          productRef: productNameData.status ? productNameData.product_url : null,
+          userId: user,
+          article: data.article,
+          active: true,
+          productName: productNameData.status ? productNameData.product_name : DEFAULT_PRODUCT_NAME,
+          keys: newKeys,
+        });
 
-    await this.fetchProvider.startTrialPeriod(user);
-    await this.fetchProvider.fetchParser({ keysId: newKeys });
-    return newArticle;
+        this.eventEmitter.emit(EventsParser.SEND_TO_PARSE, { keysId: newKeys });
+
+        await this.fetchProvider.startTrialPeriod(user);
+
+        resolve(newArticle);
+
+        setImmediate(() => this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user }));
+      }),
+    );
   }
 
   //Cделано
