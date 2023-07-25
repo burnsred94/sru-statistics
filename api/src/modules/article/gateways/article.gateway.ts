@@ -40,7 +40,7 @@ export class ArticleGateway {
 
   async handleDisconnect(client: Socket) {
     this.logger.log(`Client Disconnected: ${client.id}`);
-    console.log(this.clients);
+    this.clients = this.clients.filter(client => client.id !== client.clientId);
   }
 
   async handleConnection(client: Socket, ...arguments_: any[]) {
