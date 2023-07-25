@@ -27,7 +27,7 @@ export class ArticleService {
     private readonly keyService: KeysService,
     private readonly utilsDestructor: TownsDestructor,
     private readonly eventEmitter: EventEmitter2,
-  ) { }
+  ) {}
 
   async checkData(user: User) {
     return await this.articleRepository.findDataByUser(user);
@@ -35,6 +35,10 @@ export class ArticleService {
 
   //Cделано
   async create(data: CreateArticleDto, user: User) {
+    //TODO: Разбить на блоки
+    // 1. Блок поиска артикула который у нас есть, если есть то мы смотрим на разницу ключей те которые совпадают мы их активируем тех которых нету то отправляем на парсинг
+    // 2. Блок поиска удаленных артикулов с неактивными ключами, если мы находим его то смотрим на совпадение ключей
+    // 3. Блок получение информации для нового артикула и деструкторизации даных
     const { article, keys } = data;
     const findArticleActive = await this.articleRepository.findArticleActive(article, user);
 
@@ -43,10 +47,19 @@ export class ArticleService {
       return findArticleActive;
     }
 
-    const findArticleNonActive = await this.articleRepository.findArticleNonActive(article, user);
+    const findArticleNonActive = await this.articleRepository.findArticleNonActive(article, user); // TODO: Сделать активацию дупликации ключей
 
     if (findArticleNonActive) {
-      return await this.articleRepository.backOldArticle(findArticleNonActive._id, user);
+      return new Promise(async resolve => {
+        setImmediate(async () => {
+          const oldArticle = await this.articleRepository.backOldArticle(
+            findArticleNonActive._id,
+            user,
+          );
+          this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user });
+          resolve(oldArticle);
+        });
+      });
     }
 
     const productNameData = await this.fetchProvider.fetchArticleName(article);

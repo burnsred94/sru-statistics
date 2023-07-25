@@ -14,6 +14,8 @@ import { GetProductRMQ } from 'src/modules/rabbitmq/contracts/products';
 import { GetProfileRMQ, StartTrialProfileRMQ } from 'src/modules/rabbitmq/contracts/profile';
 import { GetPositionDto } from '../dto';
 import { PvzService } from 'src/modules/pvz';
+import { TaskSenderQueue } from './task-sender-queue.provider';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class FetchProvider {
@@ -23,9 +25,10 @@ export class FetchProvider {
     private readonly rmqPublisher: RabbitMqPublisher,
     private readonly rmqRequester: RabbitMqRequester,
     private readonly keysService: KeysService,
+    private readonly taskSenderQueue: TaskSenderQueue,
     private readonly pvzService: PvzService,
     private readonly fetchUtils: FetchUtils,
-  ) {}
+  ) { }
 
   count = 0;
 
@@ -93,11 +96,14 @@ export class FetchProvider {
       const formatted = await this.fetchUtils.formatDataToParse(getKeys);
 
       forEach(formatted, async element => {
-        await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
-          exchange: RmqExchanges.SEARCH,
-          routingKey: SearchPositionRMQ.routingKey,
-          payload: element,
-        });
+        this.taskSenderQueue.pushTask(
+          async () =>
+            await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
+              exchange: RmqExchanges.SEARCH,
+              routingKey: SearchPositionRMQ.routingKey,
+              payload: element,
+            }),
+        );
       });
     });
   }
@@ -130,23 +136,22 @@ export class FetchProvider {
     });
   }
 
-  // @Cron(CronExpression.EVERY_10_MINUTES, { timeZone: 'Europe/Moscow' })
+  @Cron(CronExpression.EVERY_DAY_AT_1AM, { timeZone: 'Europe/Moscow' })
   async fetchUpdates() {
-    process.nextTick(async () => {
+    setImmediate(async () => {
       const keys = await this.keysService.findAndNewPeriod();
       await this.keysService.addedNewAverage(keys);
       const formatted = await this.fetchUtils.formatDataToParse(keys);
+
       forEach(formatted, async element => {
-        await new Promise(resolve => {
-          setTimeout(resolve, 100);
-        });
-        this.count += 1;
-        console.log(this.count);
-        await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
-          exchange: RmqExchanges.SEARCH,
-          routingKey: SearchPositionRMQ.routingKey,
-          payload: element,
-        });
+        this.taskSenderQueue.pushTask(
+          async () =>
+            await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
+              exchange: RmqExchanges.SEARCH,
+              routingKey: SearchPositionRMQ.routingKey,
+              payload: element,
+            }),
+        );
       });
     });
   }

@@ -17,7 +17,7 @@ import { forEach } from 'lodash';
 export class ArticleGateway {
   private logger: Logger = new Logger('MessageGateway');
 
-  constructor(private readonly articleService: ArticleService) { }
+  constructor(private readonly articleService: ArticleService) {}
 
   clients = [];
 
@@ -54,11 +54,15 @@ export class ArticleGateway {
 
     if (find.length > 0) {
       setImmediate(async () => {
-        forEach(find, async (element) => {
-          const data = await this.articleService.findByCity(element.data, payload.userId, element.query);
+        forEach(find, async element => {
+          const data = await this.articleService.findByCity(
+            element.data,
+            payload.userId,
+            element.query,
+          );
           element.sockets.compress(true).emit('findByCity', data);
-        })
-      })
+        });
+      });
     }
   }
 }
