@@ -5,6 +5,7 @@ import { Server, Socket } from 'socket.io';
 import { ArticleService } from '../services';
 import { EventsWS } from '../events';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { forEach } from 'lodash';
 
 @WebSocketGateway({
   cors: {
@@ -40,7 +41,7 @@ export class ArticleGateway {
 
   async handleDisconnect(client: Socket) {
     this.logger.log(`Client Disconnected: ${client.id}`);
-    this.clients = this.clients.filter(client => client.id !== client.clientId);
+    this.clients = this.clients.filter(element => client.id !== element.clientId);
   }
 
   async handleConnection(client: Socket, ...arguments_: any[]) {
@@ -49,12 +50,14 @@ export class ArticleGateway {
 
   @OnEvent(EventsWS.SEND_ARTICLES)
   async sender(payload: { userId: number }) {
-    const find = this.clients.find(userClient => userClient.userId === payload.userId);
+    const find = this.clients.filter(userClient => userClient.userId === payload.userId);
 
-    if (find) {
+    if (find.length > 0) {
       setImmediate(async () => {
-        const data = await this.articleService.findByCity(find.data, payload.userId, find.query);
-        find.sockets.compress(true).emit('findByCity', data);
+        forEach(find, async (element) => {
+          const data = await this.articleService.findByCity(element.data, payload.userId, element.query);
+          element.sockets.compress(true).emit('findByCity', data);
+        })
       })
     }
   }
