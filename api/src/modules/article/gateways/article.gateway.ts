@@ -4,7 +4,6 @@ import { SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/web
 import { Server, Socket } from 'socket.io';
 import { ArticleService } from '../services';
 import { EventsWS } from '../events';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import { forEach } from 'lodash';
 
 @WebSocketGateway({
@@ -17,13 +16,15 @@ import { forEach } from 'lodash';
 export class ArticleGateway {
   private logger: Logger = new Logger('MessageGateway');
 
-  constructor(private readonly articleService: ArticleService) {}
+  constructor(private readonly articleService: ArticleService) { }
 
   clients = [];
 
   @WebSocketServer() server: Server;
   @SubscribeMessage('findByCity')
   async handleSendMessage(client: Socket, payload): Promise<void> {
+    this.clients = this.clients.filter(element => payload.data.userId !== element.userId);
+
     this.clients.push({
       clientId: client.id,
       sockets: client,
@@ -31,7 +32,7 @@ export class ArticleGateway {
       data: payload.data,
       pagination: payload.query,
     });
-
+    console.log(this.clients.length);
     await this.sender({ userId: payload.data.userId });
   }
 
@@ -50,10 +51,10 @@ export class ArticleGateway {
 
   @OnEvent(EventsWS.SEND_ARTICLES)
   async sender(payload: { userId: number }) {
-    const find = this.clients.filter(userClient => userClient.userId === payload.userId);
+    setImmediate(async () => {
+      const find = this.clients.filter(userClient => userClient.userId === payload.userId);
 
-    if (find.length > 0) {
-      setImmediate(async () => {
+      if (find.length > 0) {
         forEach(find, async element => {
           const data = await this.articleService.findByCity(
             element.data,
@@ -62,7 +63,7 @@ export class ArticleGateway {
           );
           element.sockets.compress(true).emit('findByCity', data);
         });
-      });
-    }
+      }
+    });
   }
 }

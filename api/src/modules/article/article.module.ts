@@ -18,10 +18,10 @@ import { TownsDestructor } from './utils';
     FetchModule,
     KeysModule,
     PvzModule,
-    EventEmitterModule.forRoot({ global: true, maxListeners: 100 }),
+    EventEmitterModule.forRoot({ global: true, maxListeners: 10, verboseMemoryLeak: true }),
   ],
   controllers: [ArticleController],
   providers: [ArticleService, ArticleRepository, JwtStrategy, ArticleGateway, TownsDestructor],
   exports: [ArticleService],
 })
-export class ArticleModule {}
+export class ArticleModule { }
