@@ -71,7 +71,7 @@ export class KeysRepository {
 
   async findById(id: Types.ObjectId, searchObject: string) {
     let query = this.keysModel.findById({ _id: id });
-
+    console.log(searchObject);
     query =
       searchObject === 'all'
         ? query.populate({

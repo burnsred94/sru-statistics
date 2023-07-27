@@ -25,4 +25,4 @@ import { PvzModule } from '../pvz';
   exports: [FetchProvider, TaskSenderQueue],
   controllers: [FetchController],
 })
-export class FetchModule { }
+export class FetchModule {}

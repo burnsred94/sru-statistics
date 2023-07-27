@@ -28,25 +28,26 @@ export class TaskSenderQueue {
     while (this.running < this.concurrency && this.queue.length > 0) {
       const task = this.queue.shift();
       setImmediate(() => {
-        task()
+        task();
       });
 
       this.running++;
 
       if (this.running === this.concurrency) {
         setImmediate(() => {
-          new Promise((resolve) => {
-            setTimeout(
-              () => {
-                this.running = 0;
-                resolve(this.next());
-              }, 2500)
-          })
+          new Promise(resolve => {
+            setTimeout(() => {
+              this.running = 0;
+              resolve(this.next());
+            }, 2500);
+          });
         });
 
-        break
+        break;
       }
-      this.logger.debug(`Length current task: ${this.queue.length}, concurrent: ${this.concurrency}, ${this.running}`)
+      this.logger.debug(
+        `Length current task: ${this.queue.length}, concurrent: ${this.concurrency}, ${this.running}`,
+      );
     }
   }
 }

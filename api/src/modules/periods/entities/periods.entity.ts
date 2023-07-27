@@ -22,10 +22,11 @@ export class PeriodsEntity {
   date() {
     let date = new Date();
     date = new Date(date.toLocaleString('en-US', { timeZone: 'Europe/Moscow' }));
-    // const formattedDate = new Date(
-    //   date.setDate(date.getDate() + 1),
-    // ).toLocaleDateString('ru-RU', this.options);
-    const formattedDate = date.toLocaleDateString('ru-RU', this.options);
+    const formattedDate = new Date(date.setDate(date.getDate() + 0)).toLocaleDateString(
+      'ru-RU',
+      this.options,
+    );
+    // const formattedDate = date.toLocaleDateString('ru-RU', this.options);
     return formattedDate;
   }
 

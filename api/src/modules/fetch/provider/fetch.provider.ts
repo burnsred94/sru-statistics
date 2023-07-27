@@ -136,23 +136,25 @@ export class FetchProvider {
     });
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_1AM, { timeZone: 'Europe/Moscow' })
-  async fetchUpdates() {
-    setImmediate(async () => {
-      const keys = await this.keysService.findAndNewPeriod();
-      await this.keysService.addedNewAverage(keys);
-      const formatted = await this.fetchUtils.formatDataToParse(keys);
+  // @Cron(CronExpression.EVERY_5_MINUTES, { timeZone: 'Europe/Moscow' })
+  async fetchStartUpdate() {
+    await this.keysService.findAndNewPeriod();
+  }
 
-      forEach(formatted, async element => {
-        this.taskSenderQueue.pushTask(
-          async () =>
-            await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
-              exchange: RmqExchanges.SEARCH,
-              routingKey: SearchPositionRMQ.routingKey,
-              payload: element,
-            }),
-        );
-      });
+  @OnEvent('update.sender')
+  async senderUpdate() {
+    const keys = await this.keysService.findAll();
+    const formatted = await this.fetchUtils.formatDataToParse(keys);
+
+    forEach(formatted, async element => {
+      this.taskSenderQueue.pushTask(
+        async () =>
+          await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
+            exchange: RmqExchanges.SEARCH,
+            routingKey: SearchPositionRMQ.routingKey,
+            payload: element,
+          }),
+      );
     });
   }
 }

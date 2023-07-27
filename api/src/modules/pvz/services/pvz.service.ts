@@ -7,23 +7,30 @@ import { UpdatePvzDto } from '../dto';
 import { PvzUtils } from '../utils';
 import { Types } from 'mongoose';
 import { KeysService } from 'src/modules/keys';
+import { chunk, forEach } from 'lodash';
+import { PvzQueue } from './pvz-queue.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class PvzService {
   protected readonly logger = new Logger(PvzService.name);
+
   constructor(
     @Inject(forwardRef(() => KeysService))
     private readonly keysService: KeysService,
     private readonly pvzRepository: PvzRepository,
     private readonly periodsService: PeriodsService,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly pvqQueue: PvzQueue,
     private readonly pvzUtils: PvzUtils,
-  ) {}
+  ) { }
 
   async create(value, article: string, userId: User, keyId: string) {
     const period = await this.periodsService.create('Ожидается');
     const pvz = await this.pvzRepository.create({
       article: article,
       name: value.address,
+      city: value.city,
       geo_address_id: value.addressId,
       position: [period],
       userId: userId,
@@ -58,16 +65,20 @@ export class PvzService {
 
   async findAndCreate() {
     const findPvz = await this.pvzRepository.findAll();
-    let count = 0;
-    while (findPvz.length > count) {
-      const period = await this.periodsService.create('Ожидается');
-      await this.pvzRepository.update(findPvz[count]._id, period._id);
-      count++;
-    }
 
-    if (count === findPvz.length) {
-      return { status: true };
-    }
+    const pvz = chunk(findPvz, 50);
+
+    setImmediate(async () => {
+      forEach(pvz, elementAt =>
+        this.pvqQueue.pushTask(() =>
+          forEach(elementAt, async item => {
+            const period = await this.periodsService.create('Ожидается');
+            this.pvzRepository.update(item._id, period._id);
+          }),
+        ),
+      );
+      this.eventEmitter.emit('update.started');
+    });
   }
 
   async updatePeriod(pvzId: Types.ObjectId) {

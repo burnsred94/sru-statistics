@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
-import { map } from 'lodash';
+import { forEach, map } from 'lodash';
 import { Types } from 'mongoose';
 import { KeysRepository } from '../repositories';
 import { MockGenerator } from '../utils';
@@ -12,6 +12,8 @@ import { EventsAverage, EventsWS } from 'src/modules/article/events';
 
 @Injectable()
 export class KeysService {
+  protected readonly logger = new Logger(KeysService.name);
+
   constructor(
     private readonly keysRepository: KeysRepository,
     private readonly pvzService: PvzService,
@@ -49,26 +51,30 @@ export class KeysService {
     return resolvedKeys;
   }
 
+  async findAll() {
+    return await this.keysRepository.findAll();
+  }
+
   async findKeysByUser(userId: string) {
     return await this.keysRepository.findKeysByUser(userId);
   }
 
   async findAndNewPeriod() {
-    const newPeriod = await this.pvzService.findAndCreate();
-    if (newPeriod.status) {
-      return await this.keysRepository.findAll();
-    }
+    await this.pvzService.findAndCreate();
   }
 
-  async addedNewAverage(keys) {
-    let iterator = 0;
-    while (keys.length > iterator) {
+  @OnEvent('update.average')
+  async addedNewAverage() {
+    const keys = await this.keysRepository.findAll();
+
+    forEach(keys, async key => {
       const average = await this.averageService.create({
         average: 'Ожидается',
       });
-      await this.keysRepository.updateAverage(keys[iterator], average._id);
-      iterator++;
-    }
+      await this.keysRepository.updateAverage(key._id, average._id);
+    });
+    this.logger.verbose(`Update completed average keys: ${keys.length}`);
+
   }
 
   async updateAverage(payload: { average: string; key_id: string }) {

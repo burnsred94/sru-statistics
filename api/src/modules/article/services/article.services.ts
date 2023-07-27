@@ -27,7 +27,7 @@ export class ArticleService {
     private readonly keyService: KeysService,
     private readonly utilsDestructor: TownsDestructor,
     private readonly eventEmitter: EventEmitter2,
-  ) { }
+  ) {}
 
   async checkData(user: User) {
     return await this.articleRepository.findDataByUser(user);
@@ -51,10 +51,7 @@ export class ArticleService {
 
     if (findArticleNonActive) {
       setImmediate(async () => {
-        await this.articleRepository.backOldArticle(
-          findArticleNonActive._id,
-          user,
-        );
+        await this.articleRepository.backOldArticle(findArticleNonActive._id, user);
         this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user });
       });
     }
@@ -86,8 +83,8 @@ export class ArticleService {
 
       await this.fetchProvider.startTrialPeriod(user);
 
-      this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user })
-    })
+      this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user });
+    });
   }
 
   //Cделано

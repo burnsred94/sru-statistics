@@ -10,6 +10,7 @@ import { RmqModule } from '../rabbitmq/rabbitmq.module';
 import { RmqExchanges } from '../rabbitmq/exchanges';
 import { KeysModule } from '../keys';
 import { TaskUpdateQueue } from './utils';
+import { PvzQueue } from './services/pvz-queue.service';
 
 @Module({
   imports: [
@@ -18,8 +19,8 @@ import { TaskUpdateQueue } from './utils';
     RmqModule.register({ exchanges: [RmqExchanges.STATISTICS] }),
     forwardRef(() => KeysModule),
   ],
-  providers: [PvzService, PvzRepository, PvzUtils, TaskUpdateQueue],
+  providers: [PvzService, PvzRepository, PvzUtils, TaskUpdateQueue, PvzQueue],
   controllers: [PvzController],
   exports: [PvzService],
 })
-export class PvzModule { }
+export class PvzModule {}

@@ -7,6 +7,7 @@ export class PvzEntity {
   userId: User;
   active: boolean;
   status: string;
+  city: string;
   geo_address_id: string;
   key_id: string;
   name: string;
@@ -15,6 +16,7 @@ export class PvzEntity {
   constructor(data: Pvz) {
     this.article = data.article;
     this.userId = data.userId;
+    this.city = data.city;
     this.geo_address_id = data.geo_address_id;
     this.key_id = data.key_id;
     this.status = data.status;

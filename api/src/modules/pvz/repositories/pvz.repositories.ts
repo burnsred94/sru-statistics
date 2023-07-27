@@ -18,7 +18,7 @@ export class PvzRepository {
 
   async findAll() {
     return await this.pvzModel.find({
-      status: StatusPvz.SUCCESS,
+      // status: StatusPvz.SUCCESS,
       active: true,
     });
   }

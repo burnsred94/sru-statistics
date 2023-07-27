@@ -24,4 +24,4 @@ import { TownsDestructor } from './utils';
   providers: [ArticleService, ArticleRepository, JwtStrategy, ArticleGateway, TownsDestructor],
   exports: [ArticleService],
 })
-export class ArticleModule { }
+export class ArticleModule {}
