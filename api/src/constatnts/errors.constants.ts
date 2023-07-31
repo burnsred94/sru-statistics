@@ -3,4 +3,4 @@ export const ONE_KEY_NOT_REMOVED = 'Вы не можете удалить пос
 export const KEY_DUPLICATE = 'Вы не можете добавить уже существующий ключ';
 export const ARTICLE_DUPLICATE = 'Вы не можете добавить уже существующий артикул';
 export const FAILED_DELETED_KEY = 'Не удалось удалить ключ';
-export const FILED_SEARCH_PRODUCT = 'Товар не был найден';
+export const FILED_SEARCH_PRODUCT = 'Товар по данному артикулу не был найден';

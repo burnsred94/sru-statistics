@@ -10,7 +10,7 @@ import { forEach } from 'lodash';
 
 @Injectable()
 export class KeysRepository {
-  constructor(@InjectModel(Keys.name) private readonly keysModel: Model<Keys>) {}
+  constructor(@InjectModel(Keys.name) private readonly keysModel: Model<Keys>) { }
 
   async findKey(id: string) {
     return await this.keysModel.findById(id).lean().exec();
@@ -35,8 +35,8 @@ export class KeysRepository {
     });
   }
 
-  async findAll() {
-    return await this.keysModel
+  async findToUpdateED() {
+    const find = await this.keysModel
       .find({ active: true })
       .populate({
         path: 'pwz',
@@ -50,6 +50,7 @@ export class KeysRepository {
       })
       .lean()
       .exec();
+    return find
   }
 
   async find(data: { userId: number; cityId: string }) {
@@ -71,31 +72,30 @@ export class KeysRepository {
 
   async findById(id: Types.ObjectId, searchObject: string) {
     let query = this.keysModel.findById({ _id: id });
-    console.log(searchObject);
     query =
       searchObject === 'all'
         ? query.populate({
-            path: 'pwz',
-            select: 'name position city city_id geo_address_id',
-            match: { active: true },
-            model: Pvz.name,
-            populate: {
-              path: 'position',
-              select: 'position timestamp difference',
-              model: Periods.name,
-            },
-          })
+          path: 'pwz',
+          select: 'name position city city_id geo_address_id',
+          match: { active: true },
+          model: Pvz.name,
+          populate: {
+            path: 'position',
+            select: 'position timestamp difference',
+            model: Periods.name,
+          },
+        })
         : query.populate({
-            path: 'pwz',
-            select: 'name position city city_id geo_address_id',
-            match: { city: searchObject, active: true },
-            model: Pvz.name,
-            populate: {
-              path: 'position',
-              select: 'position timestamp difference',
-              model: Periods.name,
-            },
-          });
+          path: 'pwz',
+          select: 'name position city city_id geo_address_id',
+          match: { city: searchObject, active: true },
+          model: Pvz.name,
+          populate: {
+            path: 'position',
+            select: 'position timestamp difference',
+            model: Periods.name,
+          },
+        });
 
     query = query.populate({
       path: 'average',

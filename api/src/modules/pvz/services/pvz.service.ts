@@ -7,7 +7,7 @@ import { UpdatePvzDto } from '../dto';
 import { PvzUtils } from '../utils';
 import { Types } from 'mongoose';
 import { KeysService } from 'src/modules/keys';
-import { chunk, forEach } from 'lodash';
+import { chunk, forEach, map } from 'lodash';
 import { PvzQueue } from './pvz-queue.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
@@ -34,7 +34,7 @@ export class PvzService {
       geo_address_id: value.addressId,
       position: [period],
       userId: userId,
-      status: StatusPvz.PENDING,
+      status: StatusPvz.WAIT_TO_SEND,
       active: true,
       key_id: keyId,
     });
@@ -69,7 +69,7 @@ export class PvzService {
     const pvz = chunk(findPvz, 50);
 
     setImmediate(async () => {
-      forEach(pvz, elementAt =>
+      const data = map(pvz, elementAt =>
         this.pvqQueue.pushTask(() =>
           forEach(elementAt, async item => {
             const period = await this.periodsService.create('Ожидается');
@@ -77,7 +77,10 @@ export class PvzService {
           }),
         ),
       );
-      this.eventEmitter.emit('update.started');
+      const resolved = await Promise.all(data);
+      if (resolved) {
+        this.eventEmitter.emit('update.started');
+      }
     });
   }
 

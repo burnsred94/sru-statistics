@@ -48,26 +48,23 @@ export class FetchProvider {
       payload: { article: dto.article },
     });
 
-    if (product.status === true) {
-      const data = await this.rmqRequester.request({
-        exchange: RmqExchanges.SEARCH,
-        routingKey: GetPositionWidgetsRMQ.routingKey,
-        timeout: 5000 * 10,
-        payload: dto,
-      });
+    if (!product.product_name && !product.product_url) throw new BadRequestException(`Такого артикула не существует: ${dto.article}`);
 
-      if (data) {
-        return {
-          product: {
-            article: dto.article,
-            ...product,
-          },
-          find_data: data,
-        };
-      }
-    } else {
-      throw new BadRequestException(`Мы не смогли найти товар по артикулу: ${dto.article}`);
-    }
+    const data = await this.rmqRequester.request({
+      exchange: RmqExchanges.SEARCH,
+      routingKey: GetPositionWidgetsRMQ.routingKey,
+      timeout: 5000 * 10,
+      payload: dto,
+    })
+
+    return {
+      product: {
+        article: dto.article,
+        ...product,
+      },
+      find_data: data,
+    };
+
   }
 
   async fetchArticleName(article: string) {
@@ -136,8 +133,8 @@ export class FetchProvider {
     });
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_1AM, { timeZone: 'Europe/Moscow' })
-  async fetchStartUpdate() {
+  @Cron("10 0 * * *", { timeZone: 'Europe/Moscow' })
+  async fet0chStartUpdate() {
     await this.keysService.findAndNewPeriod();
   }
 

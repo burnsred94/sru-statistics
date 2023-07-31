@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -6,7 +7,6 @@ import {
   HttpStatus,
   Logger,
   Post,
-  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -16,12 +16,16 @@ import { CurrentUser, JwtAuthGuard, User } from 'src/modules';
 import { ArticleService } from '../services';
 import { Response } from 'express';
 import { initArticleMessage } from 'src/constatnts';
+import { FetchProvider } from 'src/modules/fetch';
 
 @Controller('v1')
 export class ArticleController {
   protected readonly logger = new Logger(ArticleController.name);
 
-  constructor(private readonly articleService: ArticleService) {}
+  constructor(
+    private readonly articleService: ArticleService,
+    private readonly fetchProvider: FetchProvider
+  ) { }
 
   @ApiAcceptedResponse({ description: 'Create Statistic' })
   @UseGuards(JwtAuthGuard)
@@ -32,7 +36,11 @@ export class ArticleController {
     @Res() response: Response,
   ) {
     try {
-      process.nextTick(async () => await this.articleService.create(data, user));
+      const productNameData = await this.fetchProvider.fetchArticleName(data.article);
+
+      if (!productNameData.product_name && !productNameData.product_url) throw new BadRequestException(`Такого артикула не существует: ${data.article}`);
+
+      setImmediate(async () => await this.articleService.create(data, user, productNameData))
 
       const initArticle = initArticleMessage(data.article);
       return response.status(HttpStatus.OK).send({

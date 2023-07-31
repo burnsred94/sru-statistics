@@ -15,7 +15,7 @@ export class PeriodsEntity {
   constructor(position: string, difference = '0') {
     this.position = position;
     this.difference = difference;
-    this.status = StatusPvz.PENDING;
+    this.status = StatusPvz.WAIT_TO_SEND;
     this.timestamp = this.date();
   }
 

@@ -52,7 +52,7 @@ export class KeysService {
   }
 
   async findAll() {
-    return await this.keysRepository.findAll();
+    return await this.keysRepository.findToUpdateED();
   }
 
   async findKeysByUser(userId: string) {
@@ -65,7 +65,7 @@ export class KeysService {
 
   @OnEvent('update.average')
   async addedNewAverage() {
-    const keys = await this.keysRepository.findAll();
+    const keys = await this.keysRepository.findToUpdateED();
 
     forEach(keys, async key => {
       const average = await this.averageService.create({

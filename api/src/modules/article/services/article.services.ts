@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ArticleRepository } from '../repositories';
 import {
   AddKeyDto,
@@ -16,6 +16,8 @@ import { TownsDestructor } from '../utils';
 import { compact } from 'lodash';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventsParser, EventsWS } from '../events';
+import { FILED_SEARCH_PRODUCT } from 'src/constatnts';
+import { GetProductRMQ } from 'src/modules/rabbitmq/contracts/products';
 
 @Injectable()
 export class ArticleService {
@@ -27,64 +29,66 @@ export class ArticleService {
     private readonly keyService: KeysService,
     private readonly utilsDestructor: TownsDestructor,
     private readonly eventEmitter: EventEmitter2,
-  ) {}
+  ) { }
 
   async checkData(user: User) {
     return await this.articleRepository.findDataByUser(user);
   }
 
   //Cделано
-  async create(data: CreateArticleDto, user: User) {
-    //TODO: Разбить на блоки
-    // 1. Блок поиска артикула который у нас есть, если есть то мы смотрим на разницу ключей те которые совпадают мы их активируем тех которых нету то отправляем на парсинг
-    // 2. Блок поиска удаленных артикулов с неактивными ключами, если мы находим его то смотрим на совпадение ключей
-    // 3. Блок получение информации для нового артикула и деструкторизации даных
-    const { article, keys } = data;
-    const findArticleActive = await this.articleRepository.findArticleActive(article, user);
+  async create(data: CreateArticleDto, user: User, product: GetProductRMQ.Response) {
+    try {
+      //TODO: Разбить на блоки
+      // 1. Блок поиска артикула который у нас есть, если есть то мы смотрим на разницу ключей те которые совпадают мы их активируем тех которых нету то отправляем на парсинг
+      // 2. Блок поиска удаленных артикулов с неактивными ключами, если мы находим его то смотрим на совпадение ключей
+      // 3. Блок получение информации для нового артикула и деструкторизации даных
+      const { article, keys } = data;
+      const findArticleActive = await this.articleRepository.findArticleActive(article, user);
 
-    if (findArticleActive) {
-      await this.addKeys({ articleId: String(findArticleActive._id), keys: keys }, user);
-      return findArticleActive;
-    }
+      if (findArticleActive) {
+        await this.addKeys({ articleId: String(findArticleActive._id), keys: keys }, user);
+        return findArticleActive;
+      }
 
-    const findArticleNonActive = await this.articleRepository.findArticleNonActive(article, user); // TODO: Сделать активацию дупликации ключей
+      const findArticleNonActive = await this.articleRepository.findArticleNonActive(article, user); // TODO: Сделать активацию дупликации ключей
 
-    if (findArticleNonActive) {
+      if (findArticleNonActive) {
+        setImmediate(async () => {
+          await this.articleRepository.backOldArticle(findArticleNonActive._id, user);
+          this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user });
+        });
+      }
+
+      const towns = await this.fetchProvider.fetchProfileTowns(user);
+      const destructTowns = await this.utilsDestructor.destruct(towns);
+
       setImmediate(async () => {
-        await this.articleRepository.backOldArticle(findArticleNonActive._id, user);
+        const newKeys = await this.keyService.create({
+          pvz: destructTowns,
+          keys: keys,
+          userId: user,
+          article: article,
+        });
+
+        await this.articleRepository.create({
+          productImg: product.status ? product.img : null,
+          productRef: product.status ? product.product_url : null,
+          userId: user,
+          article: data.article,
+          active: true,
+          productName: product.status ? product.product_name : DEFAULT_PRODUCT_NAME,
+          keys: newKeys,
+        });
+
+        this.eventEmitter.emit(EventsParser.SEND_TO_PARSE, { keysId: newKeys });
+
+        await this.fetchProvider.startTrialPeriod(user);
+
         this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user });
       });
+    } catch (error) {
+      return error.message;
     }
-
-    const productNameData = await this.fetchProvider.fetchArticleName(article);
-
-    const towns = await this.fetchProvider.fetchProfileTowns(user);
-    const destructTowns = await this.utilsDestructor.destruct(towns);
-
-    setImmediate(async () => {
-      const newKeys = await this.keyService.create({
-        pvz: destructTowns,
-        keys: keys,
-        userId: user,
-        article: article,
-      });
-
-      await this.articleRepository.create({
-        productImg: productNameData.status ? productNameData.img : null,
-        productRef: productNameData.status ? productNameData.product_url : null,
-        userId: user,
-        article: data.article,
-        active: true,
-        productName: productNameData.status ? productNameData.product_name : DEFAULT_PRODUCT_NAME,
-        keys: newKeys,
-      });
-
-      this.eventEmitter.emit(EventsParser.SEND_TO_PARSE, { keysId: newKeys });
-
-      await this.fetchProvider.startTrialPeriod(user);
-
-      this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user });
-    });
   }
 
   //Cделано
