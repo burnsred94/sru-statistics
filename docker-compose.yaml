@@ -1,13 +1,22 @@
 version: '3.8'
 
+networks:
+  geo_default:
+    external:
+      name: geo_default
+
 services:
   api:
+    container_name: sru-statistics-api
     build:
       context: ./api
       dockerfile: Dockerfile
-      target: development
-    command: npm run start:dev
+      target: production
+    env_file:
+      - ./api/.env
     ports:
-      - 3000:3000
+      - $PORT:$PORT_DEV
     volumes:
       - ./api/:/usr/src/app
+    networks:
+      - geo_default
