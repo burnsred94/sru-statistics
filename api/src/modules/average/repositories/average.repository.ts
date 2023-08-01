@@ -20,7 +20,7 @@ export class AverageRepository {
   }
 
   async updateTime(id, timestamp) {
-    await this.averageModel.updateOne({ id: id }, { $set: { timestamp: timestamp } })
+    await this.averageModel.updateOne({ _id: id }, { $set: { timestamp: timestamp } })
   }
 
   async update(id: Types.ObjectId, data: string) {
