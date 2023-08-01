@@ -10,7 +10,7 @@ export class TaskUpdateQueue {
   queue: Array<any>;
 
   constructor(private readonly configService: ConfigService) {
-    this.concurrency = Number(this.configService.get('LIMIT_TASK_QUEUE_CONCURRENCY'));
+    this.concurrency = 50;
     this.running = 0;
     this.queue = [];
   }
@@ -25,7 +25,7 @@ export class TaskUpdateQueue {
   }
 
   next() {
-    while (this.running < this.concurrency && this.queue.length > 0) {
+    while (this.running <= this.concurrency && this.queue.length > 0) {
       const task = this.queue.shift();
       setImmediate(() => {
         task();

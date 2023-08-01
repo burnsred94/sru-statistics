@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from './modules/database/database.module';
 import { ConfigModule } from '@nestjs/config';
-import { CronModule } from './modules/cron/cron.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtOptions } from './configs/jwt.config';
@@ -11,6 +10,8 @@ import { KeysModule } from './modules/keys/keys.module';
 import { PvzModule } from './modules/pvz/pvz.module';
 import { PeriodsModule } from './modules/periods/periods.module';
 import { AverageModule } from './modules/average/average.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { UtilsModule } from './modules/utils/utils.module';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { AverageModule } from './modules/average/average.module';
       envFilePath: '.env',
     }),
     DatabaseModule,
-    CronModule,
+    ScheduleModule.forRoot(),
     JwtModule.registerAsync(jwtOptions),
     PassportModule,
     ArticleModule,
@@ -28,6 +29,7 @@ import { AverageModule } from './modules/average/average.module';
     PvzModule,
     PeriodsModule,
     AverageModule,
+    UtilsModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

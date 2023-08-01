@@ -5,22 +5,23 @@ import { PvzService } from './services';
 import { PvzRepository } from './repositories';
 import { PeriodsModule } from '../periods';
 import { PvzController } from './controllers';
-import { PvzUtils } from './utils';
 import { RmqModule } from '../rabbitmq/rabbitmq.module';
 import { RmqExchanges } from '../rabbitmq/exchanges';
 import { KeysModule } from '../keys';
 import { TaskUpdateQueue } from './utils';
 import { PvzQueue } from './services/pvz-queue.service';
+import { UtilsModule } from '../utils';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Pvz.name, schema: PvzSchema }]),
     PeriodsModule,
+    UtilsModule,
     RmqModule.register({ exchanges: [RmqExchanges.STATISTICS] }),
     forwardRef(() => KeysModule),
   ],
-  providers: [PvzService, PvzRepository, PvzUtils, TaskUpdateQueue, PvzQueue],
+  providers: [PvzService, PvzRepository, TaskUpdateQueue, PvzQueue],
   controllers: [PvzController],
   exports: [PvzService],
 })
-export class PvzModule {}
+export class PvzModule { }

@@ -12,8 +12,6 @@ export class FetchController {
   @Post('get-position')
   async getPositionWidgets(@Body() dto: GetPositionDto, @Res() response: Response) {
     try {
-
-      
       const data = await this.fetchProvider.getPositionWidget(dto);
 
       return response.status(HttpStatus.OK).send({

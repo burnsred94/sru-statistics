@@ -7,7 +7,6 @@ import * as compression from 'compression';
 import * as cookieParser from 'cookie-parser';
 import { RabbitMqPublisher } from './modules/rabbitmq/services';
 import { RpcExceptionFilter } from './modules/rabbitmq/utils';
-import { AppClustersService } from './app.cluster';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

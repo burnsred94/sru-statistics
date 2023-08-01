@@ -120,8 +120,14 @@ export class ArticleService {
     await this.articleRepository.removeArticle(data, id);
   }
 
-  //Cделано
+  //Доделать проверку на последний ключ в артикуле
   async removeKey(data: RemoveKeyDto, user: User) {
-    await this.keyService.removeKey(data.keyId);
+    // const getKey = await this.keyService.findById([{ _id: data.keyId, active: true }], 'all')
+    await this.keyService.removeKey(data.keyId)
+      .then((data) => {
+        if (data) {
+          this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user });
+        }
+      });
   }
 }

@@ -8,7 +8,7 @@ import { Periods } from 'src/modules/periods';
 
 @Injectable()
 export class PvzRepository {
-  constructor(@InjectModel(Pvz.name) private readonly pvzModel: Model<Pvz>) {}
+  constructor(@InjectModel(Pvz.name) private readonly pvzModel: Model<Pvz>) { }
 
   async create(data: Pvz) {
     const newPwz = new PvzEntity(data);

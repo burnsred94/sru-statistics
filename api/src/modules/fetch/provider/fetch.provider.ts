@@ -48,14 +48,15 @@ export class FetchProvider {
       payload: { article: dto.article },
     });
 
-    if (!product.product_name && !product.product_url) throw new BadRequestException(`Такого артикула не существует: ${dto.article}`);
+    if (!product.product_name && !product.product_url)
+      throw new BadRequestException(`Такого артикула не существует: ${dto.article}`);
 
     const data = await this.rmqRequester.request({
       exchange: RmqExchanges.SEARCH,
       routingKey: GetPositionWidgetsRMQ.routingKey,
       timeout: 5000 * 10,
       payload: dto,
-    })
+    });
 
     return {
       product: {
@@ -64,7 +65,6 @@ export class FetchProvider {
       },
       find_data: data,
     };
-
   }
 
   async fetchArticleName(article: string) {
@@ -133,8 +133,8 @@ export class FetchProvider {
     });
   }
 
-  @Cron("10 0 * * *", { timeZone: 'Europe/Moscow' })
-  async fet0chStartUpdate() {
+  @Cron('30 0 * * *', { timeZone: 'Europe/Moscow' })
+  async fetchStartUpdate() {
     await this.keysService.findAndNewPeriod();
   }
 

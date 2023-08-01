@@ -4,6 +4,7 @@ import { IAverage } from 'src/interfaces';
 export class AverageEntity {
   timestamp: string;
   average: string;
+  difference: string;
   options: {
     day: '2-digit';
     month: '2-digit';
@@ -12,6 +13,8 @@ export class AverageEntity {
 
   constructor(data: IAverage) {
     this.average = data.average;
+    4;
+    this.difference = data.difference;
     this.timestamp = this.date();
   }
 

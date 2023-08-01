@@ -15,21 +15,28 @@ export class AverageRepository {
     return newAverage.save();
   }
 
-  async find() {
-    return await this.averageModel.find({ timestamp: '02.08.2023' })
-  }
-
-  async updateTime(id, timestamp) {
-    await this.averageModel.updateOne({ _id: id }, { $set: { timestamp: timestamp } })
+  async findOne(id: Types.ObjectId) {
+    return await this.averageModel.findOne({ _id: id })
   }
 
   async update(id: Types.ObjectId, data: string) {
-    await this.averageModel.findByIdAndUpdate(
+    return await this.averageModel.findByIdAndUpdate(
       {
         _id: id,
       },
       {
         $set: { average: data },
+      },
+    );
+  }
+
+  async updateDiff(id: Types.ObjectId, data: string) {
+    await this.averageModel.findByIdAndUpdate(
+      {
+        _id: id,
+      },
+      {
+        $set: { difference: data },
       },
     );
   }
