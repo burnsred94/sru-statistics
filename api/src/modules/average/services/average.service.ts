@@ -10,14 +10,14 @@ export class AverageService {
   constructor(
     private readonly averageRepository: AverageRepository,
     private readonly mathUtils: MathUtils,
-  ) { }
+  ) {}
 
   async create(data: IAverage) {
     return await this.averageRepository.create(data);
   }
 
   async find(ids: Types.ObjectId[]) {
-    return map(ids, async (id) => await this.averageRepository.findOne(id));
+    return map(ids, async id => await this.averageRepository.findOne(id));
   }
 
   async update(id: Types.ObjectId, data: string, key) {
@@ -25,7 +25,7 @@ export class AverageService {
 
     if (update && key.average.length > 1) {
       const reverse = key.average.reverse();
-      const averageData = await this.find([reverse.at(1)._id, reverse.at(0)._id])
+      const averageData = await this.find([reverse.at(1)._id, reverse.at(0)._id]);
       const resolved = await Promise.all(averageData);
       await this.updateDiff(resolved[0], resolved[1]);
     }
@@ -34,7 +34,10 @@ export class AverageService {
   async updateDiff(first, second) {
     if (second !== undefined) {
       console.log(`diff`, first, second);
-      const data = await this.mathUtils.calculateDiff({ position: second.average }, { position: first.average });
+      const data = await this.mathUtils.calculateDiff(
+        { position: second.average },
+        { position: first.average },
+      );
       await this.averageRepository.updateDiff(second._id, data);
     }
   }

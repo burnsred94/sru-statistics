@@ -22,4 +22,4 @@ import { UtilsModule } from '../utils';
   exports: [KeysService],
   controllers: [KeysController],
 })
-export class KeysModule { }
+export class KeysModule {}

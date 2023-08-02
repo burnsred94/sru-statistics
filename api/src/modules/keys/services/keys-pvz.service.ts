@@ -14,7 +14,7 @@ export class KeysPvzService {
     private readonly pvzService: PvzService,
     private readonly keysRepository: KeysRepository,
     private readonly eventEmitter: EventEmitter2,
-  ) { }
+  ) {}
 
   async updateFromProfile(data, keys) {
     const { address } = data;

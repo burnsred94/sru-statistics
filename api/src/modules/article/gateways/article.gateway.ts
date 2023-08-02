@@ -56,7 +56,6 @@ export class ArticleGateway {
 
       if (find.length > 0) {
         forEach(find, async element => {
-          console.log(element);
           const data = await this.articleService.findByCity(
             element.data,
             payload.userId,

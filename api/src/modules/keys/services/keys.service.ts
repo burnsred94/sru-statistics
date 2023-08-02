@@ -20,34 +20,43 @@ export class KeysService {
   ) { }
 
   async create(data: IKey) {
-    const keys = map(data.keys, async key => {
+    const { keys } = data;
+
+    const result = [];
+    let iterator = 0;
+    while (keys.length > iterator) {
+
       const average = await this.averageService.create({
         average: 'Ожидается',
         difference: '0',
       });
 
-      const newKey = await this.keysRepository.create({
+      const key = await this.keysRepository.create({
         article: data.article,
-        key: key,
+        key: keys[iterator],
         userId: data.userId,
         countPvz: 0,
         average: [average._id],
       });
 
-      const pvz = map(data.pvz, async pvz => {
-        return await this.pvzService.create(pvz, data.article, data.userId, String(newKey));
-      });
+      result.push(key)
 
-      const resolved = await Promise.all(pvz);
+      new Promise((resolve) => {
+        setImmediate(() => {
+          resolve(map(data.pvz, pvz => {
+            return this.pvzService.create(pvz, data.article, data.userId, String(key));
+          }))
+        })
+      }).then(async (result: Types.ObjectId[]) => {
+        result = await Promise.all(result);
+        this.keysRepository.update(key, result);
+      })
 
-      await this.keysRepository.update(newKey, resolved);
+      iterator++;
+    }
 
-      return newKey._id;
-    });
+    return result;
 
-    const resolvedKeys = await Promise.all(keys);
-
-    return resolvedKeys;
   }
 
   async findAll() {
@@ -80,7 +89,7 @@ export class KeysService {
     const id = payload.key_id as unknown as Types.ObjectId;
     const key = await this.keysRepository.findById(id, 'all');
 
-    await this.averageService.update(key.average.at(-1)._id, payload.average, key)
+    await this.averageService.update(key.average.at(-1)._id, payload.average, key);
   }
 
   async findById(ids: Array<{ _id: Types.ObjectId; active: boolean }>, searchObject: string) {
@@ -98,6 +107,13 @@ export class KeysService {
   }
 
   async removeKey(id: Types.ObjectId) {
-    return await this.keysRepository.removeKey(id);
+    return await this.keysRepository.setStatusKey(id, false);
+  }
+
+  async activateKey(ids: Types.ObjectId[]) {
+    forEach(ids, async (id: Types.ObjectId) => {
+      console.log(id, `activate`)
+      await this.keysRepository.setStatusKey(id, true);
+    })
   }
 }

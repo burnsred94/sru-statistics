@@ -5,10 +5,11 @@ import { Pvz } from '../schemas';
 import { PvzEntity } from '../entities';
 import { StatusPvz } from 'src/interfaces';
 import { Periods } from 'src/modules/periods';
+import { User } from 'src/modules/auth';
 
 @Injectable()
 export class PvzRepository {
-  constructor(@InjectModel(Pvz.name) private readonly pvzModel: Model<Pvz>) { }
+  constructor(@InjectModel(Pvz.name) private readonly pvzModel: Model<Pvz>) {}
 
   async create(data: Pvz) {
     const newPwz = new PvzEntity(data);
@@ -20,6 +21,14 @@ export class PvzRepository {
     return await this.pvzModel.find({
       // status: StatusPvz.SUCCESS,
       active: true,
+    });
+  }
+
+  async findUserStatus(userId: User, article: string) {
+    return await this.pvzModel.countDocuments({
+      userId: userId,
+      article: article,
+      status: StatusPvz.WAIT_TO_SEND,
     });
   }
 

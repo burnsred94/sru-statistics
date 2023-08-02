@@ -24,4 +24,4 @@ import { UtilsModule } from '../utils';
   controllers: [PvzController],
   exports: [PvzService],
 })
-export class PvzModule { }
+export class PvzModule {}

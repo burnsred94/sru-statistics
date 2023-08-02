@@ -25,7 +25,7 @@ export class ArticleController {
   constructor(
     private readonly articleService: ArticleService,
     private readonly fetchProvider: FetchProvider,
-  ) {}
+  ) { }
 
   @ApiAcceptedResponse({ description: 'Create Statistic' })
   @UseGuards(JwtAuthGuard)
@@ -38,12 +38,12 @@ export class ArticleController {
     try {
       const productNameData = await this.fetchProvider.fetchArticleName(data.article);
 
-      if (!productNameData.product_name && !productNameData.product_url)
-        throw new BadRequestException(`Такого артикула не существует: ${data.article}`);
+      // if (!productNameData.product_name && !productNameData.product_url)
+      //   throw new BadRequestException(`Такого артикула не существует: ${data.article}`);
 
-      setImmediate(async () => await this.articleService.create(data, user, productNameData));
+      const create = await this.articleService.create(data, user, productNameData)
 
-      const initArticle = initArticleMessage(data.article);
+      const initArticle = initArticleMessage(data.article, create);
       return response.status(HttpStatus.OK).send({
         data: { message: initArticle },
         error: [],

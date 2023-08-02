@@ -10,7 +10,7 @@ import { forEach } from 'lodash';
 
 @Injectable()
 export class KeysRepository {
-  constructor(@InjectModel(Keys.name) private readonly keysModel: Model<Keys>) {}
+  constructor(@InjectModel(Keys.name) private readonly keysModel: Model<Keys>) { }
 
   async findKey(id: string) {
     return await this.keysModel.findById(id).lean().exec();
@@ -75,27 +75,27 @@ export class KeysRepository {
     query =
       searchObject === 'all'
         ? query.populate({
-            path: 'pwz',
-            select: 'name position city city_id geo_address_id',
-            match: { active: true },
-            model: Pvz.name,
-            populate: {
-              path: 'position',
-              select: 'position timestamp difference',
-              model: Periods.name,
-            },
-          })
+          path: 'pwz',
+          select: 'name position city city_id geo_address_id',
+          match: { active: true },
+          model: Pvz.name,
+          populate: {
+            path: 'position',
+            select: 'position timestamp difference',
+            model: Periods.name,
+          },
+        })
         : query.populate({
-            path: 'pwz',
-            select: 'name position city city_id geo_address_id',
-            match: { city: searchObject, active: true },
-            model: Pvz.name,
-            populate: {
-              path: 'position',
-              select: 'position timestamp difference',
-              model: Periods.name,
-            },
-          });
+          path: 'pwz',
+          select: 'name position city city_id geo_address_id',
+          match: { city: searchObject, active: true },
+          model: Pvz.name,
+          populate: {
+            path: 'position',
+            select: 'position timestamp difference',
+            model: Periods.name,
+          },
+        });
 
     query = query.populate({
       path: 'average',
@@ -106,8 +106,8 @@ export class KeysRepository {
     return await query.lean().exec();
   }
 
-  async removeKey(id: Types.ObjectId) {
-    return await this.keysModel.findByIdAndUpdate({ _id: id }, { $set: { active: false } });
+  async setStatusKey(id: Types.ObjectId, status: boolean) {
+    return await this.keysModel.findByIdAndUpdate({ _id: id }, { $set: { active: status } });
   }
 
   async updateAverage(id: Types.ObjectId, average: Types.ObjectId) {

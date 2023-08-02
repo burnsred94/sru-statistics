@@ -28,7 +28,7 @@ export class FetchProvider {
     private readonly taskSenderQueue: TaskSenderQueue,
     private readonly pvzService: PvzService,
     private readonly fetchUtils: FetchUtils,
-  ) { }
+  ) {}
 
   count = 0;
 

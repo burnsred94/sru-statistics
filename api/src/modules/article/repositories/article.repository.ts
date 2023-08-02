@@ -14,7 +14,7 @@ export class ArticleRepository {
   constructor(
     @InjectModel(Article.name) private readonly modelArticle: Model<Article>,
     private readonly keysService: KeysService,
-  ) {}
+  ) { }
 
   async findDataByUser(user: User) {
     const find = await this.modelArticle.find({ userId: user, active: true }).lean().exec();
@@ -24,20 +24,26 @@ export class ArticleRepository {
     return { total: find.length, total_keys: keysLength };
   }
 
-  async findArticleActive(article: string, userId: User) {
-    return await this.modelArticle.findOne({
-      article: article,
-      userId: userId,
-      active: true,
-    });
-  }
 
-  async findArticleNonActive(article: string, userId: User) {
-    return await this.modelArticle.findOne({
+  async findProductKeys(article: string, userId: User, productActive: boolean, stateKeys?: boolean) {
+    let product = await this.modelArticle.findOne({
       article: article,
       userId: userId,
-      active: false,
-    });
+      active: productActive,
+    })
+
+    if (product !== null) {
+
+      if (stateKeys !== undefined) {
+        product = await product.populate({ path: 'keys', select: "key active", match: { active: stateKeys }, model: Keys.name });
+        return { keys: product.keys, _id: product._id }
+      };
+
+      product = await product.populate({ path: 'keys', select: "key active", model: Keys.name });
+      return { keys: product.keys, _id: product._id }
+    }
+
+    return null;
   }
 
   async create(article: Article) {
