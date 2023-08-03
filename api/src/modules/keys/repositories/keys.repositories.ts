@@ -36,8 +36,16 @@ export class KeysRepository {
   }
 
   async findToUpdateED() {
-    const find = await this.keysModel
-      .find({ active: true })
+    let query = this.keysModel.find({ active: true });
+
+    query = query.populate({
+      path: "average",
+      select: "status",
+      match: { status: "Ожидается" },
+      model: Average.name
+    });
+
+    query = query
       .populate({
         path: 'pwz',
         select: 'name position city city_id geo_address_id',
@@ -47,10 +55,9 @@ export class KeysRepository {
           select: 'position timestamp difference',
           model: Periods.name,
         },
-      })
-      .lean()
-      .exec();
-    return find;
+      });
+
+    return await query.lean().exec();
   }
 
   async find(data: { userId: number; cityId: string }) {

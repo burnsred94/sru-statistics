@@ -28,7 +28,7 @@ export class FetchProvider {
     private readonly taskSenderQueue: TaskSenderQueue,
     private readonly pvzService: PvzService,
     private readonly fetchUtils: FetchUtils,
-  ) {}
+  ) { }
 
   count = 0;
 
@@ -153,5 +153,22 @@ export class FetchProvider {
           }),
       );
     });
+  }
+
+  @Cron('30 10 * * *', { timeZone: 'Europe/Moscow' })
+  async fetchCheck() {
+    const keys = await this.keysService.findAll();
+    const formatted = await this.fetchUtils.formatDataToParse(keys);
+
+    forEach(formatted, async element => {
+      this.taskSenderQueue.pushTask(
+        async () =>
+          await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
+            exchange: RmqExchanges.SEARCH,
+            routingKey: SearchPositionRMQ.routingKey,
+            payload: element,
+          }),
+      );
+    })
   }
 }
