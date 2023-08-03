@@ -41,7 +41,7 @@ export class KeysRepository {
     query = query.populate({
       path: "average",
       select: "status",
-      match: { status: "Ожидается" },
+      match: { average: "Ожидается" },
       model: Average.name
     });
 

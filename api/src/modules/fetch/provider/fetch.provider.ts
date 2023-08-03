@@ -151,11 +151,12 @@ export class FetchProvider {
             routingKey: SearchPositionRMQ.routingKey,
             payload: element,
           }),
+
       );
     });
   }
 
-  @Cron('30 10 * * *', { timeZone: 'Europe/Moscow' })
+  @Cron('42 10 * * *', { timeZone: 'Europe/Moscow' })
   async fetchCheck() {
     const keys = await this.keysService.findAll();
     const formatted = await this.fetchUtils.formatDataToParse(keys);
