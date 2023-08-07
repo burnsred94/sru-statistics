@@ -35,6 +35,7 @@ module.exports = {
     "unicorn/prefer-spread": "off",
     "unicorn/no-array-callback-reference": "off",
     "unicorn/consistent-function-scoping": "off",
+    "unicorn/no-object-as-default-parameter": "off",
     "unicorn/no-useless-undefined": "off",
     "unicorn/prefer-top-level-await": "off",
     "unicorn/prevent-abbreviations": [

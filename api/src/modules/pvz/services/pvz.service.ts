@@ -24,7 +24,7 @@ export class PvzService {
     private readonly eventEmitter: EventEmitter2,
     private readonly pvqQueue: PvzQueue,
     private readonly mathUtils: MathUtils,
-  ) {}
+  ) { }
 
   async findUserStatus(userId: User, article: string) {
     return async () => {
@@ -96,7 +96,7 @@ export class PvzService {
 
   async updatePeriod(pvzId: Types.ObjectId) {
     const data = await this.pvzRepository.findPvz(pvzId);
-    if (data.position.length > 0) {
+    if (data.position.length > 0 || data !== null) {
       const firstItem = data.position.at(-1);
       const secondItem = data.position.at(-2);
       const result = await this.mathUtils.calculateDiff(firstItem, secondItem);

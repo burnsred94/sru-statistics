@@ -12,7 +12,9 @@ export class PvzController {
   constructor(
     private readonly pvzService: PvzService,
     private readonly taskUpdateQueue: TaskUpdateQueue,
-  ) {}
+  ) { }
+
+  update = 0;
 
   @RabbitMqSubscriber({
     exchange: RmqExchanges.STATISTICS,
@@ -21,12 +23,14 @@ export class PvzController {
     currentService: RmqServices.STATISTICS,
   })
   async updatePeriod(payload: StatisticsUpdateRMQ.Payload) {
+    this.update++;
     try {
       if (payload.periodId !== undefined) {
         setImmediate(() =>
           this.taskUpdateQueue.pushTask(async () => this.pvzService.update(payload)),
         );
       }
+      console.log(this.update);
     } catch (error) {
       this.logger.error(error);
     }

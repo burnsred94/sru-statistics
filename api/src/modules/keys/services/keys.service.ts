@@ -4,7 +4,7 @@ import { forEach, map } from 'lodash';
 import { Types } from 'mongoose';
 import { KeysRepository } from '../repositories';
 import { AverageService } from 'src/modules/average';
-import { IKey } from 'src/interfaces';
+import { AverageStatus, IKey } from 'src/interfaces';
 import { PvzService } from 'src/modules/pvz';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
@@ -29,6 +29,7 @@ export class KeysService {
       const average = await this.averageService.create({
         average: 'Ожидается',
         difference: '0',
+        userId: data.userId as unknown as number
       });
 
       const key = await this.keysRepository.create({
@@ -59,6 +60,16 @@ export class KeysService {
 
   }
 
+  async selectToParse(statusSearch: AverageStatus, selected: { active: boolean, userId?: number }) {
+    const { ids, data } = await this.keysRepository.selectToParser(statusSearch, selected);
+    const status = (async () => await this.averageService.statusUp(ids, AverageStatus.PENDING))
+    return { data: data, stFn: status }
+  }
+
+  async countToParse(status: AverageStatus, userId?: number) {
+    return await this.averageService.getCountToParse(status, userId);
+  }
+
   async findAll() {
     return await this.keysRepository.findToUpdateED();
   }
@@ -79,6 +90,7 @@ export class KeysService {
       const average = await this.averageService.create({
         average: 'Ожидается',
         difference: '0',
+        userId: key.userId as unknown as number
       });
       await this.keysRepository.updateAverage(key._id, average._id);
     });
@@ -112,7 +124,6 @@ export class KeysService {
 
   async activateKey(ids: Types.ObjectId[]) {
     forEach(ids, async (id: Types.ObjectId) => {
-      console.log(id, `activate`)
       await this.keysRepository.setStatusKey(id, true);
     })
   }

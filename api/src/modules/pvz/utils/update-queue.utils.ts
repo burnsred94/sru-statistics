@@ -10,7 +10,7 @@ export class TaskUpdateQueue {
   queue: Array<any>;
 
   constructor(private readonly configService: ConfigService) {
-    this.concurrency = 50;
+    this.concurrency = 150;
     this.running = 0;
     this.queue = [];
   }
@@ -45,9 +45,9 @@ export class TaskUpdateQueue {
 
         break;
       }
-      this.logger.debug(
-        `Length current task: ${this.queue.length}, concurrent: ${this.concurrency}, ${this.running}`,
-      );
+      // this.logger.debug(
+      //   `Length current task: ${this.queue.length}, concurrent: ${this.concurrency}, ${this.running}`,
+      // );
     }
   }
 }

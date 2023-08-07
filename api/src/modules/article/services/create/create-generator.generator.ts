@@ -55,7 +55,7 @@ export class CreateArticleGenerator {
                     article: article,
                 });
 
-                this.eventEmitter.emit(EventsParser.SEND_TO_PARSE, { keysId: newKeys });
+                this.eventEmitter.emit(EventsParser.SEND_TO_PARSE, { userId: user });
 
                 await this.articleRepository.update(newKeys as Types.ObjectId[], active_product._id);
 
@@ -96,7 +96,7 @@ export class CreateArticleGenerator {
                 article: article,
             });
 
-            this.eventEmitter.emit(EventsParser.SEND_TO_PARSE, { keysId: newKeys });
+            this.eventEmitter.emit(EventsParser.SEND_TO_PARSE, { userId: user });
 
             await this.articleRepository.update(newKeys as Types.ObjectId[], find_keys_active._id);
 
@@ -129,7 +129,7 @@ export class CreateArticleGenerator {
                 keys: newKeys as Types.ObjectId[],
             });
 
-            this.eventEmitter.emit(EventsParser.SEND_TO_PARSE, { keysId: newKeys });
+            this.eventEmitter.emit(EventsParser.SEND_TO_PARSE, { userId: user });
             this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user })
 
             await this.fetchProvider.startTrialPeriod(user);

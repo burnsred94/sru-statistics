@@ -3,11 +3,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Average } from '../schemas';
 import { Model, Types } from 'mongoose';
 import { AverageEntity } from '../entities';
-import { IAverage } from 'src/interfaces';
+import { AverageStatus, IAverage } from 'src/interfaces';
 
 @Injectable()
 export class AverageRepository {
-  constructor(@InjectModel(Average.name) private readonly averageModel: Model<Average>) {}
+  constructor(@InjectModel(Average.name) private readonly averageModel: Model<Average>) { }
 
   async create(data: IAverage) {
     const averageEntity = new AverageEntity(data);
@@ -25,7 +25,7 @@ export class AverageRepository {
         _id: id,
       },
       {
-        $set: { average: data },
+        $set: { average: data, status_updated: AverageStatus.SUCCESS },
       },
     );
   }
@@ -39,5 +39,13 @@ export class AverageRepository {
         $set: { difference: data },
       },
     );
+  }
+
+  async statusUp(id: Types.ObjectId[], status: AverageStatus) {
+    await this.averageModel.updateMany({ _id: id }, { status_updated: status });
+  }
+
+  async getCountDocuments(searchObject): Promise<number> {
+    return await this.averageModel.countDocuments(searchObject);
   }
 }

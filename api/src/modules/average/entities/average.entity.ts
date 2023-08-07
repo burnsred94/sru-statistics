@@ -1,9 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { IAverage } from 'src/interfaces';
+import { AverageStatus, IAverage } from 'src/interfaces';
 
 export class AverageEntity {
   timestamp: string;
   average: string;
+  userId: number;
+  status_update: string;
   difference: string;
   options: {
     day: '2-digit';
@@ -13,7 +15,8 @@ export class AverageEntity {
 
   constructor(data: IAverage) {
     this.average = data.average;
-    4;
+    this.userId = data.userId;
+    this.status_update = AverageStatus.WAIT_SENDING;
     this.difference = data.difference;
     this.timestamp = this.date();
   }

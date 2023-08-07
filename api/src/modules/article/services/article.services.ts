@@ -89,7 +89,7 @@ export class ArticleService {
     });
 
     await this.articleRepository.update(newKeys as Types.ObjectId[], find._id);
-    await this.fetchProvider.fetchParser({ keysId: newKeys as Types.ObjectId[] });
+    await this.fetchProvider.fetchParser({ userId: user as unknown as number });
   }
 
   //Cделано
@@ -99,7 +99,8 @@ export class ArticleService {
 
   //Доделать проверку на последний ключ в артикуле
   async removeKey(data: RemoveKeyDto, user: User) {
-    // const getKey = await this.keyService.findById([{ _id: data.keyId, active: true }], 'all')
+    // const getKey = await this.keyService.findById([{ _id: data.keyId, active: true }], 'all');
+
     await this.keyService.removeKey(data.keyId).then(data => {
       if (data) {
         this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user });

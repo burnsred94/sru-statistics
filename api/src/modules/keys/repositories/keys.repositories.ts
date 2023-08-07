@@ -7,6 +7,7 @@ import { Pvz } from 'src/modules/pvz';
 import { Average } from 'src/modules/average';
 import { Periods } from 'src/modules/periods';
 import { forEach } from 'lodash';
+import { AverageStatus } from 'src/interfaces';
 
 @Injectable()
 export class KeysRepository {
@@ -34,6 +35,43 @@ export class KeysRepository {
       await this.keysModel.findByIdAndDelete(key._id);
     });
   }
+
+  // 
+  async selectToParser(statusSearch: AverageStatus, selected: { active: boolean, userId?: number }) {
+    let query = this.keysModel.find(selected)
+    query = query.populate({
+      path: "average",
+      select: "status_updated",
+      model: Average.name
+    });
+
+    query = query
+      .populate({
+        path: 'pwz',
+        select: 'name position city city_id geo_address_id',
+        model: Pvz.name,
+        populate: {
+          path: 'position',
+          select: 'position timestamp difference',
+          model: Periods.name,
+        },
+      });
+
+    const result = await query.lean().exec();
+
+    const ids = [];
+
+    const keys = result.filter((element: any) => {
+      if (element.average.at(-1).status_updated === statusSearch) {
+        ids.push(element.average.at(-1)._id);
+        return element
+      }
+    });
+
+    return { data: keys, ids: ids };
+  }
+
+
 
   async findToUpdateED() {
     let query = this.keysModel.find({ active: true });

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AverageRepository } from '../repositories';
 import { Types } from 'mongoose';
-import { IAverage } from 'src/interfaces';
+import { AverageStatus, IAverage } from 'src/interfaces';
 import { MathUtils } from 'src/modules/utils/providers';
 import { map } from 'lodash';
 
@@ -10,7 +10,7 @@ export class AverageService {
   constructor(
     private readonly averageRepository: AverageRepository,
     private readonly mathUtils: MathUtils,
-  ) {}
+  ) { }
 
   async create(data: IAverage) {
     return await this.averageRepository.create(data);
@@ -33,12 +33,21 @@ export class AverageService {
 
   async updateDiff(first, second) {
     if (second !== undefined) {
-      console.log(`diff`, first, second);
       const data = await this.mathUtils.calculateDiff(
         { position: second.average },
         { position: first.average },
       );
       await this.averageRepository.updateDiff(second._id, data);
     }
+  }
+
+  async statusUp(ids: Types.ObjectId[], status: AverageStatus) {
+    await this.averageRepository.statusUp(ids, status);
+  }
+
+  async getCountToParse(status: AverageStatus, userId: number): Promise<number> {
+    return userId === undefined ? 
+    this.averageRepository.getCountDocuments({ status_updated: status }) : 
+    this.averageRepository.getCountDocuments({ status_updated: status, userId: userId });
   }
 }
