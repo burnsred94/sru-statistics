@@ -62,7 +62,7 @@ export class KeysRepository {
     const ids = [];
 
     const keys = result.filter((element: any) => {
-      if (element.average.at(-1).status_updated === statusSearch) {
+      if (element.average.at(-1).status_updated !== undefined && element.average.at(-1).status_updated === statusSearch) {
         ids.push(element.average.at(-1)._id);
         return element
       }
