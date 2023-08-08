@@ -131,6 +131,7 @@ export class FetchProvider {
   async mainPostman(count = 0, status: AverageStatus = AverageStatus.WAIT_SENDING, query: { active: boolean, userId?: number } = { active: true }) {
     const { data, stFn } = await this.keysService.selectToParse(status, query);
 
+
     if (data.length > 0) {
       await this.fetchUtils.formatDataToParse(data)
         .then(async (data) => {

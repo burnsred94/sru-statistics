@@ -10,7 +10,7 @@ export class TaskUpdateQueue {
   queue: Array<any>;
 
   constructor(private readonly configService: ConfigService) {
-    this.concurrency = this.configService.get('LIMIT_TASK_UPDATE_QUEUE_CONCURRENCY');
+    this.concurrency = 50;
     this.running = 0;
     this.queue = [];
   }
@@ -45,6 +45,8 @@ export class TaskUpdateQueue {
 
         break;
       }
+
+
       // this.logger.debug(
       //   `Length current task: ${this.queue.length}, concurrent: ${this.concurrency}, ${this.running}`,
       // );

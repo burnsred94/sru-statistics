@@ -89,7 +89,10 @@ export class ArticleService {
     });
 
     await this.articleRepository.update(newKeys as Types.ObjectId[], find._id);
-    await this.fetchProvider.fetchParser({ userId: user as unknown as number });
+
+    setTimeout(async () => {
+      await this.fetchProvider.fetchParser({ userId: user as unknown as number });
+    }, 1000)
   }
 
   //Cделано

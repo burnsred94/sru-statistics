@@ -9,6 +9,7 @@ export class TaskSenderQueue {
   running: number;
   queue: Array<any>;
   tasks = 0
+  countInit = 0;
 
   constructor(private readonly configService: ConfigService) {
     this.concurrency = Number(this.configService.get('LIMIT_TASK_UPDATE_QUEUE_CONCURRENCY'));
@@ -28,10 +29,12 @@ export class TaskSenderQueue {
   }
 
   next() {
-    while (this.running <= this.concurrency && this.queue.length > 0) {
+    while (this.running < this.concurrency && this.queue.length > 0) {
       const task = this.queue.shift();
+      this.countInit++;
       setImmediate(() => {
         task();
+        console.log(task);
       });
 
       this.running++;
@@ -49,6 +52,11 @@ export class TaskSenderQueue {
         break;
       }
 
+      if (setTimeout)
+
+        this.logger.debug(
+          `Length current task: ${this.queue.length}, concurrent: ${this.concurrency}, ${this.running}`,
+        );
     }
   }
 }
