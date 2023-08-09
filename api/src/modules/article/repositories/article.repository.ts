@@ -89,6 +89,7 @@ export class ArticleRepository {
         return {
           ...stats,
           keys: chunks[0],
+          keys_length: keys.length,
           meta: {
             page: 1,
             total: chunks.length,
@@ -102,6 +103,7 @@ export class ArticleRepository {
         return {
           ...stats,
           keys: chunks[value.page - 1],
+          keys_length: keys.length,
           meta: {
             page: value.page,
             total: chunks.length,

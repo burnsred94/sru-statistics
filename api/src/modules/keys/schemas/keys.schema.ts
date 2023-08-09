@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 // import { Pwz } from './pwz.schema';
 import { Types } from 'mongoose';
-import { Article } from 'src/modules/article';
 import { User } from 'src/modules/auth/user';
 import { Average } from 'src/modules/average';
 import { Pvz } from 'src/modules/pvz';
