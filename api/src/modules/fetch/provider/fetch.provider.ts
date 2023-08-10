@@ -121,7 +121,7 @@ export class FetchProvider {
     });
   }
 
-  @Cron('50 07 * * *', { timeZone: 'Europe/Moscow' })
+  @Cron('56 07 * * *', { timeZone: 'Europe/Moscow' })
   async fetchStartUpdate() {
     await this.keysService.findAndNewPeriod();
   }
