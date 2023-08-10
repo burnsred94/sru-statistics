@@ -12,7 +12,7 @@ export class FetchUtils {
           name: element.name,
           addressId: String(element._id),
           geo_address_id: element.geo_address_id,
-          periodId: String(element.position[length - 1]._id),
+          periodId: String(element.position[length - 1]?._id) === undefined ? null : String(element.position[length - 1]._id)
         };
       });
       return {

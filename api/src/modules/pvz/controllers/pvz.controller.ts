@@ -24,7 +24,7 @@ export class PvzController {
   })
   async updatePeriod(payload: StatisticsUpdateRMQ.Payload) {
     try {
-      if (payload.periodId !== undefined) {
+      if (payload.periodId !== undefined && payload.periodId !== null) {
         setImmediate(async () =>
           this.taskUpdateQueue.pushTask(async () => await this.pvzService.update(payload)),
         );
