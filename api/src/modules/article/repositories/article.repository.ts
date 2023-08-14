@@ -17,11 +17,11 @@ export class ArticleRepository {
   ) { }
 
   async findDataByUser(user: User) {
-    const find = await this.modelArticle.find({ userId: user, active: true }).lean().exec();
+    const find = await this.modelArticle.countDocuments({ userId: user, active: true });
 
-    const keysLength = find.reduce((accumulator, item) => accumulator + item.keys.length, 0);
+    const keysLength = await this.keysService.countUserKeys(user, true);
 
-    return { total: find.length, total_keys: keysLength };
+    return { total: find, total_keys: keysLength };
   }
 
 

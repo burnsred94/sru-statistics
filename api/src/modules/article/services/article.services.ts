@@ -39,6 +39,7 @@ export class ArticleService {
     return await this.articleRepository.findDataByUser(user);
   }
 
+
   //Cделано
   async create(data: CreateArticleDto, user: User, product: GetProductRMQ.Response) {
     try {
@@ -104,9 +105,13 @@ export class ArticleService {
   //Cделано
   async removeArticle(data: RemoveArticleDto, id: User) {
     const article = await this.articleRepository.removeArticle(data, id);
-    return {
-      event: MessagesEvent.DELETE_ARTICLES,
-      article: article.article
+    const removedKey = await this.keyService.updateMany(article.keys);
+
+    if (removedKey) {
+      return {
+        event: MessagesEvent.DELETE_ARTICLES,
+        article: article.article
+      }
     }
   }
 

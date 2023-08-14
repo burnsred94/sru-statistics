@@ -60,6 +60,14 @@ export class KeysService {
 
   }
 
+  async countUserKeys(userId, status) {
+    return await this.keysRepository.countUserKeys(userId, status);
+  }
+
+  async updateMany(ids: Array<Types.ObjectId>) {
+    return await this.keysRepository.updateMany(ids);
+  }
+
   async selectToParse(statusSearch: AverageStatus, selected: { active: boolean, userId?: number }) {
     const { ids, data } = await this.keysRepository.selectToParser(statusSearch, selected);
     const status = (async () => await this.averageService.statusUp(ids, AverageStatus.PENDING))

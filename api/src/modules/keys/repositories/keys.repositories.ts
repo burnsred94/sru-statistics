@@ -17,6 +17,15 @@ export class KeysRepository {
     return await this.keysModel.findById(id).lean().exec();
   }
 
+  async updateMany(ids: Array<Types.ObjectId>) {
+    const result = await this.keysModel.updateMany(ids, { status: false });
+    return result.modifiedCount > 0
+  }
+
+  async countUserKeys(userId: number, status: boolean) {
+    return await this.keysModel.countDocuments({ userId: userId, status: status })
+  }
+
   async findKeysByUser(user: string) {
     return await this.keysModel
       .find({ userId: user })
