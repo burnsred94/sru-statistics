@@ -48,6 +48,7 @@ export class ArticleService {
       const checkProduct = this.articleGenerator.findNotActiveAddKeys(data.article, keys, user);
       const checkProductResult = await checkProduct.next();
       if (checkProductResult.value !== null) {
+        await checkProduct.next();
         return await checkProduct.next();
       }
 
