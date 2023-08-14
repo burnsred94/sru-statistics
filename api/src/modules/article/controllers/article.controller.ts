@@ -70,7 +70,7 @@ export class ArticleController {
         const initArticle = initArticleMessage(addKey.article, addKey, addKey.key_length);
         return response.status(HttpStatus.OK).send({
           status: HttpStatus.OK,
-          data: initArticle,
+          data: { message: initArticle },
           errors: [],
         });
       }
@@ -121,7 +121,7 @@ export class ArticleController {
         const initArticle = initArticleMessage(remove.article, remove);
         return response.status(HttpStatus.OK).send({
           status: HttpStatus.OK,
-          data: initArticle,
+          data: { message: initArticle },
           errors: [],
         });
       }
@@ -146,7 +146,7 @@ export class ArticleController {
         const initArticle = initArticleMessage(remove.article, remove, remove.key);
         return response.status(HttpStatus.OK).send({
           status: HttpStatus.OK,
-          data: initArticle,
+          data: { message: initArticle },
           errors: [],
         });
       }
