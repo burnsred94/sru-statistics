@@ -43,12 +43,15 @@ export class ArticleController {
 
       const create = await this.articleService.create(data, user, productNameData)
 
-      const initArticle = initArticleMessage(data.article, create);
-      return response.status(HttpStatus.OK).send({
-        data: { message: initArticle },
-        error: [],
-        status: response.statusCode,
-      });
+      if (create) {
+        const initArticle = initArticleMessage(data.article, create);
+        return response.status(HttpStatus.OK).send({
+          data: { message: initArticle },
+          error: [],
+          status: response.statusCode,
+        });
+      }
+
     } catch (error) {
       this.logger.error(error);
       return response.status(HttpStatus.OK).send({

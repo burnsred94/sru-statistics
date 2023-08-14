@@ -49,7 +49,8 @@ export class ArticleService {
       const checkProductResult = await checkProduct.next();
       if (checkProductResult.value !== null) {
         await checkProduct.next();
-        return await checkProduct.next();
+        const result = await checkProduct.next();
+        return result.value;
       }
 
       const checkKeys = this.articleGenerator.checkArticleAddKeys(data.article, keys, user)
