@@ -23,7 +23,7 @@ export class KeysRepository {
   }
 
   async countUserKeys(userId: number, status: boolean) {
-    return await this.keysModel.countDocuments({ userId: userId, status: status })
+    return await this.keysModel.countDocuments({ userId: userId, active: status })
   }
 
   async findKeysByUser(user: string) {
