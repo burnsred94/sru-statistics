@@ -75,7 +75,7 @@ export class ArticleService {
   }
 
   //Cделано
-  async addKeys(data: AddKeyDto, user: User): Promise<void> {
+  async addKeys(data: AddKeyDto, user: User) {
     const { articleId, keys } = data;
     const find = await this.articleRepository.findById(articleId);
     const towns = await this.fetchProvider.fetchProfileTowns(user);
@@ -93,20 +93,35 @@ export class ArticleService {
     setTimeout(async () => {
       await this.fetchProvider.fetchParser({ userId: user as unknown as number });
     }, 1000)
+
+    return {
+      event: MessagesEvent.ADD_KEYS_TO_ARTICLES,
+      article: find.article,
+      key_length: keys.length
+    }
   }
 
   //Cделано
   async removeArticle(data: RemoveArticleDto, id: User) {
-    await this.articleRepository.removeArticle(data, id);
+    const article = await this.articleRepository.removeArticle(data, id);
+    return {
+      event: MessagesEvent.DELETE_ARTICLES,
+      article: article.article
+    }
   }
 
   //Доделать проверку на последний ключ в артикуле
   async removeKey(data: RemoveKeyDto, user: User) {
     // const getKey = await this.keyService.findById([{ _id: data.keyId, active: true }], 'all');
 
-    await this.keyService.removeKey(data.keyId).then(data => {
+    return await this.keyService.removeKey(data.keyId).then(data => {
       if (data) {
         this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user });
+        return {
+          event: MessagesEvent.DELETE_KEY,
+          article: data.article,
+          key: data.key,
+        }
       }
     });
   }

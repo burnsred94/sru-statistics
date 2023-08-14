@@ -4,4 +4,6 @@ export enum MessagesEvent {
     CREATE_ARTICLES,
     DELETE_ARTICLES,
     ENABLED_ARTICLE,
+    ADD_KEYS_TO_ARTICLES,
+    DELETE_KEY
 }

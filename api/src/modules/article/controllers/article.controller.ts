@@ -65,11 +65,15 @@ export class ArticleController {
   async addKeys(@Body() dto: AddKeyDto, @CurrentUser() user: User, @Res() response: Response) {
     try {
       const addKey = await this.articleService.addKeys(dto, user);
-      return response.status(HttpStatus.OK).send({
-        status: HttpStatus.OK,
-        data: addKey,
-        errors: [],
-      });
+
+      if (addKey) {
+        const initArticle = initArticleMessage(addKey.article, addKey, addKey.key_length);
+        return response.status(HttpStatus.OK).send({
+          status: HttpStatus.OK,
+          data: initArticle,
+          errors: [],
+        });
+      }
     } catch (error) {
       this.logger.error(error);
       return response.status(HttpStatus.OK).send({
@@ -113,11 +117,14 @@ export class ArticleController {
     try {
       const remove = await this.articleService.removeArticle(dto, user);
 
-      return response.status(HttpStatus.OK).send({
-        status: HttpStatus.OK,
-        data: remove,
-        errors: [],
-      });
+      if (remove) {
+        const initArticle = initArticleMessage(remove.article, remove);
+        return response.status(HttpStatus.OK).send({
+          status: HttpStatus.OK,
+          data: initArticle,
+          errors: [],
+        });
+      }
     } catch (error) {
       this.logger.error(error);
       return response.status(HttpStatus.OK).send({
@@ -135,11 +142,15 @@ export class ArticleController {
     try {
       const remove = await this.articleService.removeKey(dto, user);
 
-      return response.status(HttpStatus.OK).send({
-        status: HttpStatus.OK,
-        data: remove,
-        errors: [],
-      });
+      if (remove) {
+        const initArticle = initArticleMessage(remove.article, remove, remove.key);
+        return response.status(HttpStatus.OK).send({
+          status: HttpStatus.OK,
+          data: initArticle,
+          errors: [],
+        });
+      }
+
     } catch (error) {
       this.logger.error(error);
       return response.status(HttpStatus.OK).send({
