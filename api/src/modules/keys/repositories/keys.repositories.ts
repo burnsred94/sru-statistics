@@ -18,7 +18,7 @@ export class KeysRepository {
   }
 
   async updateMany(ids: Array<Types.ObjectId>) {
-    const result = await this.keysModel.updateMany(ids, { $set: { active: false } });
+    const result = await this.keysModel.updateMany(ids, { active: false });
     return result.modifiedCount > 0
   }
 
