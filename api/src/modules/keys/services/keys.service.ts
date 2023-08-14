@@ -64,7 +64,7 @@ export class KeysService {
     return await this.keysRepository.countUserKeys(userId, status);
   }
 
-  async updateMany(ids: Array<{ _id: Types.ObjectId }>) {
+  async updateMany(ids: Array<Types.ObjectId>) {
     return await this.keysRepository.updateMany(ids);
   }
 

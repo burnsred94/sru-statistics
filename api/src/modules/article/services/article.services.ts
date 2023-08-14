@@ -103,8 +103,7 @@ export class ArticleService {
   //Cделано
   async removeArticle(data: RemoveArticleDto, id: User) {
     const article = await this.articleRepository.removeArticle(data, id);
-    const keys = article.keys.map((keyId: Types.ObjectId) => ({ _id: keyId }))
-    const removedKey = await this.keyService.updateMany(keys);
+    const removedKey = await this.keyService.updateMany(article.keys);
 
     if (removedKey) {
       return {

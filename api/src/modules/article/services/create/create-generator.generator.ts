@@ -63,6 +63,7 @@ export class CreateArticleGenerator {
             })
         }
 
+        this.senderIoEvent.sender({ userId: user, article: article, key_count: 30 });
         return { event: MessagesEvent.ENABLED_ARTICLE }
     }
 
