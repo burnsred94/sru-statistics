@@ -84,6 +84,7 @@ export class FetchProvider {
       exchange: RmqExchanges.PROFILE,
       routingKey: GetProfileRMQ.routingKey,
       payload: { userId: id as unknown as number },
+      timeout: 5000 * 10
     });
   }
 
