@@ -109,10 +109,11 @@ export class CreateArticleGenerator {
     }
 
     async createGeneration(article: string, keys, user: User, product: GetProductRMQ.Response) {
-        const towns = await this.fetchProvider.fetchProfileTowns(user);
-        const destructTowns = await this.utilsDestructor.destruct(towns);
 
         setImmediate(async () => {
+            const towns = await this.fetchProvider.fetchProfileTowns(user);
+            const destructTowns = await this.utilsDestructor.destruct(towns);
+
             const newKeys = await this.keyService.create({
                 pvz: destructTowns,
                 keys: keys,

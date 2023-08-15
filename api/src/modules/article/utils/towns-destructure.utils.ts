@@ -6,8 +6,8 @@ import { IProfileApiResponse } from 'src/interfaces';
 export class TownsDestructor {
 
   async destruct(data: IProfileApiResponse) {
+    console.log(data)
     const { towns } = data;
-    console.log(towns.length)
     const addresses = map(towns, town => {
       return map(town.addresses, address => {
         return {
