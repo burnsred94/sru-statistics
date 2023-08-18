@@ -14,7 +14,7 @@ export class PvzRepository {
   async create(data: Pvz) {
     const newPwz = new PvzEntity(data);
     const createPwz = await this.pvzModel.create({ ...newPwz });
-    return createPwz;
+    return createPwz.populate({ path: "position", select: 'position', model: Periods.name })
   }
 
   async findAll() {
@@ -37,7 +37,7 @@ export class PvzRepository {
   }
 
   async update(id, data) {
-    await this.pvzModel.updateOne(
+    const update = await this.pvzModel.updateOne(
       {
         _id: id,
       },
@@ -48,6 +48,8 @@ export class PvzRepository {
         status: StatusPvz.PENDING,
       },
     );
+
+    return update.modifiedCount > 0
   }
 
   async updateStatus(id: Types.ObjectId) {

@@ -1,12 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { forEach, map } from 'lodash';
+import { filter, forEach } from 'lodash';
 import { Types } from 'mongoose';
 import { KeysRepository } from '../repositories';
 import { AverageService } from 'src/modules/average';
 import { AverageStatus, IKey } from 'src/interfaces';
 import { PvzService } from 'src/modules/pvz';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { concatMap, from, map } from 'rxjs';
+import { EventsParser, EventsWS } from 'src/modules/article/events';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { SearchPositionRMQ } from 'src/modules/rabbitmq/contracts/search';
 
 @Injectable()
 export class KeysService {
@@ -19,45 +23,102 @@ export class KeysService {
     private readonly averageService: AverageService,
   ) { }
 
-  async create(data: IKey) {
+  async create(data: IKey, id: Types.ObjectId) {
     const { keys } = data;
 
-    const result = [];
-    let iterator = 0;
-    while (keys.length > iterator) {
+    const observe = from(keys)
+      .pipe(map(async (element) => {
+        const average = await this.averageService.create({
+          average: 'Ожидается',
+          difference: '0',
+          userId: data.userId as unknown as number
+        });
 
-      const average = await this.averageService.create({
-        average: 'Ожидается',
-        difference: '0',
-        userId: data.userId as unknown as number
-      });
+        const key = await this.keysRepository.create({
+          article: data.article,
+          key: element,
+          userId: data.userId,
+          countPvz: 0,
+          average: [average._id],
+        });
 
-      const key = await this.keysRepository.create({
-        article: data.article,
-        key: keys[iterator],
-        userId: data.userId,
-        countPvz: 0,
-        average: [average._id],
-      });
+        const pwz = await Promise.all(data.pvz.map(async pvz => await this.pvzService.create(pvz, data.article, data.userId, String(key))));
 
-      result.push(key)
+        const ids = pwz.map((data) => data._id);
 
-      new Promise((resolve) => {
-        setImmediate(() => {
-          resolve(map(data.pvz, pvz => {
-            return this.pvzService.create(pvz, data.article, data.userId, String(key));
-          }))
-        })
-      }).then(async (result: Types.ObjectId[]) => {
-        result = await Promise.all(result);
-        this.keysRepository.update(key, result);
-      })
+        this.keysRepository.update(key, ids);
 
-      iterator++;
-    }
+        return {
+          id: key,
+          average_id: average._id,
+          pwz, article: data.article,
+          key: element,
+          key_id: key,
+        };
+      }));
 
-    return result;
+    observe.subscribe({
+      next: async (data) => {
+        const result = await data;
 
+        this.eventEmitter.emit('keys.update', { id, key: result.id });
+
+        const dataParse = {
+          article: result.article,
+          key: result.key,
+          key_id: result.key_id,
+          pvz: result.pwz.map(element => {
+            return {
+              name: element.name,
+              average_id: result.average_id,
+              addressId: String(element._id),
+              geo_address_id: element.geo_address_id,
+              periodId: String(element.position[0]._id),
+            };
+          })
+        }
+
+        this.eventEmitter.emit('create.sender', dataParse)
+      },
+      complete: () => {
+        this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: data.userId })
+      }
+    })
+  }
+
+  @Cron('20 0 * * *', { timeZone: 'Europe/Moscow' })
+  async nightParse() {
+    const allKeys = await this.keysRepository.findAll({ active: true });
+
+    const observe = from(allKeys)
+      .pipe(concatMap(async (element): Promise<SearchPositionRMQ.Payload> => {
+        const average = await this.averageService.create({
+          average: 'Ожидается',
+          difference: '0',
+          userId: element.userId as unknown as number
+        });
+
+        const pwz_data = await this.pvzService.addedPosition(element.pwz, average._id)
+
+        const update = await this.keysRepository.addedAverageToKey(element._id, average._id)
+
+        const resolved = await Promise.all(pwz_data);
+
+        if (update) return {
+          article: element.article,
+          key: element.key,
+          key_id: element._id,
+          pvz: resolved
+        }
+
+      }))
+
+    observe.subscribe({
+      next: async (data) => {
+        const send = data;
+        this.eventEmitter.emit('create.sender', send)
+      }
+    })
   }
 
   async countUserKeys(userId, status) {
@@ -105,15 +166,18 @@ export class KeysService {
     this.logger.verbose(`Update completed average keys: ${keys.length}`);
   }
 
-  async updateAverage(payload: { average: string; key_id: string }) {
-    const id = payload.key_id as unknown as Types.ObjectId;
-    const key = await this.keysRepository.findById(id, 'all');
+  async updateAverage(payload: { id: Types.ObjectId, average: number; key_id: Types.ObjectId }) {
+    const result = await this.averageService.update(payload);
 
-    await this.averageService.update(key.average.at(-1)._id, payload.average, key);
+    if (result) {
+      const average = await this.keysRepository.findAverageKey(payload.key_id);
+      console.log(`Calc`, average.length, average)
+      if (average.length > 0) await this.averageService.updateDiff(average)
+    }
   }
 
   async findById(ids: Array<{ _id: Types.ObjectId; active: boolean }>, searchObject: string) {
-    const keysIterator = map(ids, async item => {
+    const keysIterator = ids.map(async item => {
       const key = await this.keysRepository.findById(item._id, searchObject);
       return key;
     });

@@ -10,7 +10,7 @@ export class TaskUpdateQueue {
   queue: Array<any>;
 
   constructor(private readonly configService: ConfigService) {
-    this.concurrency = 50;
+    this.concurrency = 25;
     this.running = 0;
     this.queue = [];
   }
@@ -27,20 +27,15 @@ export class TaskUpdateQueue {
   next() {
     while (this.running <= this.concurrency && this.queue.length > 0) {
       const task = this.queue.shift();
-      setImmediate(() => {
-        task();
-      });
-
+      task();
       this.running++;
 
       if (this.running === this.concurrency) {
-        setImmediate(() => {
-          new Promise(resolve => {
-            setTimeout(() => {
-              this.running = 0;
-              resolve(this.next());
-            }, 5000);
-          });
+        new Promise(resolve => {
+          setTimeout(() => {
+            this.running = 0;
+            resolve(this.next());
+          }, 2000);
         });
 
         break;

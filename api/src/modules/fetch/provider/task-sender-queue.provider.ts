@@ -34,7 +34,6 @@ export class TaskSenderQueue {
       this.countInit++;
       setImmediate(() => {
         task();
-        console.log(task);
       });
 
       this.running++;

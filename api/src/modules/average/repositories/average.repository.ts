@@ -19,15 +19,36 @@ export class AverageRepository {
     return await this.averageModel.findOne({ _id: id });
   }
 
-  async update(id: Types.ObjectId, data: string) {
-    return await this.averageModel.findByIdAndUpdate(
-      {
-        _id: id,
-      },
-      {
-        $set: { average: data, status_updated: AverageStatus.SUCCESS },
-      },
-    );
+  async update(id: Types.ObjectId, data: number): Promise<boolean> {
+    const find = await this.averageModel.findById({ _id: id })
+      .lean()
+      .exec();
+
+    const average = find.average === 'Ожидается' || find.average === '1000+' ? 0 : Number(find.average);
+
+    const delimiter = find.delimiter;
+
+    if (data === 0) {
+      const result = average > 0 ? String(average) : '1000+'
+      // console.log(`Data: ${data} average: ${result} --> Data === 0`)
+      await this.averageModel.findByIdAndUpdate(
+        { _id: id },
+        { average: result, status_updated: AverageStatus.SUCCESS, $inc: { delimiter: 1 } }
+      )
+    } else {
+      // console.log(`average: ${average}`)
+      const old = (average * delimiter);
+      const mathOld = old + data;
+      const result = Math.round(mathOld / (delimiter + 1));
+
+      await this.averageModel.findByIdAndUpdate(
+        { _id: id },
+        { average: String(result), status_updated: AverageStatus.SUCCESS, $inc: { delimiter: 1 } },
+        { new: true }
+      )
+    }
+
+    return find.delimiter === 14;
   }
 
   async updateDiff(id: Types.ObjectId, data: string) {

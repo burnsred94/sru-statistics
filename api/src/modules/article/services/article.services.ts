@@ -61,7 +61,7 @@ export class ArticleService {
         return result.value
       }
 
-      this.articleGenerator.createGeneration(data.article, keys, user, product)
+      await this.articleGenerator.createGeneration(data.article, keys, user, product)
 
       return { event: MessagesEvent.CREATE_ARTICLES }
     } catch (error) {
@@ -82,14 +82,14 @@ export class ArticleService {
     const towns = await this.fetchProvider.fetchProfileTowns(user);
     const destructTowns = await this.utilsDestructor.destruct(towns);
 
-    const newKeys = await this.keyService.create({
-      pvz: destructTowns,
-      keys: keys,
-      userId: user,
-      article: find.article,
-    });
+    // const newKeys = await this.keyService.create({
+    //   pvz: destructTowns,
+    //   keys: keys,
+    //   userId: user,
+    //   article: find.article,
+    // });
 
-    await this.articleRepository.update(newKeys as Types.ObjectId[], find._id);
+    // await this.articleRepository.update(newKeys as Types.ObjectId[], find._id);
 
     setTimeout(async () => {
       await this.fetchProvider.fetchParser({ userId: user as unknown as number });

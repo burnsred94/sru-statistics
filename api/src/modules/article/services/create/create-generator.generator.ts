@@ -10,6 +10,7 @@ import { DEFAULT_PRODUCT_NAME } from "../../constants";
 import { Types } from "mongoose";
 import { EventsParser, EventsWS } from "../../events";
 import { EventEmitter2 } from "@nestjs/event-emitter";
+import { from } from "rxjs";
 
 /// Сделать когда возрващаються ключи проверить на актуальность позиции
 
@@ -53,13 +54,13 @@ export class CreateArticleGenerator {
                     keys: matchToActiveKeys,
                     userId: user,
                     article: article,
-                });
+                }, active_product._id);
 
                 this.eventEmitter.emit(EventsParser.SEND_TO_PARSE, { userId: user });
 
-                await this.articleRepository.update(newKeys as Types.ObjectId[], active_product._id);
+                // await this.articleRepository.update(newKeys as Types.ObjectId[], active_product._id);
 
-                this.senderIoEvent.sender({ userId: user, article: article, key_count: newKeys.length });
+                // this.senderIoEvent.sender({ userId: user, article: article, key_count: newKeys.length });
             })
         }
 
@@ -90,18 +91,18 @@ export class CreateArticleGenerator {
         const destructTowns = await this.utilsDestructor.destruct(towns);
 
         setImmediate(async () => {
-            const newKeys = await this.keyService.create({
+            this.keyService.create({
                 pvz: destructTowns,
                 keys: matchToActiveKeys,
                 userId: user,
                 article: article,
-            });
+            }, find_keys_active._id);
 
             this.eventEmitter.emit(EventsParser.SEND_TO_PARSE, { userId: user });
 
-            await this.articleRepository.update(newKeys as Types.ObjectId[], find_keys_active._id);
+            // await this.articleRepository.update(newKeys as Types.ObjectId[], find_keys_active._id);
 
-            this.senderIoEvent.sender({ userId: user, article: article, key_count: newKeys.length });
+            // this.senderIoEvent.sender({ userId: user, article: article, key_count: newKeys.length });
 
         });
 
@@ -114,29 +115,25 @@ export class CreateArticleGenerator {
             const towns = await this.fetchProvider.fetchProfileTowns(user);
             const destructTowns = await this.utilsDestructor.destruct(towns);
 
-            const newKeys = await this.keyService.create({
-                pvz: destructTowns,
-                keys: keys,
-                userId: user,
-                article: article,
-            });
-
-            await this.articleRepository.create({
+            const newArticle = await this.articleRepository.create({
                 productImg: product.status ? product.img : null,
                 productRef: product.status ? product.product_url : null,
                 userId: user,
                 article: article,
                 active: true,
                 productName: product.status ? product.product_name : DEFAULT_PRODUCT_NAME,
-                keys: newKeys as Types.ObjectId[],
             });
 
-            this.eventEmitter.emit(EventsParser.SEND_TO_PARSE, { userId: user });
-            this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user })
+            await this.keyService.create({
+                pvz: destructTowns,
+                keys: keys,
+                userId: user,
+                article: article,
+            }, newArticle._id);
 
             await this.fetchProvider.startTrialPeriod(user);
 
-            this.senderIoEvent.sender({ userId: user, article: article, key_count: newKeys.length });
+            // this.senderIoEvent.sender({ userId: user, article: article, key_count: newKeys.length });
         });
     }
 

@@ -48,29 +48,22 @@ export class PvzService {
       active: true,
       key_id: keyId,
     });
-    return pvz._id;
+    return pvz;
   }
 
   async update(data: UpdatePvzDto) {
     await this.periodsService.update(data.periodId, data.position);
-    await this.pvzRepository.updateStatus(data.addressId);
-    await this.updatePeriod(data.addressId);
-
-    const findNonActive = await this.pvzRepository.findNonActive(data.key_id);
-
-    if (findNonActive === 0) {
-      await this.calculateAverage(data.key_id);
-    }
+    await this.keysService.updateAverage({ id: data.averageId, average: data.position, key_id: data.key_id })
+    // await this.updatePeriod(data.addressId);
   }
 
-  async calculateAverage(payload: string) {
-    const data = await this.pvzRepository.findActive(payload);
-    const average = await this.mathUtils.calculateAverage(data);
-    const checkAverage = average === 0 ? '1000+' : String(average);
-    await this.keysService.updateAverage({
-      average: checkAverage,
-      key_id: payload,
-    });
+  async addedPosition(data, averageId) {
+    console.log('data:', data)
+    return map(data, async (element) => {
+      const period = await this.periodsService.create('Ожидается');
+      const update = await this.pvzRepository.update(element._id, period);
+      if (update) return { name: element.name, periodId: period._id, addressId: element._id, geo_address_id: element.geo_address_id, average_id: averageId }
+    })
   }
 
   async findAndCreate() {

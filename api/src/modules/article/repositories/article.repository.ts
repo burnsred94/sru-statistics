@@ -8,6 +8,7 @@ import { FindByCityDto, FindByCityQueryDto, RemoveArticleDto } from '../dto';
 import { Keys, KeysService } from 'src/modules/keys';
 import { chunk, compact, map, uniqBy } from 'lodash';
 import { Pvz } from 'src/modules/pvz';
+import { OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
 export class ArticleRepository {
@@ -53,10 +54,11 @@ export class ArticleRepository {
     return save;
   }
 
-  async update(data: Types.ObjectId[], id: Types.ObjectId) {
-    await this.modelArticle.findByIdAndUpdate(id, {
+  @OnEvent('keys.update')
+  async update(payload: { id: Types.ObjectId, key: Types.ObjectId }) {
+    await this.modelArticle.findByIdAndUpdate(payload.id, {
       $push: {
-        keys: data,
+        keys: payload.key,
       },
     });
   }

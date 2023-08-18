@@ -1,5 +1,5 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { FilterQuery, Model, Types } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { KeysEntity } from '../entities';
 import { Keys } from '../schemas';
@@ -15,6 +15,27 @@ export class KeysRepository {
 
   async findKey(id: string) {
     return await this.keysModel.findById(id).lean().exec();
+  }
+
+  //Для подсчета разницы между средними
+  async findAverageKey(id: Types.ObjectId) {
+    const key = await this.keysModel.findById(id)
+      .populate({ path: 'average', select: "average", model: Average.name })
+      .lean()
+      .exec()
+    return [key.average.at(-1), key.average.at(-2)].includes(undefined) ? [] : [key.average.at(-1), key.average.at(-2)]
+  }
+
+  async addedAverageToKey(id_key: Types.ObjectId, id_average: Types.ObjectId) {
+    const result = await this.keysModel.updateOne({ _id: id_key }, { $push: { average: id_average } });
+    return result.modifiedCount > 0;
+  }
+
+  async findAll(searchObject: FilterQuery<Keys>) {
+    return await this.keysModel.find(searchObject)
+      .populate({ path: 'pwz', select: 'name geo_address_id name', model: Pvz.name })
+      .lean()
+      .exec();
   }
 
   async updateMany(ids: Array<Types.ObjectId>) {
@@ -154,7 +175,7 @@ export class KeysRepository {
 
     query = query.populate({
       path: 'average',
-      select: 'timestamp average difference',
+      select: 'timestamp average difference ',
       model: Average.name,
     });
 

@@ -7,6 +7,7 @@ export class AverageEntity {
   userId: number;
   status_update: string;
   difference: string;
+  delimiter: number;
   options: {
     day: '2-digit';
     month: '2-digit';
@@ -17,6 +18,7 @@ export class AverageEntity {
     this.average = data.average;
     this.userId = data.userId;
     this.status_update = AverageStatus.WAIT_SENDING;
+    this.delimiter = 0;
     this.difference = data.difference;
     this.timestamp = this.date();
   }

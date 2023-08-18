@@ -20,25 +20,20 @@ export class AverageService {
     return map(ids, async id => await this.averageRepository.findOne(id));
   }
 
-  async update(id: Types.ObjectId, data: string, key) {
-    const update = await this.averageRepository.update(id, data);
-
-    if (update && key.average.length > 1) {
-      const reverse = key.average.reverse();
-      const averageData = await this.find([reverse.at(1)._id, reverse.at(0)._id]);
-      const resolved = await Promise.all(averageData);
-      await this.updateDiff(resolved[0], resolved[1]);
-    }
+  async update(payload: { id: Types.ObjectId, average: number; key_id: Types.ObjectId }) {
+    return await this.averageRepository.update(payload.id, payload.average);
   }
 
-  async updateDiff(first, second) {
-    if (second !== undefined) {
-      const data = await this.mathUtils.calculateDiff(
-        { position: second.average },
-        { position: first.average },
-      );
-      await this.averageRepository.updateDiff(second._id, data);
-    }
+  async updateDiff(average) {
+    const first = average.at(1);
+    const second = average.at(0);
+
+    const data = await this.mathUtils.calculateDiff(
+      { position: second.average },
+      { position: first.average },
+    );
+
+    await this.averageRepository.updateDiff(second._id, data);
   }
 
   async statusUp(ids: Types.ObjectId[], status: AverageStatus) {
@@ -46,8 +41,8 @@ export class AverageService {
   }
 
   async getCountToParse(status: AverageStatus, userId: number): Promise<number> {
-    return userId === undefined ? 
-    this.averageRepository.getCountDocuments({ status_updated: status }) : 
-    this.averageRepository.getCountDocuments({ status_updated: status, userId: userId });
+    return userId === undefined ?
+      this.averageRepository.getCountDocuments({ status_updated: status }) :
+      this.averageRepository.getCountDocuments({ status_updated: status, userId: userId });
   }
 }

@@ -22,20 +22,6 @@ export class MathUtils {
       const second = secondItem.position === '1000+' ? 0 : Number(secondItem.position);
       const result = second - first;
 
-      if (firstItem.position === '1000+' && secondItem.position === '1000+') {
-        return '0';
-      }
-
-      if (firstItem.position === '1000+' && secondItem.position !== '1000+') {
-        const result = 1000 - second;
-        return `${result}`;
-      }
-
-      if (secondItem.position === '1000+' && firstItem.position !== '1000+') {
-        const result = 1000 - second;
-        return result > 0 ? `+${result}` : `${result}`;
-      }
-
       return result > 0 ? `+${String(result)}` : `${String(result)}`;
     } else {
       return '0';

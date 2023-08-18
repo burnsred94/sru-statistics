@@ -10,11 +10,12 @@ export namespace StatisticsUpdateRMQ {
     article: string;
     name: string;
     addressId: Types.ObjectId;
+    averageId: Types.ObjectId;
     periodId: Types.ObjectId;
     position: number;
     key: string;
-    key_id: string;
+    key_id: Types.ObjectId;
   }
 
-  export class Response {}
+  export class Response { }
 }

@@ -90,36 +90,49 @@ export class FetchProvider {
 
   @OnEvent(EventsParser.SEND_TO_PARSE)
   async fetchParser(payload: { userId: number }) {
-    await this.mainPostman(0, AverageStatus.WAIT_SENDING, { active: true, userId: payload.userId })
+    // await this.mainPostman(0, AverageStatus.WAIT_SENDING, { active: true, userId: payload.userId })
   }
 
   //Переписать на оптимизированное
-  @OnEvent(EventsParser.ONE_PWZ_PARSE)
-  async onePwzParse(payload: { pwzIds: Types.ObjectId[] }) {
-    setImmediate(async () => {
-      forEach(payload.pwzIds, async id => {
-        const pvz = await this.pvzService.findById(id);
-        const getKey = await this.keysService.findKey(pvz.key_id);
+  // @OnEvent(EventsParser.ONE_PWZ_PARSE)
+  // async onePwzParse(payload: { pwzIds: Types.ObjectId[] }) {
+  //   setImmediate(async () => {
+  //     forEach(payload.pwzIds, async id => {
+  //       const pvz = await this.pvzService.findById(id);
+  //       const getKey = await this.keysService.findKey(pvz.key_id);
 
-        await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
+  //       await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
+  //         exchange: RmqExchanges.SEARCH,
+  //         routingKey: SearchPositionRMQ.routingKey,
+  //         payload: {
+  //           article: pvz.article,
+  //           key: getKey.key,
+  //           key_id: pvz.key_id,
+  //           pvz: [
+  //             {
+  //               name: pvz.name,
+  //               addressId: pvz._id as unknown as string,
+  //               geo_address_id: pvz.geo_address_id,
+  //               periodId: pvz.position.at(-1)._id as unknown as string,
+  //             },
+  //           ],
+  //         },
+  //       });
+  //     });
+  //   });
+  // }
+
+  @OnEvent('create.sender')
+  async sendNewKey(payload: SearchPositionRMQ.Payload) {
+    console.log(payload);
+    setImmediate(() => {
+      this.taskSenderQueue.pushTask(
+        async () => await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
           exchange: RmqExchanges.SEARCH,
           routingKey: SearchPositionRMQ.routingKey,
-          payload: {
-            article: pvz.article,
-            key: getKey.key,
-            key_id: pvz.key_id,
-            pvz: [
-              {
-                name: pvz.name,
-                addressId: pvz._id as unknown as string,
-                geo_address_id: pvz.geo_address_id,
-                periodId: pvz.position.at(-1)._id as unknown as string,
-              },
-            ],
-          },
-        });
-      });
-    });
+          payload: payload,
+        }))
+    })
   }
 
   @Cron('20 08 * * *', { timeZone: 'Europe/Moscow' })
@@ -127,61 +140,61 @@ export class FetchProvider {
     await this.keysService.findAndNewPeriod();
   }
 
-  //Главный почтальон сообщений
-  @OnEvent('update.sender')
-  async mainPostman(count = 0, status: AverageStatus = AverageStatus.WAIT_SENDING, query: { active: boolean, userId?: number } = { active: true }) {
-    const { data, stFn } = await this.keysService.selectToParse(status, query);
+  // //Главный почтальон сообщений
+  // @OnEvent('update.sender')
+  // async mainPostman(count = 0, status: AverageStatus = AverageStatus.WAIT_SENDING, query: { active: boolean, userId?: number } = { active: true }) {
+  //   const { data, stFn } = await this.keysService.selectToParse(status, query);
 
 
-    if (data.length > 0) {
-      await this.fetchUtils.formatDataToParse(data)
-        .then(async (data) => {
-          setImmediate(() => forEach(data, (element) => {
-            this.taskSenderQueue.pushTask(
-              async () => await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
-                exchange: RmqExchanges.SEARCH,
-                routingKey: SearchPositionRMQ.routingKey,
-                payload: element,
-              }))
-          }))
-        })
+  //   if (data.length > 0) {
+  //     await this.fetchUtils.formatDataToParse(data)
+  //       .then(async (data) => {
+  //         setImmediate(() => forEach(data, (element) => {
+  //           this.taskSenderQueue.pushTask(
+  //             async () => await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
+  //               exchange: RmqExchanges.SEARCH,
+  //               routingKey: SearchPositionRMQ.routingKey,
+  //               payload: element,
+  //             }))
+  //         }))
+  //       })
 
-      await stFn();
-    }
+  //     await stFn();
+  //   }
 
-    const checkCount = await this.keysService.countToParse(status, query.userId);
+  //   const checkCount = await this.keysService.countToParse(status, query.userId);
 
-    if (checkCount > 0 && count === 0) {
-      count += 1
-      this.logger.verbose(`Count to send parser: ${count}`)
-      this.mainPostman(count, status, query)
-    } else {
-      setTimeout(async () => {
-        this.logger.log(`Checker to 10sec started`)
-        await this.workApproval(query)
-      }, 3600 * 2000);
-    }
-  }
+  //   if (checkCount > 0 && count === 0) {
+  //     count += 1
+  //     this.logger.verbose(`Count to send parser: ${count}`)
+  //     this.mainPostman(count, status, query)
+  //   } else {
+  //     setTimeout(async () => {
+  //       this.logger.log(`Checker to 10sec started`)
+  //       await this.workApproval(query)
+  //     }, 3600 * 2000);
+  //   }
+  // }
 
-  async workApproval(query: { active: boolean, userId?: number } = { active: true }, state = 0) {
-    const checkCount = await this.keysService.countToParse(AverageStatus.PENDING);
+  // async workApproval(query: { active: boolean, userId?: number } = { active: true }, state = 0) {
+  //   const checkCount = await this.keysService.countToParse(AverageStatus.PENDING);
 
-    state === 3 ? this.logger.error(`Pending errors: ${checkCount}`) : null;
+  //   state === 3 ? this.logger.error(`Pending errors: ${checkCount}`) : null;
 
-    if (checkCount > 0) {
-      const countTask = await this.rmqRequester.request<CheckStatusTaskRMQ.Payload, CheckStatusTaskRMQ.Response>({
-        exchange: RmqExchanges.SEARCH,
-        routingKey: CheckStatusTaskRMQ.routingKey,
-        timeout: 5000 * 10,
-        payload: null,
-      });
+  //   if (checkCount > 0) {
+  //     const countTask = await this.rmqRequester.request<CheckStatusTaskRMQ.Payload, CheckStatusTaskRMQ.Response>({
+  //       exchange: RmqExchanges.SEARCH,
+  //       routingKey: CheckStatusTaskRMQ.routingKey,
+  //       timeout: 5000 * 10,
+  //       payload: null,
+  //     });
 
-      if (countTask === 0) {
-        await this.mainPostman(0, AverageStatus.PENDING, query);
-      } else {
-        setTimeout(async () => await this.workApproval(query, state + 1), 3600 * 2000)
-      }
-    }
-  }
+  //     if (countTask === 0) {
+  //       await this.mainPostman(0, AverageStatus.PENDING, query);
+  //     } else {
+  //       setTimeout(async () => await this.workApproval(query, state + 1), 3600 * 2000)
+  //     }
+  //   }
+  // }
 }
 
