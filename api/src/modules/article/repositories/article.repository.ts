@@ -16,16 +16,14 @@ export class ArticleRepository {
     @InjectModel(Article.name) private readonly modelArticle: Model<Article>,
     private readonly keysService: KeysService,
   ) { }
-
+  //Нужно 
   async findDataByUser(user: User) {
     const find = await this.modelArticle.countDocuments({ userId: user, active: true });
-
     const keysLength = await this.keysService.countUserKeys(user, true);
-
     return { total: find, total_keys: keysLength };
   }
 
-
+  //Нужно 
   async findProductKeys(article: string, userId: User, productActive: boolean, stateKeys?: boolean) {
     let product = await this.modelArticle.findOne({
       article: article,
@@ -47,6 +45,7 @@ export class ArticleRepository {
     return null;
   }
 
+  //Нужно 
   async create(article: Article) {
     const newArticle = new ArticleEntity(article);
     const articleCreate = await this.modelArticle.create(newArticle);
@@ -63,6 +62,7 @@ export class ArticleRepository {
     });
   }
 
+  //Нужно 
   async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto[]) {
     const find = await this.modelArticle
       .find({
@@ -71,7 +71,7 @@ export class ArticleRepository {
       })
       .populate({
         path: 'keys',
-        select: 'active',
+        select: 'active ',
         match: { active: true },
         model: Keys.name,
       })
@@ -79,8 +79,8 @@ export class ArticleRepository {
 
     const generateData = map(find, async stats => {
       const { keys, _id } = stats;
-      const genKeys = await this.keysService.findById(
-        keys as unknown as Array<{ _id: Types.ObjectId; active: boolean }>,
+      const genKeys = await this.keysService.findByMany(
+        { article: stats.article, userId: stats.userId, active: true },
         data.city,
       );
 

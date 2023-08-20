@@ -7,7 +7,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { PvzModule } from '../pvz';
 import { Article, ArticleSchema } from './schemas';
 import { ArticleController } from './controllers';
-import { ArticleService, CreateArticleGenerator } from './services';
+import { ArticleService, CreateArticleStrategy } from './services';
 import { ArticleRepository } from './repositories';
 import { ArticleGateway } from './gateways';
 import { SenderIoEvent, TownsDestructor } from './utils';
@@ -25,7 +25,7 @@ import { UtilsModule } from '../utils';
   controllers: [ArticleController],
   providers: [
     ArticleService,
-    CreateArticleGenerator,
+    CreateArticleStrategy,
     ArticleRepository,
     JwtStrategy,
     ArticleGateway,

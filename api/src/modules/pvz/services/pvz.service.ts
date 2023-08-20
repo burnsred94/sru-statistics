@@ -54,37 +54,15 @@ export class PvzService {
   async update(data: UpdatePvzDto) {
     await this.periodsService.update(data.periodId, data.position);
     await this.keysService.updateAverage({ id: data.averageId, average: data.position, key_id: data.key_id })
-    // await this.updatePeriod(data.addressId);
+    await this.updatePeriod(data.addressId);
   }
 
   async addedPosition(data, averageId) {
-    console.log('data:', data)
     return map(data, async (element) => {
       const period = await this.periodsService.create('Ожидается');
       const update = await this.pvzRepository.update(element._id, period);
       if (update) return { name: element.name, periodId: period._id, addressId: element._id, geo_address_id: element.geo_address_id, average_id: averageId }
     })
-  }
-
-  async findAndCreate() {
-    const findPvz = await this.pvzRepository.findAll();
-
-    const pvz = chunk(findPvz, 50);
-
-    setImmediate(async () => {
-      const data = map(pvz, elementAt =>
-        this.pvqQueue.pushTask(() =>
-          forEach(elementAt, async item => {
-            const period = await this.periodsService.create('Ожидается');
-            this.pvzRepository.update(item._id, period._id);
-          }),
-        ),
-      );
-      const resolved = await Promise.all(data);
-      if (resolved) {
-        this.eventEmitter.emit('update.started');
-      }
-    });
   }
 
   async updatePeriod(pvzId: Types.ObjectId) {

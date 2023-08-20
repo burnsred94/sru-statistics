@@ -67,10 +67,10 @@ export class ArticleController {
   @Post('add-key-by-article')
   async addKeys(@Body() dto: AddKeyDto, @CurrentUser() user: User, @Res() response: Response) {
     try {
-      const addKey = await this.articleService.addKeys(dto, user);
+      const result = await this.articleService.addKeys(dto, user);
 
-      if (addKey) {
-        const initArticle = initArticleMessage(addKey.article, addKey, addKey.key_length);
+      if (result) {
+        const initArticle = initArticleMessage(result.article, result.message);
         return response.status(HttpStatus.OK).send({
           status: HttpStatus.OK,
           data: { message: initArticle },

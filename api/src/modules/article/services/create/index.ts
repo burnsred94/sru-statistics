@@ -1,1 +1,1 @@
-export * from './create-generator.generator';
+export * from './create-strategy.strategy';

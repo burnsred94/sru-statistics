@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Keys, KeysSchema } from './schemas';
 import { KeysRepository } from './repositories';
@@ -9,10 +9,12 @@ import { RmqModule } from '../rabbitmq/rabbitmq.module';
 import { RmqExchanges } from '../rabbitmq/exchanges';
 import { KeysController } from './controllers';
 import { UtilsModule } from '../utils';
+import { FetchModule } from '../fetch';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Keys.name, schema: KeysSchema }]),
+    forwardRef(() => FetchModule),
     PvzModule,
     UtilsModule,
     RmqModule.register({ exchanges: [RmqExchanges.STATISTICS] }),
@@ -22,4 +24,4 @@ import { UtilsModule } from '../utils';
   exports: [KeysService],
   controllers: [KeysController],
 })
-export class KeysModule {}
+export class KeysModule { }

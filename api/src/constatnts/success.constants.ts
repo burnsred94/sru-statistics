@@ -8,6 +8,9 @@ export const initArticleMessage = (article: string, options, option_data?) => {
     case MessagesEvent.ADD_KEYS: {
       return `В ваш существующий артикул: ${article} было добавленно ключей ${options.count_all} и востановленно ${options.count_activate}.`
     }
+    case MessagesEvent.NOT_ADDED_KEYS: {
+      return `В ваш существующий артикул: ${article} было добавленно ключей ${options.count_all}`;
+    }
     case MessagesEvent.CREATE_ARTICLES: {
       return `Ваш артикул: ${article} успешно загружен и обрабатывается. `;
     }

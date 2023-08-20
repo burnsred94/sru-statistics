@@ -30,13 +30,11 @@ export class AverageRepository {
 
     if (data === 0) {
       const result = average > 0 ? String(average) : '1000+'
-      // console.log(`Data: ${data} average: ${result} --> Data === 0`)
       await this.averageModel.findByIdAndUpdate(
         { _id: id },
         { average: result, status_updated: AverageStatus.SUCCESS, $inc: { delimiter: 1 } }
       )
     } else {
-      // console.log(`average: ${average}`)
       const old = (average * delimiter);
       const mathOld = old + data;
       const result = Math.round(mathOld / (delimiter + 1));

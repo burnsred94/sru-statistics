@@ -20,6 +20,9 @@ export class Keys {
   active: boolean;
 
   @Prop({ type: Number, default: 0 })
+  frequency: number;
+
+  @Prop({ type: Number, default: 0 })
   countPvz: number;
 
   @Prop({ type: [Types.ObjectId], ref: Average.name })

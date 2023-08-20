@@ -1,6 +1,7 @@
 
 export enum MessagesEvent {
     ADD_KEYS,
+    NOT_ADDED_KEYS,
     CREATE_ARTICLES,
     DELETE_ARTICLES,
     ENABLED_ARTICLE,

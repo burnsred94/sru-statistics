@@ -13,10 +13,6 @@ import { AverageStatus } from 'src/interfaces';
 export class KeysRepository {
   constructor(@InjectModel(Keys.name) private readonly keysModel: Model<Keys>) { }
 
-  async findKey(id: string) {
-    return await this.keysModel.findById(id).lean().exec();
-  }
-
   //Для подсчета разницы между средними
   async findAverageKey(id: Types.ObjectId) {
     const key = await this.keysModel.findById(id)
@@ -39,7 +35,6 @@ export class KeysRepository {
   }
 
   async updateMany(ids: Array<Types.ObjectId>) {
-    // forEach(ids, (id) => this.keysModel.updateOne({ _id: id}, { active: false}))
     const result = await this.keysModel.updateMany({ _id: ids }, { active: false });
     return result.modifiedCount > 0
   }
@@ -48,109 +43,18 @@ export class KeysRepository {
     return await this.keysModel.countDocuments({ userId: userId, active: status })
   }
 
-  async findKeysByUser(user: string) {
-    return await this.keysModel
-      .find({ userId: user })
-      .populate({
-        path: 'pwz',
-        select: 'name geo_address_id active',
-        model: Pvz.name,
-      })
-      .lean()
-      .exec();
-  }
-
-  async findByName(userId: string, name: string) {
-    const find = await this.keysModel.find({ userId: userId, key: name }).lean().exec();
-    forEach(find, async key => {
-      await this.keysModel.findByIdAndDelete(key._id);
-    });
-  }
-
-  // 
-  async selectToParser(statusSearch: AverageStatus, selected: { active: boolean, userId?: number }) {
-    let query = this.keysModel.find(selected)
-    query = query.populate({
-      path: "average",
-      select: "status_updated",
-      model: Average.name
-    });
-
-    query = query
-      .populate({
-        path: 'pwz',
-        select: 'name position city city_id geo_address_id',
-        model: Pvz.name,
-        populate: {
-          path: 'position',
-          select: 'position timestamp difference',
-          model: Periods.name,
-        },
-      });
-
-    const result = await query.lean().exec();
-
-    const ids = [];
-
-    const keys = result.filter((element: any) => {
-      if (element.average.at(-1)?.status_updated !== undefined && element.average.at(-1).status_updated === statusSearch) {
-        ids.push(element.average.at(-1)._id);
-        return element
-      }
-    });
-
-    return { data: keys, ids: ids };
-  }
-
-
-
-  async findToUpdateED() {
-    let query = this.keysModel.find({ active: true });
-
-    query = query.populate({
-      path: "average",
-      select: "status",
-      match: { average: "Ожидается" },
-      model: Average.name
-    });
-
-    query = query
-      .populate({
-        path: 'pwz',
-        select: 'name position city city_id geo_address_id',
-        model: Pvz.name,
-        populate: {
-          path: 'position',
-          select: 'position timestamp difference',
-          model: Periods.name,
-        },
-      });
-
-    return await query.lean().exec();
-  }
-
-  async find(data: { userId: number; cityId: string }) {
-    return await this.keysModel
-      .find({
-        userId: data.userId,
-        city_id: data.cityId,
-      })
-      .populate({ path: 'pwz', select: 'name article', model: Pvz.name })
-      .lean()
-      .exec();
-  }
-
   async create(data: Omit<Keys, 'active'>) {
     const newKey = new KeysEntity(data);
     const createKey = await this.keysModel.create(newKey);
     return createKey._id;
   }
 
-  async findById(id: Types.ObjectId, searchObject: string) {
-    let query = this.keysModel.findById({ _id: id });
-    query =
-      searchObject === 'all'
-        ? query.populate({
+  async findByMany(searchQuery: FilterQuery<Keys>, searchCity: string) {
+    let find = this.keysModel.find(searchQuery);
+
+    find =
+      searchCity === 'all'
+        ? find.populate({
           path: 'pwz',
           select: 'name position city city_id geo_address_id',
           match: { active: true },
@@ -161,10 +65,10 @@ export class KeysRepository {
             model: Periods.name,
           },
         })
-        : query.populate({
+        : find.populate({
           path: 'pwz',
           select: 'name position city city_id geo_address_id',
-          match: { city: searchObject, active: true },
+          match: { city: searchCity, active: true },
           model: Pvz.name,
           populate: {
             path: 'position',
@@ -173,13 +77,13 @@ export class KeysRepository {
           },
         });
 
-    query = query.populate({
+    find = find.populate({
       path: 'average',
       select: 'timestamp average difference ',
       model: Average.name,
     });
 
-    return await query.lean().exec();
+    return await find.lean().exec();
   }
 
   async setStatusKey(id: Types.ObjectId, status: boolean) {
