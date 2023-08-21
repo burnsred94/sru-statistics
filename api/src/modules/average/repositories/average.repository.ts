@@ -19,6 +19,16 @@ export class AverageRepository {
     return await this.averageModel.findOne({ _id: id });
   }
 
+  async refresh(id: Types.ObjectId) {
+    return await this.averageModel.findByIdAndUpdate({ _id: id }, {
+      $set: {
+        average: 'Ожидается',
+        delimiter: 0,
+        status_updated: AverageStatus.WAIT_SENDING
+      }
+    })
+  }
+
   async update(id: Types.ObjectId, data: number): Promise<boolean> {
     const find = await this.averageModel.findById({ _id: id })
       .lean()

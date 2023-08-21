@@ -7,7 +7,7 @@ import { StatusPvz } from 'src/interfaces';
 
 @Injectable()
 export class PeriodsRepository {
-  constructor(@InjectModel(Periods.name) private readonly periodModel: Model<Periods>) {}
+  constructor(@InjectModel(Periods.name) private readonly periodModel: Model<Periods>) { }
 
   async create(position: string, difference?: string) {
     const newPeriod = new PeriodsEntity(position, difference);
@@ -16,12 +16,19 @@ export class PeriodsRepository {
     return newPeriodSave._id;
   }
 
-  async update(id: Types.ObjectId, position: number) {
-    const pos = position === 0 ? '1000+' : String(position);
-    return await this.periodModel.findByIdAndUpdate(
-      { _id: id },
-      { position: pos, status: StatusPvz.SUCCESS },
-    );
+  async update(id: Types.ObjectId, position: number | string) {
+    if (typeof position === 'string') {
+      return await this.periodModel.findByIdAndUpdate(
+        { _id: id },
+        { position: position, status: StatusPvz.WAIT_TO_SEND },
+      );
+    } else {
+      const pos = position === 0 ? '1000+' : String(position);
+      return await this.periodModel.findByIdAndUpdate(
+        { _id: id },
+        { position: pos, status: StatusPvz.WAIT_TO_SEND },
+      );
+    }
   }
 
   async updateDiff(id: Types.ObjectId, diff: string) {

@@ -6,5 +6,6 @@ export enum MessagesEvent {
     DELETE_ARTICLES,
     ENABLED_ARTICLE,
     ADD_KEYS_TO_ARTICLES,
-    DELETE_KEY
+    DELETE_KEY,
+    REFRESH_KEY,
 }

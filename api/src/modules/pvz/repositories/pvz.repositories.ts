@@ -1,5 +1,5 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { FilterQuery, Model, Types } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { Pvz } from '../schemas';
 import { PvzEntity } from '../entities';
@@ -17,11 +17,11 @@ export class PvzRepository {
     return createPwz.populate({ path: "position", select: 'position', model: Periods.name })
   }
 
-  async findAll() {
-    return await this.pvzModel.find({
-      // status: StatusPvz.SUCCESS,
-      active: true,
-    });
+  async findAll(searchQuery: FilterQuery<Pvz>) {
+    let pvz = this.pvzModel.find(searchQuery);
+
+    pvz = pvz.populate({ path: "position", select: "position", model: Periods.name });
+    return await pvz.lean().exec()
   }
 
   async findUserStatus(userId: User, article: string) {

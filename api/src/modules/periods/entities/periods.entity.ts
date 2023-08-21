@@ -22,7 +22,7 @@ export class PeriodsEntity {
   date() {
     let date = new Date();
     date = new Date(date.toLocaleString('en-US', { timeZone: 'Europe/Moscow' }));
-    const formattedDate = new Date(date.setDate(date.getDate() + 0)).toLocaleDateString(
+    const formattedDate = new Date(date.setDate(date.getDate() + 1)).toLocaleDateString(
       'ru-RU',
       this.options,
     );

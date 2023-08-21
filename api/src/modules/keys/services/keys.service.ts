@@ -3,7 +3,7 @@ import { forEach } from 'lodash';
 import { FilterQuery, Types } from 'mongoose';
 import { KeysRepository } from '../repositories';
 import { AverageService } from 'src/modules/average';
-import { IKey } from 'src/interfaces';
+import { IKey, MessagesEvent } from 'src/interfaces';
 import { PvzService } from 'src/modules/pvz';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { concatMap, from } from 'rxjs';
@@ -100,7 +100,7 @@ export class KeysService {
     })
   }
 
-  @Cron('55 02 * * *', { timeZone: 'Europe/Moscow' })
+  @Cron('27 10 * * *', { timeZone: 'Europe/Moscow' })
   async nightParse() {
     const allKeys = await this.keysRepository.findAll({ active: true });
 
@@ -148,12 +148,9 @@ export class KeysService {
   }
 
   async updateAverage(payload: { id: Types.ObjectId, average: number; key_id: Types.ObjectId }) {
-    const result = await this.averageService.update(payload);
-
-    if (result) {
-      const average = await this.keysRepository.findAverageKey(payload.key_id);
-      if (average.length > 0) await this.averageService.updateDiff(average)
-    }
+    await this.averageService.update(payload);
+    const average = await this.keysRepository.findAverageKey(payload.key_id);
+    if (average.length > 0) await this.averageService.updateDiff(average)
   }
 
   async findByMany(query: FilterQuery<Keys>, city: string) {
@@ -168,5 +165,41 @@ export class KeysService {
     forEach(ids, async (id: Types.ObjectId) => {
       await this.keysRepository.setStatusKey(id, true);
     })
+  }
+
+  async refreshKey(_id: Types.ObjectId) {
+    const find_result = await this.keysRepository.findByMany({ _id: _id }, 'all');
+
+    if (find_result) {
+      const data = find_result[0];
+
+      this.averageService.updateRefresh(data.average.at(-1)._id);
+
+      const dataParse: SearchPositionRMQ.Payload = {
+        article: data.article,
+        key: data.key,
+        key_id: data._id,
+        pvz: data.pwz.map((element: any) => {
+          this.pvzService.periodRefresh(element._id)
+          return {
+            name: element.name,
+            average_id: data.average.at(-1)._id,
+            addressId: element._id,
+            geo_address_id: element.geo_address_id,
+            periodId: element.position.at(-1)._id
+          };
+        })
+      }
+
+      this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: data.userId });
+
+      this.fetchProvider.sendNewKey(dataParse);
+
+      setTimeout(() => {
+        this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: data.userId });
+      }, 10_000)
+
+      return { key: data.key, event: MessagesEvent.REFRESH_KEY }
+    }
   }
 }

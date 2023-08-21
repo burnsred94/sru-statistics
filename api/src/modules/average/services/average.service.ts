@@ -20,6 +20,10 @@ export class AverageService {
     return await this.averageRepository.update(payload.id, payload.average);
   }
 
+  async updateRefresh(id: Types.ObjectId) {
+    return await this.averageRepository.refresh(id);
+  }
+
   async updateDiff(average) {
     const first = average.at(1);
     const second = average.at(0);
