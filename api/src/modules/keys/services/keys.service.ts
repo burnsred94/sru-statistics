@@ -100,7 +100,7 @@ export class KeysService {
     })
   }
 
-  @Cron('27 10 * * *', { timeZone: 'Europe/Moscow' })
+  @Cron('30 11 * * *', { timeZone: 'Europe/Moscow' })
   async nightParse() {
     const allKeys = await this.keysRepository.findAll({ active: true });
 
