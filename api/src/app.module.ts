@@ -32,4 +32,4 @@ import { UtilsModule } from './modules/utils/utils.module';
     UtilsModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

@@ -16,7 +16,7 @@ import { forEach } from 'lodash';
 export class ArticleGateway {
   private logger: Logger = new Logger('MessageGateway');
 
-  constructor(private readonly articleService: ArticleService) {}
+  constructor(private readonly articleService: ArticleService) { }
 
   clients = [];
 

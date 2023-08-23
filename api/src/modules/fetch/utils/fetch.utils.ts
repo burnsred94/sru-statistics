@@ -3,7 +3,6 @@ import { map } from 'lodash';
 
 @Injectable()
 export class FetchUtils {
-
   async formatDataToParse(data) {
     return map(data, item => {
       const { key, pwz, article } = item;

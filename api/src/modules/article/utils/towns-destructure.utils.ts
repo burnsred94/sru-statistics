@@ -4,7 +4,6 @@ import { IProfileApiResponse } from 'src/interfaces';
 
 @Injectable()
 export class TownsDestructor {
-
   async destruct(data: IProfileApiResponse) {
     const { towns } = data;
     const addresses = map(towns, town => {

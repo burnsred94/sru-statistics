@@ -4,7 +4,6 @@ export interface IAverage {
   difference: string;
 }
 
-
 export enum AverageStatus {
   WAIT_SENDING = "WAIT_SENDING",
   PENDING = "PENDING",
