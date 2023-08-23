@@ -21,14 +21,12 @@ module.exports = {
   },
   ignorePatterns: ['.eslintrc.js'],
   rules: {
-    "prettier/prettier": [
-      "warn",
-      { "singleQuote": true, "endOfLine": "auto", "tabWidth": 2 }
-    ],
+    "prettier/prettier": 'off',
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
+    "@typescript-eslint/no-namespace": 'off',
     "unicorn/no-fn-reference-in-iterator": "off",
     "unicorn/no-array-for-each": "off",
     "unicorn/no-null": "off",
@@ -37,6 +35,7 @@ module.exports = {
     "unicorn/prefer-spread": "off",
     "unicorn/no-array-callback-reference": "off",
     "unicorn/consistent-function-scoping": "off",
+    "unicorn/no-object-as-default-parameter": "off",
     "unicorn/no-useless-undefined": "off",
     "unicorn/prefer-top-level-await": "off",
     "unicorn/prevent-abbreviations": [
