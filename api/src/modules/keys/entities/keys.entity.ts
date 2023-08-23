@@ -7,6 +7,7 @@ export class KeysEntity {
   article: string;
   average: Types.ObjectId[];
   userId: User;
+  frequency: number;
   active: boolean;
   city_id: string;
   pwz?: Types.ObjectId[];
@@ -15,6 +16,7 @@ export class KeysEntity {
     this.key = data.key;
     this.userId = data.userId;
     this.article = data.article;
+    this.frequency = data.frequency;
     this.active = true;
     this.pwz = data.pwz ?? [];
     this.average = data.average;

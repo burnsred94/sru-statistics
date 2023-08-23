@@ -16,7 +16,7 @@ import { forEach } from 'lodash';
 export class ArticleGateway {
   private logger: Logger = new Logger('MessageGateway');
 
-  constructor(private readonly articleService: ArticleService) {}
+  constructor(private readonly articleService: ArticleService) { }
 
   clients = [];
 
@@ -56,7 +56,6 @@ export class ArticleGateway {
 
       if (find.length > 0) {
         forEach(find, async element => {
-          console.log(element);
           const data = await this.articleService.findByCity(
             element.data,
             payload.userId,

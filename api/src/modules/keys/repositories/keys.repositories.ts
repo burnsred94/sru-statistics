@@ -1,5 +1,5 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { FilterQuery, Model, Types } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { KeysEntity } from '../entities';
 import { Keys } from '../schemas';
@@ -7,61 +7,40 @@ import { Pvz } from 'src/modules/pvz';
 import { Average } from 'src/modules/average';
 import { Periods } from 'src/modules/periods';
 import { forEach } from 'lodash';
+import { AverageStatus } from 'src/interfaces';
 
 @Injectable()
 export class KeysRepository {
-  constructor(@InjectModel(Keys.name) private readonly keysModel: Model<Keys>) {}
+  constructor(@InjectModel(Keys.name) private readonly keysModel: Model<Keys>) { }
 
-  async findKey(id: string) {
-    return await this.keysModel.findById(id).lean().exec();
+  //Для подсчета разницы между средними
+  async findAverageKey(id: Types.ObjectId) {
+    const key = await this.keysModel.findById(id)
+      .populate({ path: 'average', select: "average", model: Average.name })
+      .lean()
+      .exec()
+    return [key.average.at(-1), key.average.at(-2)].includes(undefined) ? [] : [key.average.at(-1), key.average.at(-2)]
   }
 
-  async findKeysByUser(user: string) {
-    return await this.keysModel
-      .find({ userId: user })
-      .populate({
-        path: 'pwz',
-        select: 'name geo_address_id active',
-        model: Pvz.name,
-      })
+  async addedAverageToKey(id_key: Types.ObjectId, id_average: Types.ObjectId) {
+    const result = await this.keysModel.updateOne({ _id: id_key }, { $push: { average: id_average } });
+    return result.modifiedCount > 0;
+  }
+
+  async findAll(searchObject: FilterQuery<Keys>) {
+    return await this.keysModel.find(searchObject)
+      .populate({ path: 'pwz', select: 'name geo_address_id name', model: Pvz.name })
       .lean()
       .exec();
   }
 
-  async findByName(userId: string, name: string) {
-    const find = await this.keysModel.find({ userId: userId, key: name }).lean().exec();
-    forEach(find, async key => {
-      await this.keysModel.findByIdAndDelete(key._id);
-    });
+  async updateMany(ids: Array<Types.ObjectId>) {
+    const result = await this.keysModel.updateMany({ _id: ids }, { active: false });
+    return result.modifiedCount > 0
   }
 
-  async findToUpdateED() {
-    const find = await this.keysModel
-      .find({ active: true })
-      .populate({
-        path: 'pwz',
-        select: 'name position city city_id geo_address_id',
-        model: Pvz.name,
-        populate: {
-          path: 'position',
-          select: 'position timestamp difference',
-          model: Periods.name,
-        },
-      })
-      .lean()
-      .exec();
-    return find;
-  }
-
-  async find(data: { userId: number; cityId: string }) {
-    return await this.keysModel
-      .find({
-        userId: data.userId,
-        city_id: data.cityId,
-      })
-      .populate({ path: 'pwz', select: 'name article', model: Pvz.name })
-      .lean()
-      .exec();
+  async countUserKeys(userId: number, status: boolean) {
+    return await this.keysModel.countDocuments({ userId: userId, active: status })
   }
 
   async create(data: Omit<Keys, 'active'>) {
@@ -70,44 +49,45 @@ export class KeysRepository {
     return createKey._id;
   }
 
-  async findById(id: Types.ObjectId, searchObject: string) {
-    let query = this.keysModel.findById({ _id: id });
-    query =
-      searchObject === 'all'
-        ? query.populate({
-            path: 'pwz',
-            select: 'name position city city_id geo_address_id',
-            match: { active: true },
-            model: Pvz.name,
-            populate: {
-              path: 'position',
-              select: 'position timestamp difference',
-              model: Periods.name,
-            },
-          })
-        : query.populate({
-            path: 'pwz',
-            select: 'name position city city_id geo_address_id',
-            match: { city: searchObject, active: true },
-            model: Pvz.name,
-            populate: {
-              path: 'position',
-              select: 'position timestamp difference',
-              model: Periods.name,
-            },
-          });
+  async findByMany(searchQuery: FilterQuery<Keys>, searchCity: string) {
+    let find = this.keysModel.find(searchQuery);
 
-    query = query.populate({
+    find =
+      searchCity === 'all'
+        ? find.populate({
+          path: 'pwz',
+          select: 'name position city city_id geo_address_id',
+          match: { active: true },
+          model: Pvz.name,
+          populate: {
+            path: 'position',
+            select: 'position timestamp difference',
+            model: Periods.name,
+          },
+        })
+        : find.populate({
+          path: 'pwz',
+          select: 'name position city city_id geo_address_id',
+          match: { city: searchCity, active: true },
+          model: Pvz.name,
+          populate: {
+            path: 'position',
+            select: 'position timestamp difference',
+            model: Periods.name,
+          },
+        });
+
+    find = find.populate({
       path: 'average',
-      select: 'timestamp average difference',
+      select: 'timestamp average difference ',
       model: Average.name,
     });
 
-    return await query.lean().exec();
+    return await find.lean().exec();
   }
 
-  async removeKey(id: Types.ObjectId) {
-    return await this.keysModel.findByIdAndUpdate({ _id: id }, { $set: { active: false } });
+  async setStatusKey(id: Types.ObjectId, status: boolean) {
+    return await this.keysModel.findByIdAndUpdate({ _id: id }, { $set: { active: status } });
   }
 
   async updateAverage(id: Types.ObjectId, average: Types.ObjectId) {

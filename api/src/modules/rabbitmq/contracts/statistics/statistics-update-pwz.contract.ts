@@ -8,8 +8,9 @@ export namespace StatisticsUpdatePwzRMQ {
   export class Payload {
     _id: string;
     addressId: string;
+    city: string;
     address: string;
   }
 
-  export class Response {}
+  export class Response { }
 }

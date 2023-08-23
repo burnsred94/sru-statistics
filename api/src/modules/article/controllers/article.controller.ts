@@ -25,7 +25,7 @@ export class ArticleController {
   constructor(
     private readonly articleService: ArticleService,
     private readonly fetchProvider: FetchProvider,
-  ) {}
+  ) { }
 
   @ApiAcceptedResponse({ description: 'Create Statistic' })
   @UseGuards(JwtAuthGuard)
@@ -38,17 +38,20 @@ export class ArticleController {
     try {
       const productNameData = await this.fetchProvider.fetchArticleName(data.article);
 
-      if (!productNameData.product_name && !productNameData.product_url)
-        throw new BadRequestException(`Такого артикула не существует: ${data.article}`);
+      // if (!productNameData.product_name && !productNameData.product_url)
+      //   throw new BadRequestException(`Такого артикула не существует: ${data.article}`);
 
-      setImmediate(async () => await this.articleService.create(data, user, productNameData));
+      const create = await this.articleService.create(data, user, productNameData)
 
-      const initArticle = initArticleMessage(data.article);
-      return response.status(HttpStatus.OK).send({
-        data: { message: initArticle },
-        error: [],
-        status: response.statusCode,
-      });
+      if (create) {
+        const initArticle = initArticleMessage(data.article, create);
+        return response.status(HttpStatus.OK).send({
+          data: { message: initArticle },
+          error: [],
+          status: response.statusCode,
+        });
+      }
+
     } catch (error) {
       this.logger.error(error);
       return response.status(HttpStatus.OK).send({
@@ -64,12 +67,16 @@ export class ArticleController {
   @Post('add-key-by-article')
   async addKeys(@Body() dto: AddKeyDto, @CurrentUser() user: User, @Res() response: Response) {
     try {
-      const addKey = await this.articleService.addKeys(dto, user);
-      return response.status(HttpStatus.OK).send({
-        status: HttpStatus.OK,
-        data: addKey,
-        errors: [],
-      });
+      const result = await this.articleService.addKeys(dto, user);
+
+      if (result) {
+        const initArticle = initArticleMessage(result.article, result.message);
+        return response.status(HttpStatus.OK).send({
+          status: HttpStatus.OK,
+          data: { message: initArticle },
+          errors: [],
+        });
+      }
     } catch (error) {
       this.logger.error(error);
       return response.status(HttpStatus.OK).send({
@@ -113,11 +120,14 @@ export class ArticleController {
     try {
       const remove = await this.articleService.removeArticle(dto, user);
 
-      return response.status(HttpStatus.OK).send({
-        status: HttpStatus.OK,
-        data: remove,
-        errors: [],
-      });
+      if (remove) {
+        const initArticle = initArticleMessage(remove.article, remove);
+        return response.status(HttpStatus.OK).send({
+          status: HttpStatus.OK,
+          data: { message: initArticle },
+          errors: [],
+        });
+      }
     } catch (error) {
       this.logger.error(error);
       return response.status(HttpStatus.OK).send({
@@ -135,11 +145,15 @@ export class ArticleController {
     try {
       const remove = await this.articleService.removeKey(dto, user);
 
-      return response.status(HttpStatus.OK).send({
-        status: HttpStatus.OK,
-        data: remove,
-        errors: [],
-      });
+      if (remove) {
+        const initArticle = initArticleMessage(remove.article, remove, remove.key);
+        return response.status(HttpStatus.OK).send({
+          status: HttpStatus.OK,
+          data: { message: initArticle },
+          errors: [],
+        });
+      }
+
     } catch (error) {
       this.logger.error(error);
       return response.status(HttpStatus.OK).send({

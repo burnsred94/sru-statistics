@@ -8,38 +8,44 @@ import { FindByCityDto, FindByCityQueryDto, RemoveArticleDto } from '../dto';
 import { Keys, KeysService } from 'src/modules/keys';
 import { chunk, compact, map, uniqBy } from 'lodash';
 import { Pvz } from 'src/modules/pvz';
+import { OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
 export class ArticleRepository {
   constructor(
     @InjectModel(Article.name) private readonly modelArticle: Model<Article>,
     private readonly keysService: KeysService,
-  ) {}
-
+  ) { }
+  //Нужно 
   async findDataByUser(user: User) {
-    const find = await this.modelArticle.find({ userId: user, active: true }).lean().exec();
-
-    const keysLength = find.reduce((accumulator, item) => accumulator + item.keys.length, 0);
-
-    return { total: find.length, total_keys: keysLength };
+    const find = await this.modelArticle.countDocuments({ userId: user, active: true });
+    const keysLength = await this.keysService.countUserKeys(user, true);
+    return { total: find, total_keys: keysLength };
   }
 
-  async findArticleActive(article: string, userId: User) {
-    return await this.modelArticle.findOne({
+  //Нужно 
+  async findProductKeys(article: string, userId: User, productActive: boolean, stateKeys?: boolean) {
+    let product = await this.modelArticle.findOne({
       article: article,
       userId: userId,
-      active: true,
-    });
+      active: productActive,
+    })
+
+    if (product !== null) {
+
+      if (stateKeys !== undefined) {
+        product = await product.populate({ path: 'keys', select: "key active", match: { active: stateKeys }, model: Keys.name });
+        return { keys: product.keys, _id: product._id }
+      };
+
+      product = await product.populate({ path: 'keys', select: "key active", model: Keys.name });
+      return { keys: product.keys, _id: product._id }
+    }
+
+    return null;
   }
 
-  async findArticleNonActive(article: string, userId: User) {
-    return await this.modelArticle.findOne({
-      article: article,
-      userId: userId,
-      active: false,
-    });
-  }
-
+  //Нужно 
   async create(article: Article) {
     const newArticle = new ArticleEntity(article);
     const articleCreate = await this.modelArticle.create(newArticle);
@@ -47,14 +53,16 @@ export class ArticleRepository {
     return save;
   }
 
-  async update(data: Types.ObjectId[], id: Types.ObjectId) {
-    await this.modelArticle.findByIdAndUpdate(id, {
+  @OnEvent('keys.update')
+  async update(payload: { id: Types.ObjectId, key: Types.ObjectId }) {
+    await this.modelArticle.findByIdAndUpdate(payload.id, {
       $push: {
-        keys: data,
+        keys: payload.key,
       },
     });
   }
 
+  //Нужно 
   async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto[]) {
     const find = await this.modelArticle
       .find({
@@ -63,7 +71,7 @@ export class ArticleRepository {
       })
       .populate({
         path: 'keys',
-        select: 'active',
+        select: 'active ',
         match: { active: true },
         model: Keys.name,
       })
@@ -71,8 +79,8 @@ export class ArticleRepository {
 
     const generateData = map(find, async stats => {
       const { keys, _id } = stats;
-      const genKeys = await this.keysService.findById(
-        keys as unknown as Array<{ _id: Types.ObjectId; active: boolean }>,
+      const genKeys = await this.keysService.findByMany(
+        { article: stats.article, userId: stats.userId, active: true },
         data.city,
       );
 
@@ -83,6 +91,7 @@ export class ArticleRepository {
         return {
           ...stats,
           keys: chunks[0],
+          keys_length: keys.length,
           meta: {
             page: 1,
             total: chunks.length,
@@ -96,6 +105,7 @@ export class ArticleRepository {
         return {
           ...stats,
           keys: chunks[value.page - 1],
+          keys_length: keys.length,
           meta: {
             page: value.page,
             total: chunks.length,

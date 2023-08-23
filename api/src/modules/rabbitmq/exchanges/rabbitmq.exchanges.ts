@@ -4,4 +4,5 @@ export enum RmqExchanges {
   PROFILE = 'profile',
   GEO = 'geo',
   PRODUCT = 'product',
+  CORE_KEYS = 'core_keys',
 }

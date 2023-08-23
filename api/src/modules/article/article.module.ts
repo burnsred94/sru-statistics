@@ -7,21 +7,32 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { PvzModule } from '../pvz';
 import { Article, ArticleSchema } from './schemas';
 import { ArticleController } from './controllers';
-import { ArticleService } from './services';
+import { ArticleService, CreateArticleStrategy } from './services';
 import { ArticleRepository } from './repositories';
 import { ArticleGateway } from './gateways';
-import { TownsDestructor } from './utils';
+import { SenderIoEvent, TownsDestructor } from './utils';
+import { UtilsModule } from '../utils';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Article.name, schema: ArticleSchema }]),
     FetchModule,
+    UtilsModule,
     KeysModule,
     PvzModule,
     EventEmitterModule.forRoot({ global: true, maxListeners: 10, verboseMemoryLeak: true }),
   ],
   controllers: [ArticleController],
-  providers: [ArticleService, ArticleRepository, JwtStrategy, ArticleGateway, TownsDestructor],
+  providers: [
+    ArticleService,
+    CreateArticleStrategy,
+    ArticleRepository,
+    JwtStrategy,
+    ArticleGateway,
+    TownsDestructor,
+    SenderIoEvent,
+  ],
   exports: [ArticleService],
 })
-export class ArticleModule {}
+export class ArticleModule { }
+

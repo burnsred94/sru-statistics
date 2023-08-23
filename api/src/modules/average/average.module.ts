@@ -8,7 +8,7 @@ import { UtilsModule } from '../utils';
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Average.name, schema: AverageSchema }]),
-    UtilsModule
+    UtilsModule,
   ],
   providers: [AverageService, AverageRepository],
   exports: [AverageService],

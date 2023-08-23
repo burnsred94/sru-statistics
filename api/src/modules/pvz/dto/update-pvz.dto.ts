@@ -13,6 +13,9 @@ export class UpdatePvzDto {
   addressId: Types.ObjectId;
   @IsNotEmpty()
   @IsString()
+  averageId: Types.ObjectId;
+  @IsNotEmpty()
+  @IsString()
   periodId: Types.ObjectId;
   @IsNotEmpty()
   @IsNumber()
@@ -22,5 +25,5 @@ export class UpdatePvzDto {
   key: string;
   @IsNotEmpty()
   @IsString()
-  key_id: string;
+  key_id: Types.ObjectId;
 }

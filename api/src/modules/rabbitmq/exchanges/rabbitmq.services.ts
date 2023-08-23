@@ -3,4 +3,5 @@ export enum RmqServices {
   STATISTICS = 'statistics',
   GEO = 'geo',
   PRODUCT = 'product',
+  CORE_KEYS = 'core_keys',
 }

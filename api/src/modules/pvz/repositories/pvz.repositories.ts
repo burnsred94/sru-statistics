@@ -1,10 +1,11 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { FilterQuery, Model, Types } from 'mongoose';
 import { Injectable } from '@nestjs/common';
 import { Pvz } from '../schemas';
 import { PvzEntity } from '../entities';
 import { StatusPvz } from 'src/interfaces';
 import { Periods } from 'src/modules/periods';
+import { User } from 'src/modules/auth';
 
 @Injectable()
 export class PvzRepository {
@@ -13,13 +14,21 @@ export class PvzRepository {
   async create(data: Pvz) {
     const newPwz = new PvzEntity(data);
     const createPwz = await this.pvzModel.create({ ...newPwz });
-    return createPwz;
+    return createPwz.populate({ path: "position", select: 'position', model: Periods.name })
   }
 
-  async findAll() {
-    return await this.pvzModel.find({
-      // status: StatusPvz.SUCCESS,
-      active: true,
+  async findAll(searchQuery: FilterQuery<Pvz>) {
+    let pvz = this.pvzModel.find(searchQuery);
+
+    pvz = pvz.populate({ path: "position", select: "position", model: Periods.name });
+    return await pvz.lean().exec()
+  }
+
+  async findUserStatus(userId: User, article: string) {
+    return await this.pvzModel.countDocuments({
+      userId: userId,
+      article: article,
+      status: StatusPvz.WAIT_TO_SEND,
     });
   }
 
@@ -28,7 +37,7 @@ export class PvzRepository {
   }
 
   async update(id, data) {
-    await this.pvzModel.updateOne(
+    const update = await this.pvzModel.updateOne(
       {
         _id: id,
       },
@@ -39,6 +48,8 @@ export class PvzRepository {
         status: StatusPvz.PENDING,
       },
     );
+
+    return update.modifiedCount > 0
   }
 
   async updateStatus(id: Types.ObjectId) {

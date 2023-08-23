@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AverageRepository } from '../repositories';
 import { Types } from 'mongoose';
-import { IAverage } from 'src/interfaces';
+import { AverageStatus, IAverage } from 'src/interfaces';
 import { MathUtils } from 'src/modules/utils/providers';
 import { map } from 'lodash';
 
@@ -16,26 +16,24 @@ export class AverageService {
     return await this.averageRepository.create(data);
   }
 
-  async find(ids: Types.ObjectId[]) {
-    return map(ids, async (id) => await this.averageRepository.findOne(id));
+  async update(payload: { id: Types.ObjectId, average: number; key_id: Types.ObjectId }) {
+    return await this.averageRepository.update(payload.id, payload.average);
   }
 
-  async update(id: Types.ObjectId, data: string, key) {
-    const update = await this.averageRepository.update(id, data);
-
-    if (update && key.average.length > 1) {
-      const reverse = key.average.reverse();
-      const averageData = await this.find([reverse.at(1)._id, reverse.at(0)._id])
-      const resolved = await Promise.all(averageData);
-      await this.updateDiff(resolved[0], resolved[1]);
-    }
+  async updateRefresh(id: Types.ObjectId) {
+    return await this.averageRepository.refresh(id);
   }
 
-  async updateDiff(first, second) {
-    if (second !== undefined) {
-      console.log(`diff`, first, second);
-      const data = await this.mathUtils.calculateDiff({ position: second.average }, { position: first.average });
-      await this.averageRepository.updateDiff(second._id, data);
-    }
+  async updateDiff(average) {
+    const first = average.at(1);
+    const second = average.at(0);
+
+    const data = await this.mathUtils.calculateDiff(
+      { position: second.average },
+      { position: first.average },
+    );
+
+    await this.averageRepository.updateDiff(second._id, data);
   }
+
 }
