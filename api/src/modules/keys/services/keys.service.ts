@@ -100,7 +100,7 @@ export class KeysService {
     })
   }
 
-  @Cron('40 12 * * *', { timeZone: 'Europe/Moscow' })
+  @Cron('05 0 * * *', { timeZone: 'Europe/Moscow' })
   async nightParse() {
     const allKeys = await this.keysRepository.findAll({ active: true });
 
@@ -147,7 +147,8 @@ export class KeysService {
     return await this.keysRepository.updateMany(ids);
   }
 
-  async updateAverage(payload: { id: Types.ObjectId, average: number; key_id: Types.ObjectId }) {
+
+  async updateAverage(payload: { id: Types.ObjectId, average: { cpm: number, promotion: number, promoPosition: number, position: number }; key_id: Types.ObjectId }) {
     await this.averageService.update(payload);
     const average = await this.keysRepository.findAverageKey(payload.key_id);
     if (average.length > 0) await this.averageService.updateDiff(average)

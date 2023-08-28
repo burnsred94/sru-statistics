@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PeriodsRepository } from '../repositories';
 import { Types } from 'mongoose';
+import { UpdatePvzDto } from 'src/modules/pvz/dto';
 
 @Injectable()
 export class PeriodsService {
@@ -10,7 +11,7 @@ export class PeriodsService {
     return await this.periodRepository.create(value, difference);
   }
 
-  async update(id: Types.ObjectId, position: number | string) {
+  async update(id: Types.ObjectId, position: { cpm: number, promotion: number, promoPosition: number, position: number }) {
     await this.periodRepository.update(id, position)
   }
 

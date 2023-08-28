@@ -11,6 +11,12 @@ export class Average {
   @Prop({ type: String, require: true })
   average: string;
 
+  @Prop({ type: String, default: null })
+  start_position: string;
+
+  @Prop({ type: String, default: null })
+  cpm: string;
+
   @Prop({ type: Number, require: true })
   userId: number;
 
