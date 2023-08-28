@@ -29,10 +29,13 @@ export class AverageRepository {
     })
   }
 
+
   async update(id: Types.ObjectId, data: { cpm: number, promotion: number, promoPosition: number, position: number }): Promise<boolean> {
+
     const find = await this.averageModel.findById({ _id: id })
       .lean()
       .exec();
+
 
     const average = find.average === 'Ожидается' || find.average === '1000+' || "Нет данных" ? 0 : Number(find.average);
     const promo = find.start_position === null ? 0 : Number(find.start_position);
@@ -52,8 +55,6 @@ export class AverageRepository {
       const promoPos = (promo * delimiter);
       const mathPromoPos = promoPos + data.position;
       const resultPromo = Math.round(mathPromoPos / (delimiter + 1));
-
-
 
       await this.averageModel.findByIdAndUpdate(
         { _id: id },

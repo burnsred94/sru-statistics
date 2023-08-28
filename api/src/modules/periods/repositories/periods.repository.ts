@@ -17,6 +17,7 @@ export class PeriodsRepository {
     return newPeriodSave._id;
   }
 
+
   async update(id: Types.ObjectId, dataPosition: { cpm: number, promotion: number, promoPosition: number, position: number }) {
 
     if (dataPosition.position > 0) {
