@@ -61,7 +61,7 @@ export class KeysRepository {
           model: Pvz.name,
           populate: {
             path: 'position',
-            select: 'position timestamp difference',
+            select: 'position timestamp difference promo_position cpm',
             model: Periods.name,
           },
         })
@@ -79,7 +79,7 @@ export class KeysRepository {
 
     find = find.populate({
       path: 'average',
-      select: 'timestamp average difference ',
+      select: 'timestamp average difference start_position cpm',
       model: Average.name,
     });
 

@@ -19,7 +19,7 @@ export class UpdatePvzDto {
   periodId: Types.ObjectId;
   @IsNotEmpty()
   @IsNumber()
-  position: number;
+  position: { cpm: number, promotion: number, promoPosition: number, position: number };
   @IsNotEmpty()
   @IsString()
   key: string;

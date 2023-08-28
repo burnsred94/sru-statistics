@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { Periods } from '../schemas';
 import { PeriodsEntity } from '../entities';
 import { StatusPvz } from 'src/interfaces';
+import { UpdatePvzDto } from 'src/modules/pvz/dto';
 
 @Injectable()
 export class PeriodsRepository {
@@ -16,17 +17,18 @@ export class PeriodsRepository {
     return newPeriodSave._id;
   }
 
-  async update(id: Types.ObjectId, position: number | string) {
-    if (typeof position === 'string') {
+  async update(id: Types.ObjectId, dataPosition: { cpm: number, promotion: number, promoPosition: number, position: number }) {
+
+    if (dataPosition.position > 0) {
       return await this.periodModel.findByIdAndUpdate(
         { _id: id },
-        { position: position, status: StatusPvz.WAIT_TO_SEND },
-      );
+        { cpm: String(dataPosition.cpm), promo_position: String(dataPosition.promoPosition), position: String(dataPosition.position), status: StatusPvz.SUCCESS },
+      )
     } else {
-      const pos = position === 0 ? '1000+' : String(position);
+      const pos = dataPosition.position === -1 ? '1000+' : dataPosition.position === -2 ? 'Нет данных' : null;
       return await this.periodModel.findByIdAndUpdate(
         { _id: id },
-        { position: pos, status: StatusPvz.WAIT_TO_SEND },
+        { position: pos, status: StatusPvz.SUCCESS },
       );
     }
   }

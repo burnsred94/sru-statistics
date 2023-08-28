@@ -29,16 +29,16 @@ export class AverageRepository {
     })
   }
 
-  async update(id: Types.ObjectId, data: number): Promise<boolean> {
+  async update(id: Types.ObjectId, data: { cpm: number, promotion: number, promoPosition: number, position: number }): Promise<boolean> {
     const find = await this.averageModel.findById({ _id: id })
       .lean()
       .exec();
 
-    const average = find.average === 'Ожидается' || find.average === '1000+' ? 0 : Number(find.average);
+    const average = find.average === 'Ожидается' || find.average === '1000+' || "Нет данных" ? 0 : Number(find.average);
+    const promo = find.start_position === null ? 0 : Number(find.start_position);
+    const delimiter = find.delimiter
 
-    const delimiter = find.delimiter;
-
-    if (data === 0) {
+    if (data.position < 0) {
       const result = average > 0 ? String(average) : '1000+'
       await this.averageModel.findByIdAndUpdate(
         { _id: id },
@@ -46,12 +46,18 @@ export class AverageRepository {
       )
     } else {
       const old = (average * delimiter);
-      const mathOld = old + data;
+      const mathOld = old + data.position;
       const result = Math.round(mathOld / (delimiter + 1));
+
+      const promoPos = (promo * delimiter);
+      const mathPromoPos = promoPos + data.position;
+      const resultPromo = Math.round(mathPromoPos / (delimiter + 1));
+
+
 
       await this.averageModel.findByIdAndUpdate(
         { _id: id },
-        { average: String(result), status_updated: AverageStatus.SUCCESS, $inc: { delimiter: 1 } },
+        { average: String(result), start_position: String(resultPromo), cpm: String(data.cpm), status_updated: AverageStatus.SUCCESS, $inc: { delimiter: 1 } },
         { new: true }
       )
     }
