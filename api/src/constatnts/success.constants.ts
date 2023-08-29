@@ -3,7 +3,7 @@ import { MessagesEvent } from "src/interfaces";
 export const SUCCESS_DELETE_KEY = 'Ключ был успешно удален';
 export const TICK_UPDATED_PERIOD = 'Tick created from update period';
 
-export const initArticleMessage = (article: string, options, option_data?) => {
+export const initArticleMessage = (article, options, option_data?) => {
   switch (options.event) {
     case MessagesEvent.ADD_KEYS: {
       return `В ваш существующий артикул: ${article} было добавленно ключей ${options.count_all} и востановленно ${options.count_activate}.`
@@ -15,7 +15,7 @@ export const initArticleMessage = (article: string, options, option_data?) => {
       return `Ваш артикул: ${article} успешно загружен и обрабатывается.`;
     }
     case MessagesEvent.DELETE_ARTICLES: {
-      return `Артикул: ${article} был удален.`
+      return article.length > 1 ? `Артикулы в количествe ${article.length} были удалены.` : `Артикул: ${article[0]} был удален`;
     }
     case MessagesEvent.ADD_KEYS_TO_ARTICLES: {
       return `Ключи ${option_data} в артикул: ${article} были добавлены.`

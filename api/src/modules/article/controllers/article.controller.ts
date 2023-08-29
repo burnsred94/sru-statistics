@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -121,13 +120,36 @@ export class ArticleController {
       const remove = await this.articleService.removeArticle(dto, user);
 
       if (remove) {
-        const initArticle = initArticleMessage(remove.article, remove);
+        const initArticle = initArticleMessage(remove, remove);
         return response.status(HttpStatus.OK).send({
           status: HttpStatus.OK,
           data: { message: initArticle },
           errors: [],
         });
       }
+    } catch (error) {
+      this.logger.error(error);
+      return response.status(HttpStatus.OK).send({
+        data: [],
+        error: [{ message: error.message }],
+        status: error.statusCode,
+      });
+    }
+  }
+
+  @ApiAcceptedResponse({ description: 'Remove key' })
+  @UseGuards(JwtAuthGuard)
+  @Get('user-articles')
+  async userArticles(@CurrentUser() user: User, @Res() response: Response) {
+    try {
+      const articles = await this.articleService.articles(user);
+
+      return response.status(HttpStatus.OK).send({
+        data: articles,
+        error: [],
+        status: HttpStatus.OK,
+      });
+
     } catch (error) {
       this.logger.error(error);
       return response.status(HttpStatus.OK).send({

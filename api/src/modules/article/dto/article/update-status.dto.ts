@@ -1,7 +1,7 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty } from 'class-validator';
 
 export class RemoveArticleDto {
   @IsNotEmpty()
-  @IsString()
-  articleId: string;
+  @IsArray()
+  articleId: string[];
 }

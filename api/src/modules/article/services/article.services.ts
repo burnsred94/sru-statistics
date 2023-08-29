@@ -11,7 +11,7 @@ import {
 import { User } from 'src/modules/auth';
 import { KeysService } from 'src/modules/keys';
 import { TownsDestructor } from '../utils';
-import { compact } from 'lodash';
+import { compact, map } from 'lodash';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventsWS } from '../events';
 import { GetProductRMQ } from 'src/modules/rabbitmq/contracts/products';
@@ -30,8 +30,16 @@ export class ArticleService {
     private readonly eventEmitter: EventEmitter2,
   ) { }
 
+  //Удалить после обновления
   async checkData(user: User) {
     return await this.articleRepository.findDataByUser(user);
+  }
+
+  async articles(id: User) {
+    return {
+      articles: await this.articleRepository.findByUser(id),
+      count_keys: await this.keyService.countUserKeys(id, true)
+    }
   }
 
   async create(data: CreateArticleDto, user: User, product?: GetProductRMQ.Response) {
@@ -68,15 +76,16 @@ export class ArticleService {
   }
 
   async removeArticle(data: RemoveArticleDto, id: User) {
-    const article = await this.articleRepository.removeArticle(data, id);
-    const removedKey = await this.keyService.updateMany(article.keys);
+    const result = map(data.articleId, async (element) => {
+      const article = await this.articleRepository.removeArticle(element, id);
+      const removedKey = await this.keyService.updateMany(article.keys);
 
-    if (removedKey) {
-      return {
-        event: MessagesEvent.DELETE_ARTICLES,
-        article: article.article
+      if (removedKey) {
+        return article.article
       }
-    }
+    })
+    const resolved = await Promise.all(result);
+    return { article: resolved, event: MessagesEvent.DELETE_ARTICLES }
   }
 
   async removeKey(data: RemoveKeyDto, user: User) {

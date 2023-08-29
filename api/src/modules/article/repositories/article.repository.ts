@@ -16,6 +16,32 @@ export class ArticleRepository {
     @InjectModel(Article.name) private readonly modelArticle: Model<Article>,
     private readonly keysService: KeysService,
   ) { }
+
+  //Забирает все артикулы и кол-во ключей
+  async findByUser(user: User) {
+    return await this.modelArticle.aggregate([
+      { $match: { userId: user, active: true } },
+      {
+        $lookup: {
+          from: 'keys',
+          localField: 'keys',
+          foreignField: '_id',
+          as: 'keys'
+        }
+      },
+      {
+        $project: {
+          article: 1,
+          userId: 1,
+          productName: 1,
+          productImg: 1,
+          createdAt: 1,
+          keys_size: { $size: '$keys' },
+        }
+      }
+    ])
+  }
+
   //Нужно 
   async findDataByUser(user: User) {
     const find = await this.modelArticle.countDocuments({ userId: user, active: true });
@@ -137,10 +163,10 @@ export class ArticleRepository {
     );
   }
 
-  async removeArticle(data: RemoveArticleDto, id: User) {
+  async removeArticle(articleId: string, id: User) {
     return await this.modelArticle.findOneAndUpdate(
       {
-        _id: data.articleId,
+        _id: articleId,
         userId: id,
       },
       {

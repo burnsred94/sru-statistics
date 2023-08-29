@@ -5,6 +5,7 @@ import { Keys } from 'src/modules/keys';
 
 @Schema({
   versionKey: false,
+  timestamps: true,
 })
 export class Article {
   @Prop({ type: String })
