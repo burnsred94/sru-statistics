@@ -71,7 +71,7 @@ export class AverageRepository {
       }
     }
 
-    if (delimiter + find.loss_delimiter === 14 && average === 0) {
+    if (delimiter + find.loss_delimiter >= 14 && average === 0) {
       const pos = data.position === -1 ? '1000+' : data.position === -2 ? "Нет данных" : null;
 
       await this.averageModel.findByIdAndUpdate(
