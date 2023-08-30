@@ -4,7 +4,6 @@ import { Model, Types } from 'mongoose';
 import { Periods } from '../schemas';
 import { PeriodsEntity } from '../entities';
 import { StatusPvz } from 'src/interfaces';
-import { UpdatePvzDto } from '../../pvz/dto';
 
 @Injectable()
 export class PeriodsRepository {
@@ -18,6 +17,13 @@ export class PeriodsRepository {
   }
 
   async update(id: Types.ObjectId, dataPosition: { cpm: number, promotion: number, promoPosition: number, position: number }) {
+
+    if (dataPosition.position === -3) {
+      return await this.periodModel.findByIdAndUpdate(
+        { _id: id },
+        { position: "Ожидается", status: StatusPvz.SUCCESS },
+      );
+    }
 
     if (dataPosition.position > 0) {
       return await this.periodModel.findByIdAndUpdate(
