@@ -23,6 +23,9 @@ export class Average {
   @Prop({ type: Number, require: true, default: 0 })
   delimiter: number;
 
+  @Prop({ type: Number, require: true, default: 0 })
+  loss_delimiter: number;
+
   @Prop({ type: String, require: true, default: AverageStatus.WAIT_SENDING })
   status_updated: string;
 

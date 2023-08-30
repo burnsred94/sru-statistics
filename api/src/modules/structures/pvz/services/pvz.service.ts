@@ -78,7 +78,12 @@ export class PvzService {
   async periodRefresh(pvzId: Types.ObjectId) {
     const pvz = await this.pvzRepository.findAll({ _id: pvzId });
     const id = pvz[0].position.at(-1)._id;
-    // await this.periodsService.update(id, { position: "Ожидается"})
+    await this.periodsService.update(id, {
+      position: -3,
+      cpm: 0,
+      promotion: 0,
+      promoPosition: 0
+    })
   }
 
   async findById(id: Types.ObjectId) {

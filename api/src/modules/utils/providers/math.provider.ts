@@ -18,10 +18,18 @@ export class MathUtils {
 
   async calculateDiff(firstItem: any, secondItem: any) {
     if (firstItem !== undefined && secondItem !== undefined) {
-      const first = firstItem.position === '1000+' ? 0 : Number(firstItem.position);
-      const second = secondItem.position === '1000+' ? 0 : Number(secondItem.position);
-      const result = second - first;
+      const first = Number.isNaN(+firstItem.position) ? 0 : Number(firstItem.position);
+      const second = Number.isNaN(+firstItem.position) ? 0 : Number(secondItem.position);
 
+      if (first === 0 || second === 0) {
+        return "0"
+      };
+
+      if (first === 0 && second === 0) {
+        return "0"
+      };
+
+      const result = second - first;
       return result > 0 ? `+${String(result)}` : `${String(result)}`;
     } else {
       return '0';
