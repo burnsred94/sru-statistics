@@ -47,16 +47,16 @@ export class AverageRepository {
     } else if (data.position > 0) {
       if (data.cpm > 0) {
         const old = (average * delimiter);
-        const mathOld = old + data.position;
+        const mathOld = old + data.promoPosition;
         const result = Math.round(mathOld / (delimiter + 1));
 
         const promoPos = (promo * delimiter);
-        const mathPromoPos = promoPos + data.promoPosition;
+        const mathPromoPos = promoPos + data.position;
         const resultPromo = Math.round(mathPromoPos / (delimiter + 1));
 
         await this.averageModel.findByIdAndUpdate(
           { _id: id },
-          { average: String(resultPromo), start_position: String(result), cpm: String(data.cpm), status_updated: AverageStatus.SUCCESS, $inc: { delimiter: 1 } },
+          { average: String(result), start_position: String(resultPromo), cpm: String(data.cpm), status_updated: AverageStatus.SUCCESS, $inc: { delimiter: 1 } },
           { new: true }
         )
       } else {
