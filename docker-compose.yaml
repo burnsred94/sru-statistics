@@ -1,13 +1,13 @@
 version: '3.8'
 
 networks:
-  sru-geo_default:
+  geo_default:
     external:
-      name: sru-geo_default
+      name: geo_default
 
 services:
   api:
-    container_name: sru-statistics-api
+    container_name: statistics-api
     build:
       context: ./api
       dockerfile: Dockerfile
@@ -19,4 +19,4 @@ services:
     volumes:
       - ./api/:/usr/src/app
     networks:
-      - sru-geo_default
+      - geo_default
