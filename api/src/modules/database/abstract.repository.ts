@@ -7,7 +7,7 @@ export abstract class AbstractRepository<T extends Document> {
         return await this.abstractModel.findOne(filterQuery, projection).exec();
     }
 
-    async find(filterQuery: FilterQuery<T>): Promise<T[] | null> {
+    async find(filterQuery?: FilterQuery<T>): Promise<T[] | null> {
         return await this.abstractModel.find(filterQuery).exec();
     }
 

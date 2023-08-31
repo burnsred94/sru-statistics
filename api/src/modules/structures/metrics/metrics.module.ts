@@ -5,11 +5,17 @@ import { MetricsController } from './metrics.controller';
 import { MetricsRepository } from './repositories';
 import { MetricsService } from './metrics.service';
 import { KeysModule } from '../keys';
+import { ArticleModule } from '../article';
+
+const STRUCTURES = [
+    ArticleModule,
+    KeysModule,
+]
 
 @Module({
     imports: [
+        ...STRUCTURES,
         MongooseModule.forFeature([{ name: Metrics.name, schema: MetricsSchema }]),
-        KeysModule
     ],
     providers: [MetricsRepository, MetricsService],
     controllers: [MetricsController],

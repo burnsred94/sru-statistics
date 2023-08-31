@@ -6,10 +6,10 @@ export const TICK_UPDATED_PERIOD = 'Tick created from update period';
 export const initArticleMessage = (data, options, option_data?) => {
   switch (options.event) {
     case MessagesEvent.ADD_KEYS: {
-      return `В ваш существующий артикул: ${data} было добавленно ключей ${options.count_all} и востановленно ${options.count_activate}.`
+      return `В ваш существующий артикул: ${data} было добавлено ключей ${options.count_all} и восстановлено ${options.count_activate}.`
     }
     case MessagesEvent.NOT_ADDED_KEYS: {
-      return `В ваш существующий артикул: ${data} было добавленно ключей ${options.count_all}.`;
+      return `В ваш существующий артикул: ${data} было добавлено ключей ${options.count_all}.`;
     }
     case MessagesEvent.CREATE_ARTICLES: {
       return `Ваш артикул: ${data} успешно загружен и обрабатывается.`;
@@ -24,7 +24,7 @@ export const initArticleMessage = (data, options, option_data?) => {
       return `Ключ "${option_data}" был удален из артикула: ${data}.`
     }
     case MessagesEvent.ENABLED_ARTICLE: {
-      return `Ваш артикул: ${data} был востановлен.`
+      return `Ваш артикул: ${data} был восстановлен.`
     }
     case MessagesEvent.REFRESH_KEY: {
       return `Ваш ключ «${data}» обновляется.`

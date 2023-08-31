@@ -1,7 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 import { User } from 'src/modules/auth/user';
 import { Keys } from '../../keys';
+
+export type ArticleDocument = HydratedDocument<Article>;
 
 @Schema({
   versionKey: false,

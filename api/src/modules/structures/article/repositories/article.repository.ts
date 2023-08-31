@@ -1,6 +1,6 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { Article } from '../schemas/article.schema';
+import { FilterQuery, Model, Types } from 'mongoose';
+import { Article, ArticleDocument } from '../schemas/article.schema';
 import { Injectable } from '@nestjs/common';
 import { ArticleEntity } from '../entities';
 import { User } from 'src/modules/auth';
@@ -9,6 +9,7 @@ import { Keys, KeysService } from '../../keys';
 import { chunk, compact, map, uniqBy } from 'lodash';
 import { Pvz } from '../../pvz';
 import { OnEvent } from '@nestjs/event-emitter';
+import { Average } from '../../average';
 
 @Injectable()
 export class ArticleRepository {
@@ -40,6 +41,11 @@ export class ArticleRepository {
         }
       }
     ])
+  }
+
+  async findOne(searchQuery: FilterQuery<ArticleDocument>) {
+    return await this.modelArticle.findOne(searchQuery)
+    // .populate({ path: "average", select: "average start_position cpm", model: Average.name })
   }
 
   //Нужно 

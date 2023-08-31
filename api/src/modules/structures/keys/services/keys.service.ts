@@ -96,6 +96,7 @@ export class KeysService {
       },
       complete: () => {
         this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: data.userId });
+        this.eventEmitter.emit("metric.created", { article: id, user: data.userId })
       }
     })
   }

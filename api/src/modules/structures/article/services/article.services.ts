@@ -17,6 +17,7 @@ import { EventsWS } from '../events';
 import { GetProductRMQ } from 'src/modules/rabbitmq/contracts/products';
 import { MessagesEvent } from 'src/interfaces';
 import { CreateArticleStrategy } from './create';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class ArticleService {
@@ -57,6 +58,10 @@ export class ArticleService {
     } catch (error) {
       return error.message;
     }
+  }
+
+  async findOne(_id: Types.ObjectId) {
+    return await this.articleRepository.findOne({ _id: _id });
   }
 
   async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto[]) {
