@@ -1,7 +1,4 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
-import { forEach, map } from 'lodash';
-import { Types } from 'mongoose';
 import { IProfileApiResponse } from 'src/interfaces/response/profile-api-response.interface';
 import { User } from 'src/modules/auth/user';
 import { RabbitMqPublisher, RabbitMqRequester } from 'src/modules/rabbitmq/services';
