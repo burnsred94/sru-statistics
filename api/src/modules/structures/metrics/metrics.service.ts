@@ -15,6 +15,6 @@ export class MetricsService {
 
     async getMetrics(user: User, article: string, _id: Types.ObjectId) {
         const metrics = await this.metricsRepository.findOne(_id);
-
+        return metrics
     }
 }
