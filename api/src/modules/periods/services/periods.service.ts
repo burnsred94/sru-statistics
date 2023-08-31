@@ -17,5 +17,5 @@ export class PeriodsService {
 
   async updateDiff(id: Types.ObjectId, diff: string) {
     await this.periodRepository.updateDiff(id, diff);
-  }
+  };
 }
