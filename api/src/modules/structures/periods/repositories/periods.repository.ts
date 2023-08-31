@@ -4,7 +4,6 @@ import { Model, Types } from 'mongoose';
 import { Periods } from '../schemas';
 import { PeriodsEntity } from '../entities';
 import { StatusPvz } from 'src/interfaces';
-import { UpdatePvzDto } from 'src/modules/pvz/dto';
 
 @Injectable()
 export class PeriodsRepository {

@@ -73,11 +73,7 @@ export class AverageRepository {
 
     if (delimiter + find.loss_delimiter >= 14 && average === 0) {
       const pos = data.position === -1 ? '1000+' : data.position === -2 ? "Нет данных" : null;
-
-      const promoPos = (promo * delimiter);
-      const mathPromoPos = promoPos + data.position;
-      const resultPromo = Math.round(mathPromoPos / (delimiter + 1));
-
+      
       await this.averageModel.findByIdAndUpdate(
         { _id: id },
         { average: pos, status_updated: AverageStatus.SUCCESS }

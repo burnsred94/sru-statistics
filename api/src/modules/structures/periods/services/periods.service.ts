@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PeriodsRepository } from '../repositories';
 import { Types } from 'mongoose';
-import { UpdatePvzDto } from 'src/modules/pvz/dto';
 
 @Injectable()
 export class PeriodsService {
