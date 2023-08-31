@@ -32,6 +32,6 @@ export class MathUtils {
 
     } else {
       return '0';
-    }
+    };
   }
 }
