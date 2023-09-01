@@ -8,7 +8,7 @@ export class TaskSenderQueue {
   concurrency: number;
   running: number;
   queue: Array<any>;
-  tasks = 0
+  tasks = 0;
   countInit = 0;
 
   constructor(private readonly configService: ConfigService) {
@@ -16,7 +16,6 @@ export class TaskSenderQueue {
     this.running = 0;
     this.queue = [];
   }
-
 
   pushTask(task) {
     if (this.queue.length > 0) {
@@ -52,7 +51,6 @@ export class TaskSenderQueue {
       }
 
       if (setTimeout)
-
         this.logger.debug(
           `Length current task: ${this.queue.length}, concurrent: ${this.concurrency}, ${this.running}`,
         );

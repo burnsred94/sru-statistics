@@ -18,7 +18,7 @@ export class KeysController {
   constructor(
     private readonly keysService: KeysService,
     private readonly keysPvzService: KeysPvzService,
-  ) { }
+  ) {}
 
   @Post('refresh')
   async refreshKey(@Body() key: RefreshKeyDto, @Res() response: Response) {
@@ -26,7 +26,7 @@ export class KeysController {
       const result = await this.keysService.refreshKey(key._id);
 
       if (result) {
-        const message = initArticleMessage(result.key, result)
+        const message = initArticleMessage(result.key, result);
         return response.status(HttpStatus.OK).send({
           data: { message: message },
           error: [],

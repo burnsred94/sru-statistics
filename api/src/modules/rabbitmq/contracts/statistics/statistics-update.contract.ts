@@ -12,10 +12,10 @@ export namespace StatisticsUpdateRMQ {
     addressId: Types.ObjectId;
     averageId: Types.ObjectId;
     periodId: Types.ObjectId;
-    position: { cpm: number, promotion: number, promoPosition: number, position: number };
+    position: { cpm: number; promotion: number; promoPosition: number; position: number };
     key: string;
     key_id: Types.ObjectId;
   }
 
-  export class Response { }
+  export class Response {}
 }

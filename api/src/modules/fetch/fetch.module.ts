@@ -19,10 +19,15 @@ import { PvzModule } from '../structures/pvz';
     PvzModule,
     RabbitRpcParamsFactory,
     RmqModule.register({
-      exchanges: [RmqExchanges.SEARCH, RmqExchanges.PROFILE, RmqExchanges.PRODUCT, RmqExchanges.CORE_KEYS],
+      exchanges: [
+        RmqExchanges.SEARCH,
+        RmqExchanges.PROFILE,
+        RmqExchanges.PRODUCT,
+        RmqExchanges.CORE_KEYS,
+      ],
     }),
   ],
   exports: [FetchProvider, TaskSenderQueue],
   controllers: [FetchController],
 })
-export class FetchModule { }
+export class FetchModule {}

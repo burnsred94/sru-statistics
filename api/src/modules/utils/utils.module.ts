@@ -1,9 +1,9 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { MathUtils, } from './providers';
+import { MathUtils } from './providers';
 
 @Module({
   imports: [],
   providers: [MathUtils],
   exports: [MathUtils],
 })
-export class UtilsModule { }
+export class UtilsModule {}

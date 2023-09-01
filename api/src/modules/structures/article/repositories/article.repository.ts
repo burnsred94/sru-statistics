@@ -27,57 +27,71 @@ export class ArticleRepository {
           from: 'keys',
           localField: 'keys',
           foreignField: '_id',
-          as: 'keys'
-        }
+          as: 'keys',
+        },
+      },
+      { $unwind: '$keys' },
+      {
+        $match: { 'keys.active': true },
       },
       {
-        $project: {
-          article: 1,
-          userId: 1,
-          productName: 1,
-          productImg: 1,
-          createdAt: 1,
-          keys_size: { $size: '$keys' },
-        }
+        $group: {
+          _id: '$_id',
+          article: { $first: '$article' },
+          userId: { $first: '$userId' },
+          productName: { $first: '$productName' },
+          productImg: { $first: '$productImg' },
+          createdAt: { $first: '$createdAt' },
+          keys_size: { $sum: 1 },
+        },
       }
-    ])
+    ]);
   }
 
   async findOne(searchQuery: FilterQuery<ArticleDocument>) {
-    return await this.modelArticle.findOne(searchQuery)
+    return await this.modelArticle.findOne(searchQuery);
     // .populate({ path: "average", select: "average start_position cpm", model: Average.name })
   }
 
-  //Нужно 
+  //Нужно
   async findDataByUser(user: User) {
     const find = await this.modelArticle.countDocuments({ userId: user, active: true });
     const keysLength = await this.keysService.countUserKeys(user, true);
     return { total: find, total_keys: keysLength };
   }
 
-  //Нужно 
-  async findProductKeys(article: string, userId: User, productActive: boolean, stateKeys?: boolean) {
+  //Нужно
+  async findProductKeys(
+    article: string,
+    userId: User,
+    productActive: boolean,
+    stateKeys?: boolean,
+  ) {
     let product = await this.modelArticle.findOne({
       article: article,
       userId: userId,
       active: productActive,
-    })
+    });
 
     if (product !== null) {
-
       if (stateKeys !== undefined) {
-        product = await product.populate({ path: 'keys', select: "key active", match: { active: stateKeys }, model: Keys.name });
-        return { keys: product.keys, _id: product._id }
-      };
+        product = await product.populate({
+          path: 'keys',
+          select: 'key active',
+          match: { active: stateKeys },
+          model: Keys.name,
+        });
+        return { keys: product.keys, _id: product._id };
+      }
 
-      product = await product.populate({ path: 'keys', select: "key active", model: Keys.name });
-      return { keys: product.keys, _id: product._id }
+      product = await product.populate({ path: 'keys', select: 'key active', model: Keys.name });
+      return { keys: product.keys, _id: product._id };
     }
 
     return null;
   }
 
-  //Нужно 
+  //Нужно
   async create(article: Article) {
     const newArticle = new ArticleEntity(article);
     const articleCreate = await this.modelArticle.create(newArticle);
@@ -86,7 +100,7 @@ export class ArticleRepository {
   }
 
   @OnEvent('keys.update')
-  async update(payload: { id: Types.ObjectId, key: Types.ObjectId }) {
+  async update(payload: { id: Types.ObjectId; key: Types.ObjectId }) {
     await this.modelArticle.findByIdAndUpdate(payload.id, {
       $push: {
         keys: payload.key,
@@ -94,7 +108,7 @@ export class ArticleRepository {
     });
   }
 
-  //Нужно 
+  //Нужно
   async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto[]) {
     const find = await this.modelArticle
       .find({

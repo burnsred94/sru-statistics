@@ -24,7 +24,7 @@ export class PvzService {
     private readonly eventEmitter: EventEmitter2,
     private readonly pvqQueue: PvzQueue,
     private readonly mathUtils: MathUtils,
-  ) { }
+  ) {}
 
   async findUserStatus(userId: User, article: string) {
     return async () => {
@@ -53,16 +53,27 @@ export class PvzService {
 
   async update(data: UpdatePvzDto) {
     await this.periodsService.update(data.periodId, data.position);
-    await this.keysService.updateAverage({ id: data.averageId, average: data.position, key_id: data.key_id })
+    await this.keysService.updateAverage({
+      id: data.averageId,
+      average: data.position,
+      key_id: data.key_id,
+    });
     await this.updatePeriod(data.addressId);
   }
 
   async addedPosition(data, averageId) {
-    return map(data, async (element) => {
+    return map(data, async element => {
       const period = await this.periodsService.create('Ожидается');
       const update = await this.pvzRepository.update(element._id, period);
-      if (update) return { name: element.name, periodId: period._id, addressId: element._id, geo_address_id: element.geo_address_id, average_id: averageId }
-    })
+      if (update)
+        return {
+          name: element.name,
+          periodId: period._id,
+          addressId: element._id,
+          geo_address_id: element.geo_address_id,
+          average_id: averageId,
+        };
+    });
   }
 
   async updatePeriod(pvzId: Types.ObjectId) {
@@ -82,8 +93,8 @@ export class PvzService {
       position: -3,
       cpm: 0,
       promotion: 0,
-      promoPosition: 0
-    })
+      promoPosition: 0,
+    });
   }
 
   async findById(id: Types.ObjectId) {

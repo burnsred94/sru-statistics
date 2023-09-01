@@ -9,19 +9,19 @@ import { User } from 'src/modules/auth';
 
 @Injectable()
 export class PvzRepository {
-  constructor(@InjectModel(Pvz.name) private readonly pvzModel: Model<Pvz>) { }
+  constructor(@InjectModel(Pvz.name) private readonly pvzModel: Model<Pvz>) {}
 
   async create(data: Pvz) {
     const newPwz = new PvzEntity(data);
     const createPwz = await this.pvzModel.create({ ...newPwz });
-    return createPwz.populate({ path: "position", select: 'position', model: Periods.name })
+    return createPwz.populate({ path: 'position', select: 'position', model: Periods.name });
   }
 
   async findAll(searchQuery: FilterQuery<Pvz>) {
     let pvz = this.pvzModel.find(searchQuery);
 
-    pvz = pvz.populate({ path: "position", select: "position", model: Periods.name });
-    return await pvz.lean().exec()
+    pvz = pvz.populate({ path: 'position', select: 'position', model: Periods.name });
+    return await pvz.lean().exec();
   }
 
   async findUserStatus(userId: User, article: string) {
@@ -49,7 +49,7 @@ export class PvzRepository {
       },
     );
 
-    return update.modifiedCount > 0
+    return update.modifiedCount > 0;
   }
 
   async updateStatus(id: Types.ObjectId) {

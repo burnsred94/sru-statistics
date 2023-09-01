@@ -5,7 +5,7 @@ export interface IAverage {
 }
 
 export enum AverageStatus {
-  WAIT_SENDING = "WAIT_SENDING",
-  PENDING = "PENDING",
-  SUCCESS = "SUCCESS",
+  WAIT_SENDING = 'WAIT_SENDING',
+  PENDING = 'PENDING',
+  SUCCESS = 'SUCCESS',
 }

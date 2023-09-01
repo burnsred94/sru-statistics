@@ -29,7 +29,7 @@ export class ArticleService {
     private readonly keyService: KeysService,
     private readonly utilsDestructor: TownsDestructor,
     private readonly eventEmitter: EventEmitter2,
-  ) { }
+  ) {}
 
   //Удалить после обновления
   async checkData(user: User) {
@@ -39,22 +39,29 @@ export class ArticleService {
   async articles(id: User) {
     return {
       articles: await this.articleRepository.findByUser(id),
-      count_keys: await this.keyService.countUserKeys(id, true)
-    }
+      count_keys: await this.keyService.countUserKeys(id, true),
+    };
   }
 
   async create(data: CreateArticleDto, user: User, product?: GetProductRMQ.Response) {
     try {
       const keys = await this.utilsDestructor.keysFilter(data.keys);
 
-      const checkProduct = await this.createArticleStrategy.findNotActiveAddKeys(data.article, keys, user);
+      const checkProduct = await this.createArticleStrategy.findNotActiveAddKeys(
+        data.article,
+        keys,
+        user,
+      );
       if (checkProduct) return checkProduct;
 
-      const checkKeys = await this.createArticleStrategy.checkArticleAddKeys(data.article, keys, user);
+      const checkKeys = await this.createArticleStrategy.checkArticleAddKeys(
+        data.article,
+        keys,
+        user,
+      );
       if (checkKeys) return checkKeys;
 
       return await this.createArticleStrategy.createNewArticle(data.article, keys, user, product);
-
     } catch (error) {
       return error.message;
     }
@@ -76,21 +83,21 @@ export class ArticleService {
 
     return {
       message,
-      article: find.article
-    }
+      article: find.article,
+    };
   }
 
   async removeArticle(data: RemoveArticleDto, id: User) {
-    const result = map(data.articleId, async (element) => {
+    const result = map(data.articleId, async element => {
       const article = await this.articleRepository.removeArticle(element, id);
       const removedKey = await this.keyService.updateMany(article.keys);
 
       if (removedKey) {
-        return article.article
+        return article.article;
       }
-    })
+    });
     const resolved = await Promise.all(result);
-    return { article: resolved, event: MessagesEvent.DELETE_ARTICLES }
+    return { article: resolved, event: MessagesEvent.DELETE_ARTICLES };
   }
 
   async removeKey(data: RemoveKeyDto, user: User) {
@@ -103,7 +110,7 @@ export class ArticleService {
           event: MessagesEvent.DELETE_KEY,
           article: data.article,
           key: data.key,
-        }
+        };
       }
     });
   }

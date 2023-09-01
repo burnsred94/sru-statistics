@@ -24,4 +24,4 @@ import { FetchModule } from '../../fetch';
   exports: [KeysService],
   controllers: [KeysController],
 })
-export class KeysModule { }
+export class KeysModule {}

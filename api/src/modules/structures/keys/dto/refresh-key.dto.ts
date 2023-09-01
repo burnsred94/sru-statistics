@@ -1,5 +1,5 @@
-import { Types } from "mongoose";
+import { Types } from 'mongoose';
 
 export class RefreshKeyDto {
-    _id: Types.ObjectId;
+  _id: Types.ObjectId;
 }
