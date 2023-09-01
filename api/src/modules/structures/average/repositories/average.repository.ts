@@ -23,11 +23,10 @@ export class AverageRepository {
     return await this.averageModel.findByIdAndUpdate(
       { _id: id },
       {
-        $set: {
-          average: 'Ожидается',
-          delimiter: 0,
-          status_updated: AverageStatus.WAIT_SENDING,
-        },
+        average: 'Ожидается',
+        delimiter: 0,
+        loss_delimiter: 0,
+        status_updated: AverageStatus.WAIT_SENDING,
       },
     );
   }
@@ -45,7 +44,7 @@ export class AverageRepository {
     if (data.position < 0) {
       await this.averageModel.findByIdAndUpdate(
         { _id: id },
-        { status_updated: AverageStatus.SUCCESS, $inc: { loss_delimiter: 1 } },
+        { average: String(average), status_updated: AverageStatus.SUCCESS, $inc: { loss_delimiter: 1 } },
       );
 
     } else if (data.position > 0) {
@@ -85,7 +84,7 @@ export class AverageRepository {
       }
     }
 
-    if ((delimiter + find.loss_delimiter) > 4 && average === 0) {
+    if (delimiter + find.loss_delimiter > 4 && average === 0) {
       const pos = data.position === -1 ? '1000+' : data.position === -2 ? 'Нет данных' : null;
 
       await this.averageModel.findByIdAndUpdate(

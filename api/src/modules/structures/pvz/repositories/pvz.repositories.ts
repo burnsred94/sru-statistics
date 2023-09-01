@@ -9,7 +9,7 @@ import { User } from 'src/modules/auth';
 
 @Injectable()
 export class PvzRepository {
-  constructor(@InjectModel(Pvz.name) private readonly pvzModel: Model<Pvz>) {}
+  constructor(@InjectModel(Pvz.name) private readonly pvzModel: Model<Pvz>) { }
 
   async create(data: Pvz) {
     const newPwz = new PvzEntity(data);
@@ -20,7 +20,7 @@ export class PvzRepository {
   async findAll(searchQuery: FilterQuery<Pvz>) {
     let pvz = this.pvzModel.find(searchQuery);
 
-    pvz = pvz.populate({ path: 'position', select: 'position', model: Periods.name });
+    pvz = pvz.populate({ path: 'position', select: 'position promo_position cpm', model: Periods.name });
     return await pvz.lean().exec();
   }
 

@@ -102,6 +102,10 @@ export class KeysService {
       complete: () => {
         this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: data.userId });
         this.eventEmitter.emit('metric.created', { article: id, user: data.userId });
+
+        setTimeout(() => {
+          this.eventEmitter.emit('metric.gathering', { article: id, user: data.userId });
+        }, (1000 * 60) * 30)
       },
     });
   }

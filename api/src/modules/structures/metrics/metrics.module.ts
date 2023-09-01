@@ -6,8 +6,9 @@ import { MetricsRepository } from './repositories';
 import { MetricsService } from './metrics.service';
 import { KeysModule } from '../keys';
 import { ArticleModule } from '../article';
+import { PvzModule } from '../pvz';
 
-const STRUCTURES = [ArticleModule, KeysModule];
+const STRUCTURES = [ArticleModule, KeysModule, PvzModule];
 
 @Module({
   imports: [
@@ -17,4 +18,4 @@ const STRUCTURES = [ArticleModule, KeysModule];
   providers: [MetricsRepository, MetricsService],
   controllers: [MetricsController],
 })
-export class MetricsModule {}
+export class MetricsModule { }

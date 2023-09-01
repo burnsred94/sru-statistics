@@ -24,14 +24,14 @@ export class Metrics {
   @Prop({ type: Types.ObjectId, required: true })
   article: Types.ObjectId;
 
-  @Prop({ type: Number, default: 0 })
-  top_100: number;
+  @Prop({ type: Array<MetricData>, default: [] })
+  top_100: Array<MetricData>;
 
-  @Prop({ type: Number, default: 0 })
-  top_1000: number;
+  @Prop({ type: Array<MetricData>, default: [] })
+  top_1000: Array<MetricData>;
 
-  @Prop({ type: Number, default: 0 })
-  indexes: number;
+  @Prop({ type: Array<MetricData>, default: [] })
+  indexes: Array<MetricData>;
 
   @Prop({ type: Array<MetricData>, default: [] })
   middle_pos_organic: Array<MetricData>;
