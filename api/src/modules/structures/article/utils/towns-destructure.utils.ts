@@ -21,20 +21,20 @@ export class TownsDestructor {
 
   async matchKeys(added: string[], current) {
     const result = added.filter((key: string) => {
-      const find = current.find(element => element.key === key)
+      const find = current.find(element => element.key === key);
       if (!find) {
-        return key
+        return key;
       }
-    })
-    return result
+    });
+    return result;
   }
 
   async matchKeysNotActive(added: string[], current) {
-    const result = []
+    const result = [];
     added.filter((key: string) => {
-      const find = current.find(element => element.key === key)
+      const find = current.find(element => element.key === key);
       if (find) {
-        result.push(find._id)
+        result.push(find._id);
       }
     });
     return uniq(result);

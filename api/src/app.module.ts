@@ -24,4 +24,4 @@ import { StructuresModule } from './modules/structures/structures.module';
     StructuresModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}

@@ -4,17 +4,20 @@ import { Types } from 'mongoose';
 
 @Injectable()
 export class PeriodsService {
-  constructor(private readonly periodRepository: PeriodsRepository) { }
+  constructor(private readonly periodRepository: PeriodsRepository) {}
 
   async create(value: string, difference?: string) {
     return await this.periodRepository.create(value, difference);
   }
 
-  async update(id: Types.ObjectId, position: { cpm: number, promotion: number, promoPosition: number, position: number }) {
-    await this.periodRepository.update(id, position)
+  async update(
+    id: Types.ObjectId,
+    position: { cpm: number; promotion: number; promoPosition: number; position: number },
+  ) {
+    await this.periodRepository.update(id, position);
   }
 
   async updateDiff(id: Types.ObjectId, diff: string) {
     await this.periodRepository.updateDiff(id, diff);
-  };
+  }
 }

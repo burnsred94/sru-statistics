@@ -22,16 +22,15 @@ export class MathUtils {
       const second = Number(secondItem.position);
 
       if (Number.isNaN(first) === true || Number.isNaN(second)) {
-        return "0"
+        return '0';
       } else if (first === Number.NaN && second === Number.NaN) {
-        return "0"
+        return '0';
       } else {
         const result = second - first;
         return result > 0 ? `+${String(result)}` : `${String(result)}`;
       }
-
     } else {
       return '0';
-    };
+    }
   }
 }

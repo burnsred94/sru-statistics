@@ -18,8 +18,7 @@ export class FetchProvider {
     private readonly rmqPublisher: RabbitMqPublisher,
     private readonly rmqRequester: RabbitMqRequester,
     private readonly taskSenderQueue: TaskSenderQueue,
-  ) { }
-
+  ) {}
 
   async startTrialPeriod(userId: User) {
     await this.rmqPublisher.publish({
@@ -70,30 +69,34 @@ export class FetchProvider {
       exchange: RmqExchanges.PROFILE,
       routingKey: GetProfileRMQ.routingKey,
       payload: { userId: id as unknown as number },
-      timeout: 5000 * 10
+      timeout: 5000 * 10,
     });
   }
 
   async sendNewKey(payload: SearchPositionRMQ.Payload) {
     setImmediate(() => {
       this.taskSenderQueue.pushTask(
-        async () => await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
-          exchange: RmqExchanges.SEARCH,
-          routingKey: SearchPositionRMQ.routingKey,
-          payload: payload,
-        }))
-    })
+        async () =>
+          await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
+            exchange: RmqExchanges.SEARCH,
+            routingKey: SearchPositionRMQ.routingKey,
+            payload: payload,
+          }),
+      );
+    });
   }
 
   async getFrequency(key: string) {
-    const result = await this.rmqRequester.request<GetFrequencyRMQ.Payload, GetFrequencyRMQ.Response>({
+    const result = await this.rmqRequester.request<
+      GetFrequencyRMQ.Payload,
+      GetFrequencyRMQ.Response
+    >({
       exchange: RmqExchanges.CORE_KEYS,
       routingKey: GetFrequencyRMQ.routingKey,
       timeout: 5000 * 10,
-      payload: { key: key }
+      payload: { key: key },
     });
 
     return result.frequency;
   }
 }
-

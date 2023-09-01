@@ -20,67 +20,79 @@ export class AverageRepository {
   }
 
   async refresh(id: Types.ObjectId) {
-    return await this.averageModel.findByIdAndUpdate({ _id: id }, {
-      $set: {
-        average: 'Ожидается',
-        delimiter: 0,
-        status_updated: AverageStatus.WAIT_SENDING
-      }
-    })
+    return await this.averageModel.findByIdAndUpdate(
+      { _id: id },
+      {
+        $set: {
+          average: 'Ожидается',
+          delimiter: 0,
+          status_updated: AverageStatus.WAIT_SENDING,
+        },
+      },
+    );
   }
 
-  async update(id: Types.ObjectId, data: { cpm: number, promotion: number, promoPosition: number, position: number }): Promise<boolean> {
-    const find = await this.averageModel.findById({ _id: id })
-      .lean()
-      .exec();
+  async update(
+    id: Types.ObjectId,
+    data: { cpm: number; promotion: number; promoPosition: number; position: number },
+  ): Promise<boolean> {
+    const find = await this.averageModel.findById({ _id: id }).lean().exec();
 
     const average = Number.isNaN(+find.average) ? 0 : Number(find.average);
     const promo = find.start_position === null ? 0 : Number(find.start_position);
     const delimiter = find.delimiter;
 
-
     if (data.position < 0) {
       await this.averageModel.findByIdAndUpdate(
         { _id: id },
-        { status_updated: AverageStatus.SUCCESS, $inc: { loss_delimiter: 1 } }
-      )
+        { status_updated: AverageStatus.SUCCESS, $inc: { loss_delimiter: 1 } },
+      );
     } else if (data.position > 0) {
       if (data.cpm > 0) {
-        const old = (average * delimiter);
+        const old = average * delimiter;
         const mathOld = old + data.promoPosition;
         const result = Math.round(mathOld / (delimiter + 1));
 
-        const promoPos = (promo * delimiter);
+        const promoPos = promo * delimiter;
         const mathPromoPos = promoPos + data.position;
         const resultPromo = Math.round(mathPromoPos / (delimiter + 1));
 
         await this.averageModel.findByIdAndUpdate(
           { _id: id },
-          { average: String(result), start_position: String(resultPromo), cpm: String(data.cpm), status_updated: AverageStatus.SUCCESS, $inc: { delimiter: 1 } },
-          { new: true }
-        )
+          {
+            average: String(result),
+            start_position: String(resultPromo),
+            cpm: String(data.cpm),
+            status_updated: AverageStatus.SUCCESS,
+            $inc: { delimiter: 1 },
+          },
+          { new: true },
+        );
       } else {
-        const old = (average * delimiter);
+        const old = average * delimiter;
         const mathOld = old + data.position;
         const result = Math.round(mathOld / (delimiter + 1));
         await this.averageModel.findByIdAndUpdate(
           { _id: id },
-          { average: String(result), status_updated: AverageStatus.SUCCESS, $inc: { delimiter: 1 } },
-          { new: true }
-        )
+          {
+            average: String(result),
+            status_updated: AverageStatus.SUCCESS,
+            $inc: { delimiter: 1 },
+          },
+          { new: true },
+        );
       }
     }
 
     if (delimiter + find.loss_delimiter >= 14 && average === 0) {
-      const pos = data.position === -1 ? '1000+' : data.position === -2 ? "Нет данных" : null;
-      
+      const pos = data.position === -1 ? '1000+' : data.position === -2 ? 'Нет данных' : null;
+
       await this.averageModel.findByIdAndUpdate(
         { _id: id },
-        { average: pos, status_updated: AverageStatus.SUCCESS }
-      )
+        { average: pos, status_updated: AverageStatus.SUCCESS },
+      );
 
       return find.delimiter === 14;
-
     }
 
     return find.delimiter === 14;

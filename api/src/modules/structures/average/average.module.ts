@@ -13,4 +13,4 @@ import { UtilsModule } from '../../utils';
   providers: [AverageService, AverageRepository],
   exports: [AverageService],
 })
-export class AverageModule { }
+export class AverageModule {}

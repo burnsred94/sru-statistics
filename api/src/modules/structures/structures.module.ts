@@ -7,15 +7,15 @@ import { PeriodsModule } from './periods';
 import { MetricsModule } from './metrics/metrics.module';
 
 const StructuresModules = [
-    ArticleModule,
-    KeysModule,
-    PvzModule,
-    AverageModule,
-    PeriodsModule,
-    MetricsModule
-]
+  ArticleModule,
+  KeysModule,
+  PvzModule,
+  AverageModule,
+  PeriodsModule,
+  MetricsModule,
+];
 
 @Module({
-    imports: [...StructuresModules]
+  imports: [...StructuresModules],
 })
-export class StructuresModule { }
+export class StructuresModule {}

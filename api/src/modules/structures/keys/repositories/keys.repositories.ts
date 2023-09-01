@@ -11,24 +11,31 @@ import { AverageStatus } from 'src/interfaces';
 
 @Injectable()
 export class KeysRepository {
-  constructor(@InjectModel(Keys.name) private readonly keysModel: Model<Keys>) { }
+  constructor(@InjectModel(Keys.name) private readonly keysModel: Model<Keys>) {}
 
   //Для подсчета разницы между средними
   async findAverageKey(id: Types.ObjectId) {
-    const key = await this.keysModel.findById(id)
-      .populate({ path: 'average', select: "average", model: Average.name })
+    const key = await this.keysModel
+      .findById(id)
+      .populate({ path: 'average', select: 'average', model: Average.name })
       .lean()
-      .exec()
-    return [key.average.at(-1), key.average.at(-2)].includes(undefined) ? [] : [key.average.at(-1), key.average.at(-2)]
+      .exec();
+    return [key.average.at(-1), key.average.at(-2)].includes(undefined)
+      ? []
+      : [key.average.at(-1), key.average.at(-2)];
   }
 
   async addedAverageToKey(id_key: Types.ObjectId, id_average: Types.ObjectId) {
-    const result = await this.keysModel.updateOne({ _id: id_key }, { $push: { average: id_average } });
+    const result = await this.keysModel.updateOne(
+      { _id: id_key },
+      { $push: { average: id_average } },
+    );
     return result.modifiedCount > 0;
   }
 
   async findAll(searchObject: FilterQuery<Keys>) {
-    return await this.keysModel.find(searchObject)
+    return await this.keysModel
+      .find(searchObject)
       .populate({ path: 'pwz', select: 'name geo_address_id name', model: Pvz.name })
       .lean()
       .exec();
@@ -36,11 +43,11 @@ export class KeysRepository {
 
   async updateMany(ids: Array<Types.ObjectId>) {
     const result = await this.keysModel.updateMany({ _id: ids }, { active: false });
-    return result.modifiedCount > 0
+    return result.modifiedCount > 0;
   }
 
   async countUserKeys(userId: number, status: boolean) {
-    return await this.keysModel.countDocuments({ userId: userId, active: status })
+    return await this.keysModel.countDocuments({ userId: userId, active: status });
   }
 
   async create(data: Omit<Keys, 'active'>) {
@@ -55,27 +62,27 @@ export class KeysRepository {
     find =
       searchCity === 'all'
         ? find.populate({
-          path: 'pwz',
-          select: 'name position city city_id geo_address_id',
-          match: { active: true },
-          model: Pvz.name,
-          populate: {
-            path: 'position',
-            select: 'position timestamp difference promo_position cpm',
-            model: Periods.name,
-          },
-        })
+            path: 'pwz',
+            select: 'name position city city_id geo_address_id',
+            match: { active: true },
+            model: Pvz.name,
+            populate: {
+              path: 'position',
+              select: 'position timestamp difference promo_position cpm',
+              model: Periods.name,
+            },
+          })
         : find.populate({
-          path: 'pwz',
-          select: 'name position city city_id geo_address_id',
-          match: { city: searchCity, active: true },
-          model: Pvz.name,
-          populate: {
-            path: 'position',
-            select: 'position timestamp difference promo_position cpm',
-            model: Periods.name,
-          },
-        });
+            path: 'pwz',
+            select: 'name position city city_id geo_address_id',
+            match: { city: searchCity, active: true },
+            model: Pvz.name,
+            populate: {
+              path: 'position',
+              select: 'position timestamp difference promo_position cpm',
+              model: Periods.name,
+            },
+          });
 
     find = find.populate({
       path: 'average',

@@ -7,7 +7,7 @@ import { StatusPvz } from 'src/interfaces';
 
 @Injectable()
 export class PeriodsRepository {
-  constructor(@InjectModel(Periods.name) private readonly periodModel: Model<Periods>) { }
+  constructor(@InjectModel(Periods.name) private readonly periodModel: Model<Periods>) {}
 
   async create(position: string, difference?: string) {
     const newPeriod = new PeriodsEntity(position, difference);
@@ -16,22 +16,31 @@ export class PeriodsRepository {
     return newPeriodSave._id;
   }
 
-  async update(id: Types.ObjectId, dataPosition: { cpm: number, promotion: number, promoPosition: number, position: number }) {
-
+  async update(
+    id: Types.ObjectId,
+    dataPosition: { cpm: number; promotion: number; promoPosition: number; position: number },
+  ) {
     if (dataPosition.position === -3) {
       return await this.periodModel.findByIdAndUpdate(
         { _id: id },
-        { position: "Ожидается", status: StatusPvz.SUCCESS },
+        { position: 'Ожидается', status: StatusPvz.SUCCESS },
       );
     }
 
     if (dataPosition.position > 0) {
+      console.log(dataPosition.position);
       return await this.periodModel.findByIdAndUpdate(
         { _id: id },
-        { cpm: String(dataPosition.cpm), promo_position: String(dataPosition.promoPosition), position: String(dataPosition.position), status: StatusPvz.SUCCESS },
-      )
+        {
+          cpm: String(dataPosition.cpm),
+          promo_position: String(dataPosition.promoPosition),
+          position: String(dataPosition.position),
+          status: StatusPvz.SUCCESS,
+        },
+      );
     } else {
-      const pos = dataPosition.position === -1 ? '1000+' : dataPosition.position === -2 ? 'Нет данных' : null;
+      const pos =
+        dataPosition.position === -1 ? '1000+' : dataPosition.position === -2 ? 'Нет данных' : null;
       return await this.periodModel.findByIdAndUpdate(
         { _id: id },
         { position: pos, status: StatusPvz.SUCCESS },

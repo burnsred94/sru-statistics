@@ -20,5 +20,5 @@ export namespace SearchPositionRMQ {
     }[];
   }
 
-  export class Response { }
+  export class Response {}
 }

@@ -12,5 +12,5 @@ export namespace StatisticsUpdatePwzRMQ {
     address: string;
   }
 
-  export class Response { }
+  export class Response {}
 }

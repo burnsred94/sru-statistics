@@ -7,17 +7,14 @@ import { MetricsService } from './metrics.service';
 import { KeysModule } from '../keys';
 import { ArticleModule } from '../article';
 
-const STRUCTURES = [
-    ArticleModule,
-    KeysModule,
-]
+const STRUCTURES = [ArticleModule, KeysModule];
 
 @Module({
-    imports: [
-        ...STRUCTURES,
-        MongooseModule.forFeature([{ name: Metrics.name, schema: MetricsSchema }]),
-    ],
-    providers: [MetricsRepository, MetricsService],
-    controllers: [MetricsController],
+  imports: [
+    ...STRUCTURES,
+    MongooseModule.forFeature([{ name: Metrics.name, schema: MetricsSchema }]),
+  ],
+  providers: [MetricsRepository, MetricsService],
+  controllers: [MetricsController],
 })
-export class MetricsModule { }
+export class MetricsModule {}

@@ -9,13 +9,17 @@ export class AverageService {
   constructor(
     private readonly averageRepository: AverageRepository,
     private readonly mathUtils: MathUtils,
-  ) { }
+  ) {}
 
   async create(data: IAverage) {
     return await this.averageRepository.create(data);
   }
 
-  async update(payload: { id: Types.ObjectId, average: { cpm: number, promotion: number, promoPosition: number, position: number }; key_id: Types.ObjectId }) {
+  async update(payload: {
+    id: Types.ObjectId;
+    average: { cpm: number; promotion: number; promoPosition: number; position: number };
+    key_id: Types.ObjectId;
+  }) {
     return await this.averageRepository.update(payload.id, payload.average);
   }
 
@@ -34,5 +38,4 @@ export class AverageService {
 
     await this.averageRepository.updateDiff(second._id, data);
   }
-
 }

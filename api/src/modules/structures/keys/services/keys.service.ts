@@ -30,15 +30,15 @@ export class KeysService {
   async create(data: IKey, id: Types.ObjectId) {
     const { keys } = data;
 
-    const observe = from(keys)
-      .pipe(concatMap(async (element) => {
+    const observe = from(keys).pipe(
+      concatMap(async element => {
         const average = await this.averageService.create({
           average: 'Ожидается',
           difference: '0',
-          userId: data.userId as unknown as number
+          userId: data.userId as unknown as number,
         });
 
-        const frequency = await this.fetchProvider.getFrequency(element)
+        const frequency = await this.fetchProvider.getFrequency(element);
 
         const key = await this.keysRepository.create({
           article: data.article,
@@ -49,23 +49,29 @@ export class KeysService {
           average: [average._id],
         });
 
-        const pwz = await Promise.all(data.pvz.map(async pvz => await this.pvzService.create(pvz, data.article, data.userId, String(key))));
+        const pwz = await Promise.all(
+          data.pvz.map(
+            async pvz => await this.pvzService.create(pvz, data.article, data.userId, String(key)),
+          ),
+        );
 
-        const ids = pwz.map((data) => data._id);
+        const ids = pwz.map(data => data._id);
 
         this.keysRepository.update(key, ids);
 
         return {
           id: key,
           average_id: average._id,
-          pwz, article: data.article,
+          pwz,
+          article: data.article,
           key: element,
           key_id: key,
         };
-      }));
+      }),
+    );
 
     observe.subscribe({
-      next: (dataObserver) => {
+      next: dataObserver => {
         const result = dataObserver;
 
         this.eventEmitter.emit('keys.update', { id, key: result.id });
@@ -86,58 +92,60 @@ export class KeysService {
               average_id: result.average_id,
               addressId: element._id,
               geo_address_id: element.geo_address_id,
-              periodId: element.position[0]._id
+              periodId: element.position[0]._id,
             };
-          })
-        }
+          }),
+        };
 
         this.fetchProvider.sendNewKey(dataParse);
-
       },
       complete: () => {
         this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: data.userId });
-        this.eventEmitter.emit("metric.created", { article: id, user: data.userId })
-      }
-    })
+        // this.eventEmitter.emit('metric.created', { article: id, user: data.userId });
+      },
+    });
   }
 
   @Cron('05 0 * * *', { timeZone: 'Europe/Moscow' })
   async nightParse() {
     const allKeys = await this.keysRepository.findAll({ active: true });
 
-    const observe = from(allKeys)
-      .pipe(concatMap(async (element): Promise<SearchPositionRMQ.Payload> => {
+    const observe = from(allKeys).pipe(
+      concatMap(async (element): Promise<SearchPositionRMQ.Payload> => {
         const average = await this.averageService.create({
           average: 'Ожидается',
           difference: '0',
-          userId: element.userId as unknown as number
+          userId: element.userId as unknown as number,
         });
 
-        const pwz_data = await this.pvzService.addedPosition(element.pwz, average._id)
+        const pwz_data = await this.pvzService.addedPosition(element.pwz, average._id);
 
-        const update = await this.keysRepository.addedAverageToKey(element._id, average._id)
+        const update = await this.keysRepository.addedAverageToKey(element._id, average._id);
 
         const resolved = await Promise.all(pwz_data);
 
-        if (update) return {
-          article: element.article,
-          key: element.key,
-          key_id: element._id,
-          pvz: resolved
-        }
-
-      }))
+        if (update)
+          return {
+            article: element.article,
+            key: element.key,
+            key_id: element._id,
+            pvz: resolved,
+          };
+      }),
+    );
 
     observe.subscribe({
-      next: (data) => {
+      next: data => {
         const send = data;
         this.fetchProvider.sendNewKey(send);
-
       },
       complete: () => {
-        this.logger.log(`Data created for parsing: count keys - ${allKeys.length}, time - ${new Date().toLocaleDateString()}`)
-      }
-    })
+        this.logger.log(
+          `Data created for parsing: count keys - ${allKeys.length
+          }, time - ${new Date().toLocaleDateString()}`,
+        );
+      },
+    });
   }
 
   async countUserKeys(userId, status) {
@@ -148,14 +156,18 @@ export class KeysService {
     return await this.keysRepository.updateMany(ids);
   }
 
-  async updateAverage(payload: { id: Types.ObjectId, average: { cpm: number, promotion: number, promoPosition: number, position: number }; key_id: Types.ObjectId }) {
+  async updateAverage(payload: {
+    id: Types.ObjectId;
+    average: { cpm: number; promotion: number; promoPosition: number; position: number };
+    key_id: Types.ObjectId;
+  }) {
     await this.averageService.update(payload);
     const average = await this.keysRepository.findAverageKey(payload.key_id);
-    if (average.length > 0) await this.averageService.updateDiff(average)
+    if (average.length > 0) await this.averageService.updateDiff(average);
   }
 
   async findByMany(query: FilterQuery<Keys>, city: string) {
-    return await this.keysRepository.findByMany(query, city)
+    return await this.keysRepository.findByMany(query, city);
   }
 
   async removeKey(id: Types.ObjectId) {
@@ -165,7 +177,7 @@ export class KeysService {
   async activateKey(ids: Types.ObjectId[]) {
     forEach(ids, async (id: Types.ObjectId) => {
       await this.keysRepository.setStatusKey(id, true);
-    })
+    });
   }
 
   async refreshKey(_id: Types.ObjectId) {
@@ -181,16 +193,16 @@ export class KeysService {
         key: data.key,
         key_id: data._id,
         pvz: data.pwz.map((element: any) => {
-          this.pvzService.periodRefresh(element._id)
+          this.pvzService.periodRefresh(element._id);
           return {
             name: element.name,
             average_id: data.average.at(-1)._id,
             addressId: element._id,
             geo_address_id: element.geo_address_id,
-            periodId: element.position.at(-1)._id
+            periodId: element.position.at(-1)._id,
           };
-        })
-      }
+        }),
+      };
 
       this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: data.userId });
 
@@ -198,9 +210,9 @@ export class KeysService {
 
       setTimeout(() => {
         this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: data.userId });
-      }, 10_000)
+      }, 10_000);
 
-      return { key: data.key, event: MessagesEvent.REFRESH_KEY }
+      return { key: data.key, event: MessagesEvent.REFRESH_KEY };
     }
   }
 }

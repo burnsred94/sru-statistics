@@ -41,7 +41,6 @@ export class TaskUpdateQueue {
         break;
       }
 
-
       // this.logger.debug(
       //   `Length current task: ${this.queue.length}, concurrent: ${this.concurrency}, ${this.running}`,
       // );
