@@ -28,9 +28,7 @@ export class KeysService {
   ) { }
 
   async create(data: IKey, id: Types.ObjectId) {
-    const { keys } = data;
-
-    const observe = from(keys).pipe(
+    from(data.keys).pipe(
       concatMap(async element => {
         const average = await this.averageService.create({
           average: 'Ожидается',
@@ -68,9 +66,7 @@ export class KeysService {
           key_id: key,
         };
       }),
-    );
-
-    observe.subscribe({
+    ).subscribe({
       next: dataObserver => {
         const result = dataObserver;
 
@@ -101,13 +97,14 @@ export class KeysService {
       },
       complete: () => {
         this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: data.userId });
-        this.eventEmitter.emit('metric.created', { article: id, user: data.userId });
-
-        setTimeout(() => {
-          this.eventEmitter.emit('metric.gathering', { article: id, user: data.userId });
-        }, (1000 * 60) * 30)
       },
-    });
+    })
+
+    this.eventEmitter.emit('metric.created', { article: id, user: data.userId });
+
+    setTimeout(() => {
+      this.eventEmitter.emit('metric.gathering', { article: id, user: data.userId });
+    }, (1000 * 60) * 30)
   }
 
   @Cron('05 0 * * *', { timeZone: 'Europe/Moscow' })

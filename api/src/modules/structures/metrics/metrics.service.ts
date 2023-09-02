@@ -14,7 +14,7 @@ import { MetricEntity } from './entities/metric.entity';
 
 export interface PayloadMetric {
     _id: Types.ObjectId;
-    user: Types.ObjectId;
+    user: User;
 }
 
 @Injectable()
