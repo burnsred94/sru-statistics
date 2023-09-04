@@ -32,7 +32,7 @@ export class MetricsService {
     async getMainPageMetrics(user: User) {
         const data = await this.metricsRepository.find({ user: user });
         return map(data, (element) => ({
-            _id: element._id,
+            _id: element.article,
             middle_pos_organic: {
                 num: element.middle_pos_organic.at(-1).met,
                 data: element.middle_pos_organic.slice(-15),

@@ -73,7 +73,8 @@ export class ArticleService {
 
   //Поиск одного артикула
   async findArticle(_id: Types.ObjectId, query) {
-    const data = await this.articleRepository.findOne({ _id });
+    const data = await this.articleRepository.findArticle({ _id }, query);
+    return data
   }
 
   async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto[]) {

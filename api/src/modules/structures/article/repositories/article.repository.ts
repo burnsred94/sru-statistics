@@ -52,17 +52,24 @@ export class ArticleRepository {
     return await this.modelArticle.findOne(searchQuery);
   }
 
-  // async findArticle(searchQuery: FilterQuery<ArticleDocument>, query) {
-  //   let data = await this.modelArticle.findById(searchQuery)
-  //   data = await data
-  //     .populate({
-  //       path: 'average',
-  //       select: 'timestamp average start_position cpm difference',
-  //       match: { timestamp: { $lt: query.period.at(-1), $gt: query.period.at(0) } },
-  //       model: Average.name
-  //     })
-  //   return data
-  // }
+  async findArticle(searchQuery: FilterQuery<ArticleDocument>, query) {
+    const period = query.period.slice(1, -1).split(", ");
+    let data = await this.modelArticle.findOne(searchQuery)
+    data = await data
+      .populate({
+        path: "keys",
+        select: 'key average frequency active',
+        match: { active: true },
+        model: Keys.name,
+        populate: {
+          path: 'average',
+          select: 'timestamp average start_position cpm difference',
+          match: { timestamp: { $lt: period.at(-1), $gt: period.at(0) } },
+          model: Average.name
+        }
+      })
+    return data
+  }
 
   //Нужно
   async findDataByUser(user: User) {
