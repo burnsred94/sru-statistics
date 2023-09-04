@@ -39,14 +39,13 @@ export class MetricsController {
 
   @ApiAcceptedResponse({ description: 'Get metrics main page article' })
   @UseGuards(JwtAuthGuard)
-  @Get('main/:id')
+  @Get()
   async getMainPageMetrics(
-    @Param('id') id: Types.ObjectId,
     @CurrentUser() user: User,
     @Res() response: Response,
   ) {
     try {
-      const metrics = await this.metricsService.getMainPageMetrics(user, id);
+      const metrics = await this.metricsService.getMainPageMetrics(user);
 
       return response.status(HttpStatus.OK).send({
         data: metrics,

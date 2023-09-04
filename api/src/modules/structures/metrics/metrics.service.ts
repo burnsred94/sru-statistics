@@ -9,6 +9,7 @@ import { concatMap, from, reduce } from 'rxjs';
 import { ArticleService } from '../article';
 import { PvzService } from '../pvz';
 import { MetricEntity } from './entities/metric.entity';
+import { map } from 'lodash';
 
 //"0 9-23/3 * * *"
 
@@ -28,21 +29,20 @@ export class MetricsService {
         private readonly metricsRepository: MetricsRepository,
     ) { }
 
-    async getMainPageMetrics(user: User, id: Types.ObjectId) {
-        const article = new Types.ObjectId(id);
-        const data = await this.metricsRepository.findOne({ user: user, article: article });
-        return {
-            _id: data._id,
+    async getMainPageMetrics(user: User) {
+        const data = await this.metricsRepository.find({ user: user });
+        return map(data, (element) => ({
+            _id: element._id,
             middle_pos_organic: {
-                num: data.middle_pos_organic.at(-1).met,
-                data: data.middle_pos_organic.slice(-15),
+                num: element.middle_pos_organic.at(-1).met,
+                data: element.middle_pos_organic.slice(-15),
             },
             middle_pos_adverts: {
-                num: data.middle_pos_adverts.at(-1).met,
-                data: data.middle_pos_adverts.slice(-15),
+                num: element.middle_pos_adverts.at(-1).met,
+                data: element.middle_pos_adverts.slice(-15),
             },
-            trend: data.top_1000.slice(-15)
-        }
+            trend: element.top_1000.slice(-15)
+        }))
     }
 
     async getMetrics(user: User, _id: Types.ObjectId) {
