@@ -141,4 +141,11 @@ export class MetricsService {
     async create(data: PayloadMetric) {
         await this.metricsRepository.create(data);
     }
+
+    @OnEvent('metric.checked')
+    async checkMetric(payload: PayloadMetric) {
+        const check = await this.metricsRepository.findOne(payload);
+        if (!check) await this.metricsRepository.create(payload), await this.dataGathering(payload);
+
+    }
 }
