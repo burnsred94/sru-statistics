@@ -12,6 +12,12 @@ import { ArticleRepository } from './repositories';
 import { ArticleGateway } from './gateways';
 import { SenderIoEvent, TownsDestructor } from './utils';
 import { UtilsModule } from '../../utils';
+import { PaginationModule } from '../pagination';
+
+
+const STRUCTURES = [
+  PaginationModule,
+]
 
 @Module({
   imports: [
@@ -20,6 +26,7 @@ import { UtilsModule } from '../../utils';
     UtilsModule,
     KeysModule,
     PvzModule,
+    ...STRUCTURES,
     EventEmitterModule.forRoot({ global: true, maxListeners: 10, verboseMemoryLeak: true }),
   ],
   controllers: [ArticleController],
@@ -34,4 +41,4 @@ import { UtilsModule } from '../../utils';
   ],
   exports: [ArticleService],
 })
-export class ArticleModule {}
+export class ArticleModule { }

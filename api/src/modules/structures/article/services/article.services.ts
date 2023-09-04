@@ -11,7 +11,7 @@ import {
 import { User } from 'src/modules/auth';
 import { KeysService } from '../../keys';
 import { TownsDestructor } from '../utils';
-import { compact, map } from 'lodash';
+import { compact, forEach, map } from 'lodash';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EventsWS } from '../events';
 import { GetProductRMQ } from 'src/modules/rabbitmq/contracts/products';
@@ -79,6 +79,11 @@ export class ArticleService {
 
   async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto[]) {
     const payload = await this.articleRepository.findByCity(data, id, query);
+
+    setImmediate(() => {
+      forEach(payload, (element) => this.eventEmitter.emit('metric.checked', { article: element._id, user: element.userId }))
+    });
+
     return compact(payload).reverse();
   }
 

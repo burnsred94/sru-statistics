@@ -188,14 +188,15 @@ export class ArticleController {
 
   @ApiAcceptedResponse({ description: 'Remove key' })
   @UseGuards(JwtAuthGuard)
-  @Get("article/:id")
+  @Post("article/:id")
   async getArticle(
     @CurrentUser() user: User,
     @Param('id') id: Types.ObjectId,
-    @Query('period') period: string[],
+    @Body() dto,
+    @Query('search') search: string,
     @Res() response: Response) {
     try {
-      const getArticle = await this.articleService.findArticle(id, { period });
+      const getArticle = await this.articleService.findArticle(id, { ...dto, search });
 
       return response.status(HttpStatus.OK).send({
         status: HttpStatus.OK,

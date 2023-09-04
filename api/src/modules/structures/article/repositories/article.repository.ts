@@ -10,6 +10,8 @@ import { chunk, compact, map, uniqBy } from 'lodash';
 import { Pvz } from '../../pvz';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Average } from '../../average';
+import { Periods } from '../../periods';
+import { Pagination } from '../../pagination';
 
 @Injectable()
 export class ArticleRepository {
@@ -52,23 +54,52 @@ export class ArticleRepository {
     return await this.modelArticle.findOne(searchQuery);
   }
 
+  //Забирает один артикул
   async findArticle(searchQuery: FilterQuery<ArticleDocument>, query) {
-    const period = query.period.slice(1, -1).split(", ");
-    let data = await this.modelArticle.findOne(searchQuery)
+    let search = {};
+
+    if (query.search !== "") search = { key: { $regex: query.search, $options: 'i' } };
+
+    let data = await this.modelArticle.findOne(searchQuery);
+
+    const keys_length = data.keys.length;
+
     data = await data
       .populate({
         path: "keys",
         select: 'key average frequency active',
-        match: { active: true },
+        match: { active: true, ...search },
         model: Keys.name,
-        populate: {
-          path: 'average',
-          select: 'timestamp average start_position cpm difference',
-          match: { timestamp: { $lt: period.at(-1), $gt: period.at(0) } },
-          model: Average.name
-        }
+        populate: [
+          {
+            path: 'average',
+            select: 'timestamp average start_position cpm difference',
+            match: { timestamp: { $in: query.period.map((date: string[]) => date) } },
+            model: Average.name,
+          },
+          {
+            path: 'pagination',
+            select: 'page key_limit',
+            model: Pagination.name,
+            strictPopulate: false,
+          },
+          {
+            path: 'pwz',
+            select: 'name position',
+            match: { active: true },
+            model: Pvz.name,
+            populate: {
+              path: 'position',
+              select: 'position timestamp difference promo_position cpm',
+              match: { timestamp: { $in: query.period.map((date: string[]) => date) } },
+              model: Periods.name,
+            }
+          }
+        ]
       })
-    return data
+
+
+    return { article: data, keys_length }
   }
 
   //Нужно
