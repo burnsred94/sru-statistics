@@ -7,6 +7,7 @@ import {
   Logger,
   Param,
   Post,
+  Query,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -188,9 +189,13 @@ export class ArticleController {
   @ApiAcceptedResponse({ description: 'Remove key' })
   @UseGuards(JwtAuthGuard)
   @Get("article/:id")
-  async getArticle(@CurrentUser() user: User, @Param('id') id: Types.ObjectId, @Res() response: Response) {
+  async getArticle(
+    @CurrentUser() user: User,
+    @Param('id') id: Types.ObjectId,
+    @Query('period') period: string[],
+    @Res() response: Response) {
     try {
-      const getArticle = await this.articleService.findOne(id);
+      const getArticle = await this.articleService.findArticle(id, { period });
 
       return response.status(HttpStatus.OK).send({
         status: HttpStatus.OK,

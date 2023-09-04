@@ -50,8 +50,19 @@ export class ArticleRepository {
 
   async findOne(searchQuery: FilterQuery<ArticleDocument>) {
     return await this.modelArticle.findOne(searchQuery);
-    // .populate({ path: "average", select: "average start_position cpm", model: Average.name })
   }
+
+  // async findArticle(searchQuery: FilterQuery<ArticleDocument>, query) {
+  //   let data = await this.modelArticle.findById(searchQuery)
+  //   data = await data
+  //     .populate({
+  //       path: 'average',
+  //       select: 'timestamp average start_position cpm difference',
+  //       match: { timestamp: { $lt: query.period.at(-1), $gt: query.period.at(0) } },
+  //       model: Average.name
+  //     })
+  //   return data
+  // }
 
   //Нужно
   async findDataByUser(user: User) {

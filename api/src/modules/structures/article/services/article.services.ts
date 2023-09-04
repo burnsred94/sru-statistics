@@ -29,7 +29,7 @@ export class ArticleService {
     private readonly keyService: KeysService,
     private readonly utilsDestructor: TownsDestructor,
     private readonly eventEmitter: EventEmitter2,
-  ) {}
+  ) { }
 
   //Удалить после обновления
   async checkData(user: User) {
@@ -68,7 +68,12 @@ export class ArticleService {
   }
 
   async findOne(_id: Types.ObjectId) {
-    return await this.articleRepository.findOne({ _id: _id });
+    return await this.articleRepository.findOne(_id);
+  }
+
+  //Поиск одного артикула
+  async findArticle(_id: Types.ObjectId, query) {
+    const data = await this.articleRepository.findOne({ _id });
   }
 
   async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto[]) {
