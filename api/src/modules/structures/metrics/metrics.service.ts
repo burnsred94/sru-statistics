@@ -28,6 +28,23 @@ export class MetricsService {
         private readonly metricsRepository: MetricsRepository,
     ) { }
 
+    async getMainPageMetrics(user: User, id: Types.ObjectId) {
+        const article = new Types.ObjectId(id);
+        const data = await this.metricsRepository.findOne({ user: user, article: article });
+        return {
+            _id: data._id,
+            middle_pos_organic: {
+                num: data.middle_pos_organic.at(-1).met,
+                data: data.middle_pos_organic.slice(-15),
+            },
+            middle_pos_adverts: {
+                num: data.middle_pos_adverts.at(-1).met,
+                data: data.middle_pos_adverts.slice(-15),
+            },
+            trend: data.top_1000.slice(-15)
+        }
+    }
+
     async getMetrics(user: User, _id: Types.ObjectId) {
         const id = new Types.ObjectId(_id);
         const metrics = await this.metricsRepository.findOne({ article: id });

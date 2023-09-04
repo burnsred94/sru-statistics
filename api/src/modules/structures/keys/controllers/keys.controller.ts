@@ -5,7 +5,6 @@ import { RmqExchanges, RmqServices } from 'src/modules/rabbitmq/exchanges';
 import {
   StatisticsDisabledRMQ,
   StatisticsEnabledRMQ,
-  StatisticsUpdatePwzRMQ,
 } from 'src/modules/rabbitmq/contracts/statistics';
 import { Response } from 'express';
 import { RefreshKeyDto } from '../dto';
@@ -18,7 +17,7 @@ export class KeysController {
   constructor(
     private readonly keysService: KeysService,
     private readonly keysPvzService: KeysPvzService,
-  ) {}
+  ) { }
 
   @Post('refresh')
   async refreshKey(@Body() key: RefreshKeyDto, @Res() response: Response) {
