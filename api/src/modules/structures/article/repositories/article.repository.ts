@@ -74,7 +74,7 @@ export class ArticleRepository {
           {
             path: 'average',
             select: 'timestamp average start_position cpm difference',
-            match: { timestamp: { $in: query.period.map((date: string[]) => date) } },
+            match: { timestamp: { $in: query.period } },
             model: Average.name,
           },
           {
@@ -91,7 +91,7 @@ export class ArticleRepository {
             populate: {
               path: 'position',
               select: 'position timestamp difference promo_position cpm',
-              match: { timestamp: { $in: query.period.map((date: string[]) => date) } },
+              match: { timestamp: { $in: query.period } },
               model: Periods.name,
             }
           }

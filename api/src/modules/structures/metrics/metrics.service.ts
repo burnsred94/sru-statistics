@@ -140,6 +140,7 @@ export class MetricsService {
     @OnEvent('metric.created')
     async create(data: PayloadMetric) {
         await this.metricsRepository.create(data);
+        await this.dataGathering(data)
     }
 
     @OnEvent('metric.checked')
