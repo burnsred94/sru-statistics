@@ -74,7 +74,7 @@ export class MetricsService {
         };
     }
 
-    @Cron("0 9-23/3 * * *", { timeZone: "Europe/Moscow" })
+    @Cron("20 22 * * *", { timeZone: "Europe/Moscow" })
     @OnEvent("metric.gathering")
     async dataGathering(payload?) {
         from(
@@ -96,12 +96,11 @@ export class MetricsService {
 
                     return average.reduce((accumulator, value) => {
 
-                        if (value.average.length < 4 && value.average !== null) {
+                        if (value.average !== null && value.average.length < 4) {
                             accumulator.index = accumulator.index + 1;
 
-                            value.average <= 100 ?
-                                accumulator.top_100 = accumulator.top_100 + 1 :
-                                accumulator.top_1000 = accumulator.top_1000 + 1;
+                            if (value.average <= 100) accumulator.top_100 = accumulator.top_100 + 1;
+                            accumulator.top_1000 = accumulator.top_1000 + 1;
 
                             if (value.start_position) {
                                 accumulator.ads.num = (accumulator.ads.num + Number(value.average));
