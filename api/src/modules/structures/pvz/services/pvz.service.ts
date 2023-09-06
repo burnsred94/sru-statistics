@@ -34,11 +34,12 @@ export class PvzService {
         reduce((accumulator, value: any) => {
           let pos = 0
           let old = 0
+          console.log(value.position);
 
-          if (!value.position.at(-1)?.cpm !== undefined && value.position.at(-1).cpm !== null && value.position.at(-1).cpm !== "0") {
+          if (!value.position.at(-1)?.cpm !== undefined && value.position.at(-1)?.cpm !== null && value.position.at(-1)?.cpm !== "0") {
             pos = Number.isNaN(+value.position.at(-1).promo_position) ? 0 : Number(value.position.at(-1).promo_position);
             old = Number.isNaN(+value.position.at(-2)?.promo_position) ? 0 : Number(value.position.at(-2).promo_position);
-          } else if (value.position.at(-1)?.cpm !== undefined && value.position.at(-1).cpm === null || value.position.at(-1).cpm === "0") {
+          } else if (value.position.at(-1)?.cpm !== undefined && value.position.at(-1)?.cpm === null || value.position.at(-1)?.cpm === "0") {
             pos = Number.isNaN(+value.position.at(-1).position) ? 0 : Number(value.position.at(-1).position);
             old = Number.isNaN(+value.position.at(-2)?.position) ? 0 : Number(value.position.at(-2).position);
           }
