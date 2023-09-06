@@ -37,10 +37,10 @@ export class PvzService {
           console.log(value.position);
 
           if (!value.position.at(-1)?.cpm !== undefined && value.position.at(-1)?.cpm !== null && value.position.at(-1)?.cpm !== "0") {
-            pos = Number.isNaN(+value.position.at(-1).promo_position) ? 0 : Number(value.position.at(-1).promo_position);
+            pos = Number.isNaN(+value.position.at(-1)?.promo_position) ? 0 : Number(value.position.at(-1).promo_position);
             old = Number.isNaN(+value.position.at(-2)?.promo_position) ? 0 : Number(value.position.at(-2).promo_position);
           } else if (value.position.at(-1)?.cpm !== undefined && value.position.at(-1)?.cpm === null || value.position.at(-1)?.cpm === "0") {
-            pos = Number.isNaN(+value.position.at(-1).position) ? 0 : Number(value.position.at(-1).position);
+            pos = Number.isNaN(+value.position.at(-1)?.position) ? 0 : Number(value.position.at(-1).position);
             old = Number.isNaN(+value.position.at(-2)?.position) ? 0 : Number(value.position.at(-2).position);
           }
 
