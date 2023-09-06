@@ -34,7 +34,6 @@ export class PvzService {
         reduce((accumulator, value: any) => {
           let pos = 0
           let old = 0
-          console.log(value.position);
 
           if (!value.position.at(-1)?.cpm !== undefined && value.position.at(-1)?.cpm !== null && value.position.at(-1)?.cpm !== "0") {
             pos = Number.isNaN(+value.position.at(-1)?.promo_position) ? 0 : Number(value.position.at(-1).promo_position);
