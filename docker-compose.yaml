@@ -7,6 +7,12 @@ networks:
 
 services:
   api:
+    deploy:
+      resources:
+        limits:
+          memory: 8192M
+        reservations:
+          memory: 8192M
     container_name: statistics-api
     build:
       context: ./api
