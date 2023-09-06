@@ -12,7 +12,7 @@ export class PvzController {
   constructor(
     private readonly pvzService: PvzService,
     private readonly taskUpdateQueue: TaskUpdateQueue,
-  ) {}
+  ) { }
 
   update = 0;
 
@@ -24,7 +24,6 @@ export class PvzController {
   })
   async updatePeriod(payload: StatisticsUpdateRMQ.Payload) {
     try {
-      console.log(payload);
       if (payload.periodId !== undefined && payload.periodId !== null) {
         this.taskUpdateQueue.pushTask(async () => await this.pvzService.update(payload));
       }

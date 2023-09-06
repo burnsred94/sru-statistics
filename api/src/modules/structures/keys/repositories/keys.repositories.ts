@@ -6,12 +6,10 @@ import { Keys } from '../schemas';
 import { Pvz } from '../../pvz';
 import { Average } from '../../average';
 import { Periods } from '../../periods';
-import { forEach } from 'lodash';
-import { AverageStatus } from 'src/interfaces';
 
 @Injectable()
 export class KeysRepository {
-  constructor(@InjectModel(Keys.name) private readonly keysModel: Model<Keys>) {}
+  constructor(@InjectModel(Keys.name) private readonly keysModel: Model<Keys>) { }
 
   //Для подсчета разницы между средними
   async findAverageKey(id: Types.ObjectId) {
@@ -62,27 +60,27 @@ export class KeysRepository {
     find =
       searchCity === 'all'
         ? find.populate({
-            path: 'pwz',
-            select: 'name position city city_id geo_address_id',
-            match: { active: true },
-            model: Pvz.name,
-            populate: {
-              path: 'position',
-              select: 'position timestamp difference promo_position cpm',
-              model: Periods.name,
-            },
-          })
+          path: 'pwz',
+          select: 'name position city city_id geo_address_id',
+          match: { active: true },
+          model: Pvz.name,
+          populate: {
+            path: 'position',
+            select: 'position timestamp difference promo_position cpm',
+            model: Periods.name,
+          },
+        })
         : find.populate({
-            path: 'pwz',
-            select: 'name position city city_id geo_address_id',
-            match: { city: searchCity, active: true },
-            model: Pvz.name,
-            populate: {
-              path: 'position',
-              select: 'position timestamp difference promo_position cpm',
-              model: Periods.name,
-            },
-          });
+          path: 'pwz',
+          select: 'name position city city_id geo_address_id',
+          match: { city: searchCity, active: true },
+          model: Pvz.name,
+          populate: {
+            path: 'position',
+            select: 'position timestamp difference promo_position cpm',
+            model: Periods.name,
+          },
+        });
 
     find = find.populate({
       path: 'average',
