@@ -9,7 +9,7 @@ import { Types } from 'mongoose';
 export class MetricsController {
   protected readonly logger = new Logger(MetricsController.name);
 
-  constructor(private readonly metricsService: MetricsService) {}
+  constructor(private readonly metricsService: MetricsService) { }
 
   @ApiAcceptedResponse({ description: 'Get metrics article' })
   @UseGuards(JwtAuthGuard)
@@ -17,11 +17,35 @@ export class MetricsController {
   async getMetrics(
     @Param('id') id: Types.ObjectId,
     @CurrentUser() user: User,
-    @Query('article') article: string,
     @Res() response: Response,
   ) {
     try {
-      const metrics = await this.metricsService.getMetrics(user, article, id);
+      const metrics = await this.metricsService.getMetrics(user, id);
+
+      return response.status(HttpStatus.OK).send({
+        data: metrics,
+        error: [],
+        status: response.statusCode,
+      });
+    } catch (error) {
+      this.logger.error(error.message);
+      return response.status(HttpStatus.OK).send({
+        data: [],
+        error: [{ message: error.message }],
+        status: response.statusCode,
+      });
+    }
+  }
+
+  @ApiAcceptedResponse({ description: 'Get metrics main page article' })
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  async getMainPageMetrics(
+    @CurrentUser() user: User,
+    @Res() response: Response,
+  ) {
+    try {
+      const metrics = await this.metricsService.getMainPageMetrics(user);
 
       return response.status(HttpStatus.OK).send({
         data: metrics,

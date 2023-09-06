@@ -16,6 +16,9 @@ export class Article {
   @Prop({ type: Number })
   userId: User;
 
+  @Prop({ type: Types.ObjectId })
+  pagination: Types.ObjectId;
+
   @Prop({ type: String })
   productName: string;
 

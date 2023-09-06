@@ -10,6 +10,8 @@ import { chunk, compact, map, uniqBy } from 'lodash';
 import { Pvz } from '../../pvz';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Average } from '../../average';
+import { Periods } from '../../periods';
+import { Pagination } from '../../pagination';
 
 @Injectable()
 export class ArticleRepository {
@@ -50,7 +52,54 @@ export class ArticleRepository {
 
   async findOne(searchQuery: FilterQuery<ArticleDocument>) {
     return await this.modelArticle.findOne(searchQuery);
-    // .populate({ path: "average", select: "average start_position cpm", model: Average.name })
+  }
+
+  //Забирает один артикул
+  async findArticle(searchQuery: FilterQuery<ArticleDocument>, query) {
+    let search = {};
+
+    if (query.search !== "") search = { key: { $regex: query.search, $options: 'i' } };
+
+    let data = await this.modelArticle.findOne(searchQuery);
+
+    const keys_length = data.keys.length;
+
+    data = await data
+      .populate({
+        path: "keys",
+        select: 'key average frequency active',
+        match: { active: true, ...search },
+        model: Keys.name,
+        populate: [
+          {
+            path: 'average',
+            select: 'timestamp average start_position cpm difference',
+            match: { timestamp: { $in: query.period } },
+            model: Average.name,
+          },
+          {
+            path: 'pagination',
+            select: 'page key_limit',
+            model: Pagination.name,
+            strictPopulate: false,
+          },
+          {
+            path: 'pwz',
+            select: 'name position',
+            match: { active: true },
+            model: Pvz.name,
+            populate: {
+              path: 'position',
+              select: 'position timestamp difference promo_position cpm',
+              match: { timestamp: { $in: query.period } },
+              model: Periods.name,
+            }
+          }
+        ]
+      })
+
+
+    return { article: data, keys_length }
   }
 
   //Нужно

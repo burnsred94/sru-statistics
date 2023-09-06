@@ -1,12 +1,18 @@
 version: '3.8'
 
 networks:
-  geo_default:
+  sru-geo_default:
     external:
-      name: geo_default
+      name: sru-geo_default
 
 services:
   api:
+    deploy:
+      resources:
+        limits:
+          memory: 8192M
+        reservations:
+          memory: 8192M
     container_name: statistics-api
     build:
       context: ./api
@@ -19,4 +25,4 @@ services:
     volumes:
       - ./api/:/usr/src/app
     networks:
-      - geo_default
+      - sru-geo_default

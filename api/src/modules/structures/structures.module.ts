@@ -18,4 +18,4 @@ const StructuresModules = [
 @Module({
   imports: [...StructuresModules],
 })
-export class StructuresModule {}
+export class StructuresModule { }

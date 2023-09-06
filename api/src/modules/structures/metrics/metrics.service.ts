@@ -7,12 +7,15 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { OnEvent } from '@nestjs/event-emitter';
 import { concatMap, from, reduce } from 'rxjs';
 import { ArticleService } from '../article';
+import { PvzService } from '../pvz';
+import { MetricEntity } from './entities/metric.entity';
+import { map } from 'lodash';
 
 //"0 9-23/3 * * *"
 
 export interface PayloadMetric {
     _id: Types.ObjectId;
-    user: Types.ObjectId;
+    user: User;
 }
 
 @Injectable()
@@ -22,56 +25,127 @@ export class MetricsService {
     constructor(
         private readonly articleService: ArticleService,
         private readonly keyService: KeysService,
+        private readonly pvzService: PvzService,
         private readonly metricsRepository: MetricsRepository,
     ) { }
 
-    async getMetrics(user: User, article: string, _id: Types.ObjectId) {
-        const metrics = await this.metricsRepository.findOne(_id);
-        return metrics;
+    async getMainPageMetrics(user: User) {
+        const data = await this.metricsRepository.find({ user: user });
+        return map(data, (element) => ({
+            _id: element.article,
+            middle_pos_organic: {
+                num: element.middle_pos_organic.at(-1).met,
+                data: element.middle_pos_organic.slice(-15),
+            },
+            middle_pos_adverts: {
+                num: element.middle_pos_adverts.at(-1).met,
+                data: element.middle_pos_adverts.slice(-15),
+            },
+            trend: element.top_1000.slice(-15)
+        }))
     }
 
-    // @Cron(CronExpression.EVERY_10_SECONDS, { timeZone: "Europe/Moscow" })
-    async dataGathering() {
-        const data = await this.metricsRepository.find();
-        const observer = from(data)
+    async getMetrics(user: User, _id: Types.ObjectId) {
+        const id = new Types.ObjectId(_id);
+        const metrics = await this.metricsRepository.findOne({ article: id });
+        return {
+            _id: metrics._id,
+            top_100: {
+                num: metrics.top_100.at(-1).met,
+                data: metrics.top_100,
+            },
+            top_1000: {
+                num: metrics.top_1000.at(-1).met,
+                data: metrics.top_1000,
+            },
+            indexes: {
+                num: metrics.indexes.at(-1).met,
+                data: metrics.indexes,
+            },
+            middle_pos_organic: {
+                num: metrics.middle_pos_organic.at(-1).met,
+                data: metrics.middle_pos_organic
+            },
+            middle_pos_adverts: {
+                num: metrics.middle_pos_adverts.at(-1).met,
+                data: metrics.middle_pos_adverts
+            },
+            middle_pos_cities: metrics.middle_pos_cities
+        };
+    }
+
+    @Cron("0 9-23/3 * * *", { timeZone: "Europe/Moscow" })
+    @OnEvent("metric.gathering")
+    async dataGathering(payload?) {
+        from(
+            payload === undefined ?
+                await this.metricsRepository.find() :
+                await this.metricsRepository.find(payload)
+        )
             .pipe(
                 concatMap(async item => {
                     const article = await this.articleService.findOne(item.article);
                     const keys = await this.keyService.findByMany({ _id: article.keys }, 'all');
+                    const observer = await this.pvzService.findByMetrics(item.user, article.article);
+
 
                     const average: any = keys.map((value) => {
                         return value.average.at(-1);
                     })
 
-                    let delimiter_organic = 0;
-                    let delimiter_ads = 0;
 
                     return average.reduce((accumulator, value) => {
-                        if (value.average.length < 4) {
+
+                        if (value.average !== null && value.average.length < 4) {
+                            accumulator.index = accumulator.index + 1;
+
+                            if (value.average <= 100) accumulator.top_100 = accumulator.top_100 + 1;
+                            accumulator.top_1000 = accumulator.top_1000 + 1;
+
                             if (value.start_position) {
-                                delimiter_ads++;
-                                accumulator.ads = (accumulator.ads + Number(value.average)) / delimiter_ads;
+                                accumulator.ads.num = (accumulator.ads.num + Number(value.average));
+                                accumulator.ads.del = accumulator.ads.del + 1;
                             } else {
-                                delimiter_organic++;
-                                accumulator.org = (accumulator.org + Number(value.average)) / delimiter_organic;
+                                accumulator.org.num = (accumulator.org.num + Number(value.average));
+                                accumulator.org.del = accumulator.org.del + 1;
                             }
                         }
                         return accumulator;
-                    }, { ads: 0, org: 0 });
+
+                    }, {
+                        ads: { num: 0, del: 0 },
+                        org: { num: 0, del: 0 },
+                        ts: new Date().toLocaleString("ru-RU", { timeZone: "Europe/Moscow" }).split(",")[0],
+                        index: 0,
+                        top_100: 0,
+                        top_1000: 0,
+                        article: item.article,
+                        user: item.user,
+                        city_metric: observer
+                    });
 
                 })
             )
-
-        observer.subscribe({
-            next: dataObserver => {
-                console.log(dataObserver);
-            },
-            complete: () => console.log('complete'),
-        });
+            .subscribe({
+                next: async dataObserver => {
+                    const find = await this.metricsRepository.findOne({ user: dataObserver.user, city: dataObserver.city });
+                    const metric = await new MetricEntity().initMetric(dataObserver, find);
+                    await this.metricsRepository.findOneAndUpdate({ user: dataObserver.user, article: dataObserver.article }, metric);
+                },
+                complete: () => console.log('complete'),
+            });
     }
 
     @OnEvent('metric.created')
     async create(data: PayloadMetric) {
         await this.metricsRepository.create(data);
+        await this.dataGathering(data)
+    }
+
+    @OnEvent('metric.checked')
+    async checkMetric(payload: PayloadMetric) {
+        const check = await this.metricsRepository.findOne(payload);
+        if (!check) await this.metricsRepository.create(payload), await this.dataGathering(payload);
+
     }
 }

@@ -5,7 +5,9 @@ import {
   Get,
   HttpStatus,
   Logger,
+  Param,
   Post,
+  Query,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -16,6 +18,7 @@ import { ArticleService } from '../services';
 import { Response } from 'express';
 import { initArticleMessage } from 'src/constatnts';
 import { FetchProvider } from 'src/modules/fetch';
+import { Types } from 'mongoose';
 
 @Controller('v1')
 export class ArticleController {
@@ -24,7 +27,7 @@ export class ArticleController {
   constructor(
     private readonly articleService: ArticleService,
     private readonly fetchProvider: FetchProvider,
-  ) {}
+  ) { }
 
   @ApiAcceptedResponse({ description: 'Create Statistic' })
   @UseGuards(JwtAuthGuard)
@@ -173,6 +176,33 @@ export class ArticleController {
           errors: [],
         });
       }
+    } catch (error) {
+      this.logger.error(error);
+      return response.status(HttpStatus.OK).send({
+        data: [],
+        error: [{ message: error.message }],
+        status: error.statusCode,
+      });
+    }
+  }
+
+  @ApiAcceptedResponse({ description: 'Remove key' })
+  @UseGuards(JwtAuthGuard)
+  @Post("article/:id")
+  async getArticle(
+    @CurrentUser() user: User,
+    @Param('id') id: Types.ObjectId,
+    @Body() dto,
+    @Query('search') search: string,
+    @Res() response: Response) {
+    try {
+      const getArticle = await this.articleService.findArticle(id, { ...dto, search });
+
+      return response.status(HttpStatus.OK).send({
+        status: HttpStatus.OK,
+        data: getArticle,
+        errors: [],
+      });
     } catch (error) {
       this.logger.error(error);
       return response.status(HttpStatus.OK).send({
