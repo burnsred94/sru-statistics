@@ -47,7 +47,6 @@ export class AverageRepository {
         { average: String(average), status_updated: AverageStatus.SUCCESS, $inc: { loss_delimiter: 1 } },
       );
 
-      return find.delimiter === 14;
     } else if (data.position > 0) {
       if (data.cpm > 0) {
         const old = average * delimiter;
