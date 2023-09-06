@@ -74,7 +74,7 @@ export class MetricsService {
         };
     }
 
-    @Cron("10 12 * * *", { timeZone: "Europe/Moscow" })
+    @Cron("12 12 * * *", { timeZone: "Europe/Moscow" })
     @OnEvent("metric.gathering")
     async dataGathering(payload?) {
         from(
