@@ -90,7 +90,7 @@ export class MetricsService {
 
 
                     const average: any = keys.map((value) => {
-                        return value.average.at(-1);
+                        return value?.average.at(-1) === undefined ? 0 : value.average.at(-1);
                     })
 
 
