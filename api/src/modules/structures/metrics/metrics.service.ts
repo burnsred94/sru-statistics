@@ -96,7 +96,7 @@ export class MetricsService {
 
                     return average.reduce((accumulator, value) => {
 
-                        if (value.average !== null && value.average.length < 4) {
+                        if (value.average !== undefined && value.average !== null && value.average.length < 4) {
                             accumulator.index = accumulator.index + 1;
 
                             if (value.average <= 100) accumulator.top_100 = accumulator.top_100 + 1;
