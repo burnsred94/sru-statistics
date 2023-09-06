@@ -67,7 +67,7 @@ export class PvzService {
             let past = current;
             if (value.old !== 0) past = Math.round(value.old / value.old_del);
 
-            return { city: value.city, pos: current, dynamic: current - past }
+            return { city: value.city, pos: current, dynamic: past - current }
           })
         }))
 
