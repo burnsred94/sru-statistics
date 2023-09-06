@@ -44,7 +44,7 @@ export class AverageRepository {
     if (data.position < 0) {
       await this.averageModel.findByIdAndUpdate(
         { _id: id },
-        { average: String(average), status_updated: AverageStatus.SUCCESS, $inc: { loss_delimiter: 1 } },
+        { status_updated: AverageStatus.SUCCESS, $inc: { loss_delimiter: 1 } },
       );
 
     } else if (data.position > 0) {
