@@ -47,6 +47,7 @@ export class AverageRepository {
         { average: String(average), status_updated: AverageStatus.SUCCESS, $inc: { loss_delimiter: 1 } },
       );
 
+      return find.delimiter === 14;
     } else if (data.position > 0) {
       if (data.cpm > 0) {
         const old = average * delimiter;
@@ -68,10 +69,13 @@ export class AverageRepository {
           },
           { new: true },
         );
+
+        return find.delimiter === 14;
       } else {
         const old = average * delimiter;
         const mathOld = old + data.position;
         const result = Math.round(mathOld / (delimiter + 1));
+
         await this.averageModel.findByIdAndUpdate(
           { _id: id },
           {
@@ -81,10 +85,12 @@ export class AverageRepository {
           },
           { new: true },
         );
+
+        return find.delimiter === 14;
       }
     }
 
-    if (average === 0 && delimiter + find.loss_delimiter > 4) {
+    if (average === 0 && delimiter + find.loss_delimiter === 4 || delimiter + find.loss_delimiter === 15 || delimiter + find.loss_delimiter === 7) {
       const pos = data.position === -1 ? '1000+' : data.position === -2 ? 'Нет данных' : null;
 
       await this.averageModel.findByIdAndUpdate(
