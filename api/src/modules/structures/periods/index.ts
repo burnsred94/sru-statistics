@@ -1,4 +1,3 @@
-export * from './entities';
 export * from './periods.module';
 export * from './repositories';
 export * from './schemas';

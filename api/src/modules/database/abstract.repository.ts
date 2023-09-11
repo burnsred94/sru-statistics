@@ -1,22 +1,32 @@
-import { Document, FilterQuery, Model, UpdateQuery } from 'mongoose';
+import { Document, FilterQuery, Model, PopulateOptions, UpdateQuery } from 'mongoose';
 
 export abstract class AbstractRepository<T extends Document> {
-  constructor(protected readonly abstractModel: Model<T>) {}
+  constructor(protected readonly abstractModel: Model<T>) { }
 
   async findOne(
     filterQuery: FilterQuery<T>,
-    projection?: Record<string, unknown>,
+    populate?: PopulateOptions
   ): Promise<T | null> {
-    return await this.abstractModel.findOne(filterQuery, projection).exec();
+    return populate === undefined ? await this.abstractModel.findOne(filterQuery)
+      .lean()
+      : await this.abstractModel.findOne(filterQuery)
+        .populate(populate)
+        .lean();
   }
 
-  async find(filterQuery?: FilterQuery<T>): Promise<T[] | null> {
-    return await this.abstractModel.find(filterQuery).exec();
+  async find(filterQuery?: FilterQuery<T>, populate?: PopulateOptions): Promise<T[] | null> {
+    return populate === undefined ?
+      await this.abstractModel.find(filterQuery)
+        .populate(populate)
+        .lean()
+      : await this.abstractModel.find(filterQuery)
+        .lean()
   }
 
-  async create(createEntityData: unknown): Promise<T | null> {
+  async create(createEntityData: unknown, populate?: PopulateOptions): Promise<T | null> {
     const entity = new this.abstractModel(createEntityData);
-    return await entity.save();
+    const create = await entity.save()
+    return populate ? create.populate(populate) : create;
   }
 
   async findOneAndUpdate(
@@ -31,6 +41,11 @@ export abstract class AbstractRepository<T extends Document> {
   async deleteMany(filterQuery: FilterQuery<T>): Promise<boolean> {
     const result = await this.abstractModel.deleteMany(filterQuery);
     return result.deletedCount >= 0;
+  }
+
+  async updateMany(filterQuery: FilterQuery<T>, updateQuery: UpdateQuery<unknown>): Promise<boolean> {
+    const result = await this.abstractModel.updateMany(filterQuery, updateQuery);
+    return result.modifiedCount > 0;
   }
 
   async getCountDocuments(filterQuery: FilterQuery<T>): Promise<number> {

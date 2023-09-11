@@ -1,34 +1,30 @@
-import { Inject, Injectable, Logger, forwardRef } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { User } from 'src/modules/auth/user';
 import { PvzRepository } from '../repositories';
-import { PeriodsService } from '../../periods';
-import { StatusPvz } from 'src/interfaces';
-import { UpdatePvzDto } from '../dto';
+import { Periods, PeriodsService } from '../../periods';
 import { Types } from 'mongoose';
-import { KeysService } from '../../keys';
-import { chunk, forEach, map } from 'lodash';
-import { PvzQueue } from './pvz-queue.service';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { map } from 'lodash';
 import { MathUtils } from 'src/modules/utils/providers';
-import { EventsWS } from '../../article/events';
 import { from, lastValueFrom, reduce, map as rxjs_map } from 'rxjs';
+import { StatisticsUpdateRMQ } from 'src/modules/rabbitmq/contracts/statistics';
 
 @Injectable()
 export class PvzService {
   protected readonly logger = new Logger(PvzService.name);
 
   constructor(
-    @Inject(forwardRef(() => KeysService))
-    private readonly keysService: KeysService,
     private readonly pvzRepository: PvzRepository,
     private readonly periodsService: PeriodsService,
-    private readonly eventEmitter: EventEmitter2,
     private readonly mathUtils: MathUtils,
   ) { }
 
+  //Расчет позиций для метрики по городам
   async findByMetrics(user: number, article: string) {
     const observable = from(
-      await this.pvzRepository.findAll({ userId: user, article: article, active: true })
+      await this.pvzRepository.find(
+        { userId: user, article: article, active: true },
+        { path: 'position', select: 'position promo_position cpm', model: Periods.name }
+      )
     )
       .pipe(
         reduce((accumulator, value: any) => {
@@ -74,17 +70,11 @@ export class PvzService {
     return lastValueFrom(observable)
   }
 
-  async findUserStatus(userId: User, article: string) {
-    return async () => {
-      const count = await this.pvzRepository.findUserStatus(userId, article);
-      return count > 0
-        ? this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: userId })
-        : { complete: true };
-    };
-  }
-
+  //Создание пвз + периуд
   async create(value, article: string, userId: User, keyId: string) {
-    const period = await this.periodsService.create('Ожидается');
+    const date = await this.mathUtils.currentDate();
+    const period = await this.periodsService.create('0', date);
+
     const pvz = await this.pvzRepository.create({
       article: article,
       name: value.address,
@@ -92,41 +82,41 @@ export class PvzService {
       geo_address_id: value.addressId,
       position: [period],
       userId: userId,
-      status: StatusPvz.WAIT_TO_SEND,
-      active: true,
       key_id: keyId,
-    });
+    }, { path: 'position', select: 'position', model: Periods.name });
     return pvz;
   }
-
-  async update(data: UpdatePvzDto) {
+  //Обновление позиции после парсинга
+  async update(data: StatisticsUpdateRMQ.Payload, callback: () => void) {
     await this.periodsService.update(data.periodId, data.position);
-    await this.keysService.updateAverage({
-      id: data.averageId,
-      average: data.position,
-      key_id: data.key_id,
-    });
     await this.updatePeriod(data.addressId);
+    callback();
   }
 
   async addedPosition(data, averageId) {
     return map(data, async element => {
-      const period = await this.periodsService.create('Ожидается');
-      const update = await this.pvzRepository.update(element._id, period);
-      if (update)
-        return {
-          name: element.name,
-          periodId: period._id,
-          addressId: element._id,
-          geo_address_id: element.geo_address_id,
-          average_id: averageId,
-        };
+      const date = await this.mathUtils.currentDate();
+      const period = await this.periodsService.create('0', date);
+
+      await this.pvzRepository.findOneAndUpdate(element._id, {
+        $push: {
+          position: period._id,
+        },
+      });
+
+      return {
+        name: element.name,
+        periodId: period._id,
+        addressId: element._id,
+        geo_address_id: element.geo_address_id,
+        average_id: averageId,
+      };
     });
   }
 
   async updatePeriod(pvzId: Types.ObjectId) {
-    const data = await this.pvzRepository.findPvz(pvzId);
-    if (data.position.length > 0 || data !== null) {
+    const data = await this.pvzRepository.findOne({ _id: pvzId }, { path: 'position', select: 'position', model: Periods.name });
+    if (data !== null || data.position.length > 0) {
       const firstItem = data.position.at(-1);
       const secondItem = data.position.at(-2);
       const result = await this.mathUtils.calculateDiff(firstItem, secondItem);
@@ -135,7 +125,7 @@ export class PvzService {
   }
 
   async periodRefresh(pvzId: Types.ObjectId) {
-    const pvz = await this.pvzRepository.findAll({ _id: pvzId });
+    const pvz = await this.pvzRepository.find({ _id: pvzId }, { path: 'position', select: 'position promo_position cpm', model: Periods.name });
     const id = pvz[0].position.at(-1)._id;
     await this.periodsService.update(id, {
       position: -3,
@@ -145,11 +135,4 @@ export class PvzService {
     });
   }
 
-  async findById(id: Types.ObjectId) {
-    return await this.pvzRepository.findPvz(id);
-  }
-
-  async initStatus(id: string, active: boolean) {
-    await this.pvzRepository.initStatus(id, active);
-  }
 }

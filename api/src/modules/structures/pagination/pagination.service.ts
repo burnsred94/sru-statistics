@@ -11,14 +11,20 @@ export class PaginationService {
 
 
     async create(data?: Pagination) {
-        return await this.paginationRepository.create(data);
+        if (data) {
+            return await this.paginationRepository.create(data);
+        }
     }
 
     async update(_id: Types.ObjectId, data: Pagination) {
-        return await this.paginationRepository.findOneAndUpdate(_id, data);
+        return await this.paginationRepository.findOneAndUpdate({ article_id: _id }, data);
     }
 
     async findOne(_id: Types.ObjectId) {
         return await this.paginationRepository.findOne(_id);
+    }
+
+    async findByArticleId(_id: Types.ObjectId) {
+        return await this.paginationRepository.findOne({ article_id: _id });
     }
 }

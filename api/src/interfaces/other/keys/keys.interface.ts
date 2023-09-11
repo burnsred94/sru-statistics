@@ -1,4 +1,3 @@
-import { Types } from 'mongoose';
 import { User } from 'src/modules/auth/user';
 
 export interface IKey {
@@ -15,10 +14,3 @@ export interface IDestructure {
   city_id: string;
 }
 
-export interface ICreateKey {
-  articleId: Types.ObjectId;
-  key: string;
-  city_id: string;
-  userId: User;
-  article: string;
-}

@@ -88,27 +88,27 @@ export class ArticleController {
     }
   }
 
-  @ApiAcceptedResponse({ description: 'Send length articles' })
-  @UseGuards(JwtAuthGuard)
-  @Get('/check-articles')
-  async checkArticles(@CurrentUser() user: User, @Res() response: Response) {
-    try {
-      const checkData = await this.articleService.checkData(user);
+  // @ApiAcceptedResponse({ description: 'Send length articles' })
+  // @UseGuards(JwtAuthGuard)
+  // @Get('/check-articles')
+  // async checkArticles(@CurrentUser() user: User, @Res() response: Response) {
+  //   try {
+  //     const checkData = await this.articleService.checkData(user);
 
-      return response.status(HttpStatus.OK).send({
-        data: checkData,
-        error: [],
-        status: response.statusCode,
-      });
-    } catch (error) {
-      this.logger.error(error);
-      return response.status(HttpStatus.OK).send({
-        data: [],
-        error: [{ message: error.message }],
-        status: response.statusCode,
-      });
-    }
-  }
+  //     return response.status(HttpStatus.OK).send({
+  //       data: checkData,
+  //       error: [],
+  //       status: response.statusCode,
+  //     });
+  //   } catch (error) {
+  //     this.logger.error(error);
+  //     return response.status(HttpStatus.OK).send({
+  //       data: [],
+  //       error: [{ message: error.message }],
+  //       status: response.statusCode,
+  //     });
+  //   }
+  // }
 
   @ApiAcceptedResponse({ description: 'Remove article' })
   @UseGuards(JwtAuthGuard)
@@ -142,9 +142,13 @@ export class ArticleController {
   @ApiAcceptedResponse({ description: 'Remove key' })
   @UseGuards(JwtAuthGuard)
   @Get('user-articles')
-  async userArticles(@CurrentUser() user: User, @Res() response: Response) {
+  async userArticles(
+    @CurrentUser() user: User,
+    @Query('search') search: string,
+    @Query('sort') sort: string,
+    @Res() response: Response) {
     try {
-      const articles = await this.articleService.articles(user);
+      const articles = await this.articleService.articles(user, { search, sort });
 
       return response.status(HttpStatus.OK).send({
         data: articles,
@@ -190,13 +194,14 @@ export class ArticleController {
   @UseGuards(JwtAuthGuard)
   @Post("article/:id")
   async getArticle(
-    @CurrentUser() user: User,
     @Param('id') id: Types.ObjectId,
     @Body() dto,
     @Query('search') search: string,
+    @Query('sort') sort: { frequency: number },
+    @Query('city') city: string,
     @Res() response: Response) {
     try {
-      const getArticle = await this.articleService.findArticle(id, { ...dto, search });
+      const getArticle = await this.articleService.findArticle(id, { ...dto, search, sort, city });
 
       return response.status(HttpStatus.OK).send({
         status: HttpStatus.OK,

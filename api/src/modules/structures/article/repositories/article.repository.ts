@@ -1,29 +1,47 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 import { Article, ArticleDocument } from '../schemas/article.schema';
-import { Injectable } from '@nestjs/common';
-import { ArticleEntity } from '../entities';
+import { Injectable, Logger } from '@nestjs/common';
 import { User } from 'src/modules/auth';
-import { FindByCityDto, FindByCityQueryDto, RemoveArticleDto } from '../dto';
-import { Keys, KeysService } from '../../keys';
-import { chunk, compact, map, uniqBy } from 'lodash';
+import { Keys } from '../../keys';
 import { Pvz } from '../../pvz';
-import { OnEvent } from '@nestjs/event-emitter';
 import { Average } from '../../average';
 import { Periods } from '../../periods';
 import { Pagination } from '../../pagination';
+import { AbstractRepository } from 'src/modules/database';
+
+export enum MetricsEnum {
+  NEUTRAL = 'blue',
+  UP = 'green',
+  DOWN = 'red'
+}
 
 @Injectable()
-export class ArticleRepository {
-  constructor(
-    @InjectModel(Article.name) private readonly modelArticle: Model<Article>,
-    private readonly keysService: KeysService,
-  ) { }
+export class ArticleRepository extends AbstractRepository<ArticleDocument> {
+  protected readonly logger = new Logger(ArticleRepository.name);
 
-  //Забирает все артикулы и кол-во ключей
-  async findByUser(user: User) {
+  constructor(
+    @InjectModel(Article.name) private modelArticle: Model<ArticleDocument>,
+  ) {
+    super(modelArticle)
+  }
+
+  //Забирает все артикулы и кол-во ключей c метрикой для артикула + есть сортировка и поиск 
+  async findList(user: User, search: string, sort_parameters: string) {
+    let query = {};
+    let sort = {};
+
+    if (search !== undefined) query = { article: { $regex: search, $options: 'i' } };
+
+    sort = sort_parameters ? (() => {
+      const elements = sort_parameters.split('#');
+      return {
+        [elements[0]]: Number(elements[1])
+      }
+    })() : { createdAt: -1 };
+
     return await this.modelArticle.aggregate([
-      { $match: { userId: user, active: true } },
+      { $match: { userId: user, active: true, ...query } },
       {
         $lookup: {
           from: 'keys',
@@ -37,210 +55,134 @@ export class ArticleRepository {
         $match: { 'keys.active': true },
       },
       {
+        $lookup: {
+          from: 'metrics',
+          localField: '_id',
+          foreignField: 'article',
+          as: 'metrics',
+        }
+      },
+      { $unwind: '$metrics' },
+      {
         $group: {
           _id: '$_id',
           article: { $first: '$article' },
           userId: { $first: '$userId' },
           productName: { $first: '$productName' },
+          metrics: { $first: '$metrics' },
           productImg: { $first: '$productImg' },
           createdAt: { $first: '$createdAt' },
-          keys_size: { $sum: 1 },
+          keys: { $push: "$keys" },
         },
-      }
-    ]);
-  }
-
-  async findOne(searchQuery: FilterQuery<ArticleDocument>) {
-    return await this.modelArticle.findOne(searchQuery);
+      },
+      {
+        $project: {
+          _id: 1,
+          article: 1,
+          userId: 1,
+          productName: 1,
+          productImg: 1,
+          createdAt: 1,
+          keys: { $size: '$keys' },
+          middle_pos_organic: {
+            num: { $arrayElemAt: ['$metrics.middle_pos_organic.met', -1] },
+            data: { $slice: ['$metrics.middle_pos_organic', -15] },
+            color_metrics: {
+              $cond: {
+                if: { $eq: [{ $arrayElemAt: ['$metrics.middle_pos_adverts.met', 0] }, { $arrayElemAt: ['$metrics.middle_pos_adverts.met', -1] }] },
+                then: MetricsEnum.NEUTRAL,
+                else: {
+                  $cond: {
+                    if: { $gt: [{ $arrayElemAt: ['$metrics.middle_pos_adverts.met', 0] }, { $arrayElemAt: ['$metrics.middle_pos_adverts.met', -1] }] },
+                    then: MetricsEnum.UP,
+                    else: MetricsEnum.DOWN
+                  }
+                }
+              }
+            }
+          },
+          middle_pos_adverts: {
+            num: { $arrayElemAt: ['$metrics.middle_pos_adverts.met', -1] },
+            data: { $slice: ['$metrics.middle_pos_adverts', -15] },
+            color_metrics: {
+              $cond: {
+                if: { $eq: [{ $arrayElemAt: ['$metrics.middle_pos_adverts.met', 0] }, { $arrayElemAt: ['$metrics.middle_pos_adverts.met', -1] }] },
+                then: MetricsEnum.NEUTRAL,
+                else: {
+                  $cond: {
+                    if: { $gt: [{ $arrayElemAt: ['$metrics.middle_pos_adverts.met', 0] }, { $arrayElemAt: ['$metrics.middle_pos_adverts.met', -1] }] },
+                    then: MetricsEnum.UP,
+                    else: MetricsEnum.DOWN
+                  }
+                }
+              }
+            }
+          },
+          trend: '$metrics.indexes',
+        },
+      },
+      {
+        $sort: sort
+      },
+    ])
+      .exec()
+      .then((value) => ({ articles: value, count_keys: value.reduce((accumulator, value) => (accumulator + value.keys), 0) }));
   }
 
   //Забирает один артикул
-  async findArticle(searchQuery: FilterQuery<ArticleDocument>, query) {
+  async findArticle(searchQuery: FilterQuery<ArticleDocument>, query: { sort: string, search: string, period: string[], city: string }) {
     let search = {};
+    let sort = { frequency: 1 }; // default
+    let city = {}
 
-    if (query.search !== "") search = { key: { $regex: query.search, $options: 'i' } };
+    if (query.search !== undefined) search = { key: { $regex: query.search, $options: 'i' } };
 
-    let data = await this.modelArticle.findOne(searchQuery);
+    if (query.sort !== undefined) sort = { frequency: Number(query.sort) };
 
-    const keys_length = data.keys.length;
+    if (query.city !== undefined) city = { city: query.city };
 
-    data = await data
-      .populate({
-        path: "keys",
-        select: 'key average frequency active',
-        match: { active: true, ...search },
-        model: Keys.name,
-        populate: [
+    let data = this.modelArticle.findOne(searchQuery)
+
+    data = data
+      .populate(
+        [
           {
-            path: 'average',
-            select: 'timestamp average start_position cpm difference',
-            match: { timestamp: { $in: query.period } },
-            model: Average.name,
+            path: "keys",
+            select: 'key average frequency active',
+            match: { active: true, ...search },
+            options: {
+              sort: sort,
+            },
+            model: Keys.name,
+            populate: [
+              {
+                path: 'average',
+                select: 'timestamp average start_position cpm difference',
+                match: { timestamp: { $in: query.period } },
+                model: Average.name,
+              },
+              {
+                path: 'pwz',
+                select: 'name position',
+                match: { ...city },
+                model: Pvz.name,
+                populate: {
+                  path: 'position',
+                  select: 'position timestamp difference promo_position cpm',
+                  match: { timestamp: { $in: query.period } },
+                  model: Periods.name,
+                }
+              }
+            ]
           },
           {
             path: 'pagination',
             select: 'page key_limit',
             model: Pagination.name,
-            strictPopulate: false,
           },
-          {
-            path: 'pwz',
-            select: 'name position',
-            match: { active: true },
-            model: Pvz.name,
-            populate: {
-              path: 'position',
-              select: 'position timestamp difference promo_position cpm',
-              match: { timestamp: { $in: query.period } },
-              model: Periods.name,
-            }
-          }
-        ]
-      })
+        ])
 
-
-    return { article: data, keys_length }
+    return await data.lean();
   }
 
-  //Нужно
-  async findDataByUser(user: User) {
-    const find = await this.modelArticle.countDocuments({ userId: user, active: true });
-    const keysLength = await this.keysService.countUserKeys(user, true);
-    return { total: find, total_keys: keysLength };
-  }
-
-  //Нужно
-  async findProductKeys(
-    article: string,
-    userId: User,
-    productActive: boolean,
-    stateKeys?: boolean,
-  ) {
-    let product = await this.modelArticle.findOne({
-      article: article,
-      userId: userId,
-      active: productActive,
-    });
-
-    if (product !== null) {
-      if (stateKeys !== undefined) {
-        product = await product.populate({
-          path: 'keys',
-          select: 'key active',
-          match: { active: stateKeys },
-          model: Keys.name,
-        });
-        return { keys: product.keys, _id: product._id };
-      }
-
-      product = await product.populate({ path: 'keys', select: 'key active', model: Keys.name });
-      return { keys: product.keys, _id: product._id };
-    }
-
-    return null;
-  }
-
-  //Нужно
-  async create(article: Article) {
-    const newArticle = new ArticleEntity(article);
-    const articleCreate = await this.modelArticle.create(newArticle);
-    const save = await articleCreate.save();
-    return save;
-  }
-
-  @OnEvent('keys.update')
-  async update(payload: { id: Types.ObjectId; key: Types.ObjectId }) {
-    await this.modelArticle.findByIdAndUpdate(payload.id, {
-      $push: {
-        keys: payload.key,
-      },
-    });
-  }
-
-  //Нужно
-  async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto[]) {
-    const find = await this.modelArticle
-      .find({
-        userId: id,
-        active: true,
-      })
-      .populate({
-        path: 'keys',
-        select: 'active ',
-        match: { active: true },
-        model: Keys.name,
-      })
-      .lean();
-
-    const generateData = map(find, async stats => {
-      const { keys, _id } = stats;
-      const genKeys = await this.keysService.findByMany(
-        { article: stats.article, userId: stats.userId, active: true },
-        data.city,
-      );
-
-      const value = query?.find(pagination => pagination.articleId === String(_id));
-
-      if (value === undefined) {
-        const chunks = chunk(genKeys, 10);
-        return {
-          ...stats,
-          keys: chunks[0],
-          keys_length: keys.length,
-          meta: {
-            page: 1,
-            total: chunks.length,
-            page_size: 10,
-          },
-        };
-      }
-
-      if (value.articleId === String(_id)) {
-        const chunks = chunk(genKeys, value.limit);
-        return {
-          ...stats,
-          keys: chunks[value.page - 1],
-          keys_length: keys.length,
-          meta: {
-            page: value.page,
-            total: chunks.length,
-            page_size: value.limit,
-          },
-        };
-      }
-    });
-
-    const resolved = await Promise.all(generateData);
-    const result = resolved.flat();
-    return uniqBy(result, '_id');
-  }
-
-  async findById(articleId: string) {
-    const find = await this.modelArticle.findById(articleId);
-    return find.populate({
-      path: 'keys',
-      select: 'pwz key userId',
-      model: Keys.name,
-      populate: { path: 'pwz', select: 'name', model: Pvz.name },
-    });
-  }
-
-  async backOldArticle(articleId: Types.ObjectId, id: User) {
-    return await this.modelArticle.findOneAndUpdate(
-      { _id: articleId, userId: id },
-      { active: true },
-    );
-  }
-
-  async removeArticle(articleId: string, id: User) {
-    return await this.modelArticle.findOneAndUpdate(
-      {
-        _id: articleId,
-        userId: id,
-      },
-      {
-        active: false,
-      },
-    );
-  }
 }

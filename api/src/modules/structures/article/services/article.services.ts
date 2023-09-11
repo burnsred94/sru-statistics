@@ -3,21 +3,21 @@ import { ArticleRepository } from '../repositories';
 import {
   AddKeyDto,
   CreateArticleDto,
-  FindByCityDto,
-  FindByCityQueryDto,
   RemoveKeyDto,
   RemoveArticleDto,
 } from '../dto';
 import { User } from 'src/modules/auth';
-import { KeysService } from '../../keys';
+import { Keys, KeysService } from '../../keys';
 import { TownsDestructor } from '../utils';
-import { compact, forEach, map } from 'lodash';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { chunk, map } from 'lodash';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { EventsWS } from '../events';
 import { GetProductRMQ } from 'src/modules/rabbitmq/contracts/products';
 import { MessagesEvent } from 'src/interfaces';
 import { CreateArticleStrategy } from './create';
-import { Types } from 'mongoose';
+import { FilterQuery, HydratedDocument, Types } from 'mongoose';
+import { Article } from '../schemas';
+import { Pvz } from '../../pvz';
 
 @Injectable()
 export class ArticleService {
@@ -31,18 +31,12 @@ export class ArticleService {
     private readonly eventEmitter: EventEmitter2,
   ) { }
 
-  //Удалить после обновления
-  async checkData(user: User) {
-    return await this.articleRepository.findDataByUser(user);
+  ///Получение артикулов для разводящей
+  async articles(id: User, query) {
+    return await this.articleRepository.findList(id, query.search, query.sort);
   }
 
-  async articles(id: User) {
-    return {
-      articles: await this.articleRepository.findByUser(id),
-      count_keys: await this.keyService.countUserKeys(id, true),
-    };
-  }
-
+  //Переделать на более оптимизированный запрос
   async create(data: CreateArticleDto, user: User, product?: GetProductRMQ.Response) {
     try {
       const keys = await this.utilsDestructor.keysFilter(data.keys);
@@ -67,29 +61,63 @@ export class ArticleService {
     }
   }
 
-  async findOne(_id: Types.ObjectId) {
-    return await this.articleRepository.findOne(_id);
+  //Нужен для Метрики
+  async findOne(filterQuery: FilterQuery<Article>) {
+    return await this.articleRepository.findOne(filterQuery);
   }
 
   //Поиск одного артикула
   async findArticle(_id: Types.ObjectId, query) {
-    const data = await this.articleRepository.findArticle({ _id }, query);
-    return data
+    const data = await this.articleRepository.findArticle({ _id: _id }, query);
+    const total_keys = data.keys.length;
+
+    //Временное событие
+    this.eventEmitter.emitAsync('metric.checked', { article: data._id, user: data.userId });
+
+    let keys: Types.ObjectId[],
+      page: number,
+      total: number,
+      page_size: number;
+
+    const pagination = <{ key_limit: number, _id: Types.ObjectId, page: number }><unknown>data.pagination
+
+    const chunks = chunk(data.keys, pagination.key_limit);
+
+    if (chunks[pagination.page]) {
+      keys = chunks[pagination.page],
+        page = pagination.page,
+        total = chunks.length,
+        page_size = pagination.key_limit;
+    } else {
+      keys = chunks[0],
+        page = 1,
+        total = chunks.length,
+        page_size = pagination.key_limit;
+    }
+
+    return {
+      article: {
+        ...data, keys,
+      },
+      meta: {
+        page, total, page_size,
+      },
+      total_keys,
+    }
   }
 
-  async findByCity(data: FindByCityDto, id: number, query: FindByCityQueryDto[]) {
-    const payload = await this.articleRepository.findByCity(data, id, query);
-
-    setImmediate(() => {
-      forEach(payload, (element) => this.eventEmitter.emit('metric.checked', { article: element._id, user: element.userId }))
-    });
-
-    return compact(payload).reverse();
-  }
-
+  //Оптимизируется после создания
   async addKeys(data: AddKeyDto, user: User) {
     const { articleId, keys } = data;
-    const find = await this.articleRepository.findById(articleId);
+    let find: HydratedDocument<Article> = await this.articleRepository.findOne({ _id: articleId });
+
+    find = await find.populate({
+      path: 'keys',
+      select: 'pwz key userId',
+      model: Keys.name,
+      populate: { path: 'pwz', select: 'name', model: Pvz.name },
+    });
+
     const message = await this.create({ article: find.article, keys: keys }, user);
 
     return {
@@ -98,10 +126,19 @@ export class ArticleService {
     };
   }
 
+  //Переделать на более оптимизированный запрос, добавить событие
   async removeArticle(data: RemoveArticleDto, id: User) {
     const result = map(data.articleId, async element => {
-      const article = await this.articleRepository.removeArticle(element, id);
-      const removedKey = await this.keyService.updateMany(article.keys);
+      const article = await this.articleRepository.findOneAndUpdate(
+        {
+          _id: element, userId: id,
+        },
+        {
+          active: false,
+        }
+      );
+
+      const removedKey = await this.keyService.updateMany(article.keys, { active: false });
 
       if (removedKey) {
         return article.article;
@@ -111,6 +148,7 @@ export class ArticleService {
     return { article: resolved, event: MessagesEvent.DELETE_ARTICLES };
   }
 
+  //Дописать что бы не удалялся последний ключ
   async removeKey(data: RemoveKeyDto, user: User) {
     // const getKey = await this.keyService.findById([{ _id: data.keyId, active: true }], 'all');
 
@@ -124,5 +162,20 @@ export class ArticleService {
         };
       }
     });
+  }
+
+  //добовление ключей 
+  @OnEvent('keys.update')
+  async update(payload) {
+    await this.articleRepository.findOneAndUpdate({ _id: payload.id }, {
+      $push: {
+        keys: payload.key,
+      },
+    });
+  }
+
+  @OnEvent('pagination.create')
+  async updatePagination(payload: { pagination_id: Types.ObjectId, article_id: Types.ObjectId }) {
+    await this.articleRepository.findOneAndUpdate({ _id: payload.article_id }, { pagination: payload.pagination_id });
   }
 }

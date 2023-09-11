@@ -1,14 +1,14 @@
 import { Body, Controller, HttpStatus, Logger, Post, Res } from '@nestjs/common';
-import { KeysPvzService, KeysService } from '../services';
+import { KeysService } from '../services';
 import { RabbitMqSubscriber } from 'src/modules/rabbitmq/decorators';
 import { RmqExchanges, RmqServices } from 'src/modules/rabbitmq/exchanges';
 import {
   StatisticsDisabledRMQ,
   StatisticsEnabledRMQ,
+  StatisticsUpdateRMQ,
 } from 'src/modules/rabbitmq/contracts/statistics';
 import { Response } from 'express';
 import { RefreshKeyDto } from '../dto';
-import { initArticleMessage } from 'src/constatnts';
 
 @Controller('keys')
 export class KeysController {
@@ -16,22 +16,18 @@ export class KeysController {
 
   constructor(
     private readonly keysService: KeysService,
-    private readonly keysPvzService: KeysPvzService,
   ) { }
 
   @Post('refresh')
   async refreshKey(@Body() key: RefreshKeyDto, @Res() response: Response) {
     try {
-      const result = await this.keysService.refreshKey(key._id);
+      await this.keysService.refreshKey(key._id);
 
-      if (result) {
-        const message = initArticleMessage(result.key, result);
-        return response.status(HttpStatus.OK).send({
-          data: { message: message },
-          error: [],
-          status: HttpStatus.OK,
-        });
-      }
+      return response.status(HttpStatus.OK).send({
+        data: [],
+        error: [],
+        status: HttpStatus.OK,
+      });
     } catch (error) {
       this.logger.error(error);
       return response.status(HttpStatus.OK).send({
@@ -62,16 +58,18 @@ export class KeysController {
     this.logger.log(payload.userId);
   }
 
-  // @RabbitMqSubscriber({
-  //   exchange: RmqExchanges.STATISTICS,
-  //   routingKey: StatisticsUpdatePwzRMQ.routingKey,
-  //   queue: StatisticsUpdatePwzRMQ.queue,
-  //   currentService: RmqServices.STATISTICS,
-  // })
-  // async statisticUpdatePwz(payload) {
-  //   const keysUser = await this.keysService.findKeysByUser(payload.userId);
-  //   if (keysUser.length > 0) {
-  //     setImmediate(async () => await this.keysPvzService.updateFromProfile(payload, keysUser));
-  //   }
-  // }
+  @RabbitMqSubscriber({
+    exchange: RmqExchanges.STATISTICS,
+    routingKey: StatisticsUpdateRMQ.routingKey,
+    queue: StatisticsUpdateRMQ.queue,
+    currentService: RmqServices.STATISTICS,
+  })
+  async updatePeriod(payload: StatisticsUpdateRMQ.Payload) {
+    try {
+      await this.keysService.updateData(payload);
+    } catch (error) {
+      this.logger.error(error);
+    }
+  }
+
 }

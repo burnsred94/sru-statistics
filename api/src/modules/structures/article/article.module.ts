@@ -10,24 +10,24 @@ import { ArticleController } from './controllers';
 import { ArticleService, CreateArticleStrategy } from './services';
 import { ArticleRepository } from './repositories';
 import { ArticleGateway } from './gateways';
-import { SenderIoEvent, TownsDestructor } from './utils';
+import { TownsDestructor } from './utils';
 import { UtilsModule } from '../../utils';
 import { PaginationModule } from '../pagination';
 
 
 const STRUCTURES = [
   PaginationModule,
+  KeysModule,
+  PvzModule,
 ]
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Article.name, schema: ArticleSchema }]),
+    EventEmitterModule.forRoot({ global: true, maxListeners: 10, verboseMemoryLeak: true }),
     FetchModule,
     UtilsModule,
-    KeysModule,
-    PvzModule,
     ...STRUCTURES,
-    EventEmitterModule.forRoot({ global: true, maxListeners: 10, verboseMemoryLeak: true }),
   ],
   controllers: [ArticleController],
   providers: [
@@ -37,7 +37,6 @@ const STRUCTURES = [
     JwtStrategy,
     ArticleGateway,
     TownsDestructor,
-    SenderIoEvent,
   ],
   exports: [ArticleService],
 })
