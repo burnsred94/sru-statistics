@@ -36,7 +36,7 @@ export class ArticleService {
   ///Получение артикулов для разводящей
   async articles(id: User, query) {
     const list = await this.articleRepository.findList(id, query.search, query.sort);
-    return { articles: list, count_keys: await this.keyService.count({ active: true, userId: id }) }
+    return { articles: list.articles, count_keys: await this.keyService.count({ active: true, userId: id }) }
   }
 
   //Переделать на более оптимизированный запрос
