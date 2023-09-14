@@ -19,6 +19,9 @@ import { Response } from 'express';
 import { initArticleMessage } from 'src/constatnts';
 import { FetchProvider } from 'src/modules/fetch';
 import { Types } from 'mongoose';
+import { RabbitMqResponser } from 'src/modules/rabbitmq/decorators';
+import { RmqExchanges, RmqServices } from 'src/modules/rabbitmq/exchanges';
+import { StatisticsGetArticlesRMQ } from 'src/modules/rabbitmq/contracts/statistics';
 
 @Controller('v1')
 export class ArticleController {
@@ -87,28 +90,6 @@ export class ArticleController {
       });
     }
   }
-
-  // @ApiAcceptedResponse({ description: 'Send length articles' })
-  // @UseGuards(JwtAuthGuard)
-  // @Get('/check-articles')
-  // async checkArticles(@CurrentUser() user: User, @Res() response: Response) {
-  //   try {
-  //     const checkData = await this.articleService.checkData(user);
-
-  //     return response.status(HttpStatus.OK).send({
-  //       data: checkData,
-  //       error: [],
-  //       status: response.statusCode,
-  //     });
-  //   } catch (error) {
-  //     this.logger.error(error);
-  //     return response.status(HttpStatus.OK).send({
-  //       data: [],
-  //       error: [{ message: error.message }],
-  //       status: response.statusCode,
-  //     });
-  //   }
-  // }
 
   @ApiAcceptedResponse({ description: 'Remove article' })
   @UseGuards(JwtAuthGuard)
@@ -215,6 +196,21 @@ export class ArticleController {
         error: [{ message: error.message }],
         status: error.statusCode,
       });
+    }
+  }
+
+
+  @RabbitMqResponser({
+    exchange: RmqExchanges.STATISTICS,
+    routingKey: StatisticsGetArticlesRMQ.routingKey,
+    queue: StatisticsGetArticlesRMQ.queue,
+    currentService: RmqServices.STATISTICS
+  })
+  async getDataUpload(payload: StatisticsGetArticlesRMQ.Payload) {
+    try {
+      return { articles: await this.articleService.getArticlesUpload(payload) };
+    } catch (error) {
+      this.logger.error(error.message);
     }
   }
 }

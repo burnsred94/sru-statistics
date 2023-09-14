@@ -17,9 +17,9 @@ export abstract class AbstractRepository<T extends Document> {
   async find(filterQuery?: FilterQuery<T>, populate?: PopulateOptions): Promise<T[] | null> {
     return populate === undefined ?
       await this.abstractModel.find(filterQuery)
-        .populate(populate)
         .lean()
       : await this.abstractModel.find(filterQuery)
+        .populate(populate)
         .lean()
   }
 

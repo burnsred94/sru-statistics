@@ -18,6 +18,8 @@ import { CreateArticleStrategy } from './create';
 import { FilterQuery, HydratedDocument, Types } from 'mongoose';
 import { Article } from '../schemas';
 import { Pvz } from '../../pvz';
+import { StatisticsGetArticlesRMQ } from 'src/modules/rabbitmq/contracts/statistics';
+import { Periods } from '../../periods';
 
 @Injectable()
 export class ArticleService {
@@ -160,6 +162,27 @@ export class ArticleService {
           article: data.article,
           key: data.key,
         };
+      }
+    });
+  }
+
+  //Поиск артикулов для выгрузки в Excel
+  async getArticlesUpload(payload: StatisticsGetArticlesRMQ.Payload) {
+    return await this.articleRepository.find({ _id: payload.articles, userId: payload.userId }, {
+      path: 'keys',
+      select: 'key frequency pwz',
+      match: { active: true },
+      model: Keys.name,
+      populate: {
+        path: 'pwz',
+        select: 'city position',
+        model: Pvz.name,
+        populate: {
+          path: 'position',
+          select: 'position cpm promo_position timestamp difference',
+          match: { timestamp: { $in: payload.periods } },
+          model: Periods.name
+        }
       }
     });
   }
