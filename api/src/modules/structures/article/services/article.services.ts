@@ -85,9 +85,8 @@ export class ArticleService {
     const pagination = <{ key_limit: number, _id: Types.ObjectId, page: number }><unknown>data.pagination
 
     const chunks = chunk(data.keys, pagination.key_limit);
-
-    if (chunks[pagination.page]) {
-      keys = chunks[pagination.page],
+    if (chunks[pagination.page - 1]) {
+      keys = chunks[pagination.page - 1],
         page = pagination.page,
         total = chunks.length,
         page_size = pagination.key_limit;
