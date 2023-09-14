@@ -126,7 +126,7 @@ export class ArticleRepository extends AbstractRepository<ArticleDocument> {
       },
     ])
       .exec()
-      .then((value) => ({ articles: value, count_keys: value.reduce((accumulator, value) => (accumulator + value.keys), 0) }));
+      .then((value) => ({ articles: value }));
   }
 
   //Забирает один артикул

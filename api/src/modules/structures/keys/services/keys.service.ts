@@ -13,6 +13,7 @@ import { FetchProvider } from 'src/modules/fetch';
 import { ArticleDocument } from '../../article';
 import { StatisticsUpdateRMQ } from 'src/modules/rabbitmq/contracts/statistics';
 import { QueueProvider } from 'src/modules/lib/queue';
+import { KeysDocument } from '../schemas';
 
 @Injectable()
 export class KeysService {
@@ -26,6 +27,10 @@ export class KeysService {
     private readonly eventEmitter: EventEmitter2,
     private readonly averageService: AverageService,
   ) { }
+
+  async count(searchQuery: FilterQuery<KeysDocument>) {
+    return await this.keysRepository.getCountDocuments(searchQuery)
+  }
 
   //Поиск всех ключей и возможность делать кастом populated
   async find(searchQuery: FilterQuery<ArticleDocument>, populate?: PopulateOptions) {
