@@ -9,6 +9,7 @@ import {
 } from 'src/modules/rabbitmq/contracts/statistics';
 import { Response } from 'express';
 import { RefreshKeyDto } from '../dto';
+import { concatMap, from } from 'rxjs';
 
 @Controller('keys')
 export class KeysController {
@@ -45,7 +46,23 @@ export class KeysController {
     currentService: RmqServices.STATISTICS,
   })
   async disableSubscription(payload: StatisticsDisabledRMQ.Payload) {
-    this.logger.log(payload.users);
+    try {
+      console.log(payload);
+      from(payload.users)
+        .pipe(
+          concatMap(async (element) => {
+            const disabled = await this.keysService.keySubscriptionManagement(element.userId, false)
+            return { user: element, status: disabled }
+          })
+        )
+        .subscribe({
+          next: (value) => {
+            this.logger.log(`User ${value.user} disabled keys ${value.status ? `successfully` : `unsuccessfully`}`)
+          }
+        })
+    } catch (error) {
+      this.logger.error(error.message);
+    }
   }
 
   @RabbitMqSubscriber({
@@ -55,7 +72,15 @@ export class KeysController {
     currentService: RmqServices.STATISTICS,
   })
   async enabledSubscription(payload: StatisticsEnabledRMQ.Payload) {
-    this.logger.log(payload.userId);
+    try {
+      const enabled = await this.keysService.keySubscriptionManagement(payload.userId, true);
+      this.logger.log(enabled ?
+        `User ${payload.userId} enabled keys successfully` :
+        `User ${payload.userId} enabled keys unsuccessfully`
+      );
+    } catch (error) {
+      this.logger.error(error.message);
+    }
   }
 
   @RabbitMqSubscriber({

@@ -1,3 +1,4 @@
+import { QueryOptions } from 'mongoose';
 import { Document, FilterQuery, Model, PopulateOptions, UpdateQuery } from 'mongoose';
 
 export abstract class AbstractRepository<T extends Document> {
@@ -43,8 +44,8 @@ export abstract class AbstractRepository<T extends Document> {
     return result.deletedCount >= 0;
   }
 
-  async updateMany(filterQuery: FilterQuery<T>, updateQuery: UpdateQuery<unknown>): Promise<boolean> {
-    const result = await this.abstractModel.updateMany(filterQuery, updateQuery);
+  async updateMany(filterQuery: FilterQuery<T>, updateQuery: UpdateQuery<unknown>, options?: QueryOptions): Promise<boolean> {
+    const result = await this.abstractModel.updateMany(filterQuery, updateQuery, options);
     return result.modifiedCount > 0;
   }
 

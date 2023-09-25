@@ -20,6 +20,9 @@ export class Keys {
   @Prop({ type: Boolean, default: true })
   active: boolean;
 
+  @Prop({ type: Boolean, default: true })
+  active_sub: boolean;
+
   @Prop({ type: Number, default: 0 })
   frequency: number;
 

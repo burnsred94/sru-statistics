@@ -20,6 +20,7 @@ import { Article } from '../schemas';
 import { Pvz } from '../../pvz';
 import { StatisticsGetArticlesRMQ } from 'src/modules/rabbitmq/contracts/statistics';
 import { Periods } from '../../periods';
+import { Pagination } from '../../pagination';
 
 @Injectable()
 export class ArticleService {
@@ -71,11 +72,12 @@ export class ArticleService {
 
   //Поиск одного артикула
   async findArticle(_id: Types.ObjectId, query) {
+    await this.eventEmitter.emitAsync('pagination.check', { article_id: _id } as Pagination); //Временные события
+
     const data = await this.articleRepository.findArticle({ _id: _id }, query);
     const total_keys = data.keys.length;
 
-    //Временное событие
-    this.eventEmitter.emitAsync('metric.checked', { article: data._id, user: data.userId });
+    await this.eventEmitter.emitAsync('metric.checked', { article: data._id, user: data.userId }); //Временные события
 
     let keys: Types.ObjectId[],
       page: number,
@@ -111,14 +113,15 @@ export class ArticleService {
   //Оптимизируется после создания
   async addKeys(data: AddKeyDto, user: User) {
     const { articleId, keys } = data;
-    let find: HydratedDocument<Article> = await this.articleRepository.findOne({ _id: articleId });
-
-    find = await find.populate({
-      path: 'keys',
-      select: 'pwz key userId',
-      model: Keys.name,
-      populate: { path: 'pwz', select: 'name', model: Pvz.name },
-    });
+    const find: HydratedDocument<Article> = await this.articleRepository.findOne(
+      { _id: articleId },
+      {
+        path: 'keys',
+        select: 'pwz key userId',
+        model: Keys.name,
+        populate: { path: 'pwz', select: 'name', model: Pvz.name },
+      }
+    );
 
     const message = await this.create({ article: find.article, keys: keys }, user);
 

@@ -94,8 +94,8 @@ export class ArticleRepository extends AbstractRepository<ArticleDocument> {
                 else: {
                   $cond: {
                     if: { $gt: [{ $arrayElemAt: ['$metrics.middle_pos_adverts.met', 0] }, { $arrayElemAt: ['$metrics.middle_pos_adverts.met', -1] }] },
-                    then: MetricsEnum.UP,
-                    else: MetricsEnum.DOWN
+                    then: MetricsEnum.DOWN,
+                    else: MetricsEnum.UP,
                   }
                 }
               }

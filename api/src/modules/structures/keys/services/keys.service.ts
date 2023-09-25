@@ -36,82 +36,85 @@ export class KeysService {
   async find(searchQuery: FilterQuery<ArticleDocument>, populate?: PopulateOptions) {
     return await this.keysRepository.find(searchQuery, populate)
   }
+
   //Создание ключей через pipelines
   async create(data: IKey, id: Types.ObjectId) {
     let inc = 0
 
-    from(data.keys).pipe(
-      concatMap(async element => {
-        const average = await this.averageService.create({
-          userId: data.userId as unknown as number,
-        });
+    from(data.keys)
+      .pipe(
+        concatMap(async element => {
+          const average = await this.averageService.create({
+            userId: data.userId as unknown as number,
+          });
 
-        const frequency = await this.fetchProvider.getFrequency(element);
+          const frequency = await this.fetchProvider.getFrequency(element);
 
-        const key = await this.keysRepository.create({
-          article: data.article,
-          key: element,
-          userId: data.userId,
-          frequency: frequency,
-          average: [average._id],
-        })
+          const key = await this.keysRepository.create({
+            article: data.article,
+            key: element,
+            userId: data.userId,
+            frequency: frequency,
+            average: [average._id],
+          })
 
-        const pwz = await Promise.all(
-          data.pvz.map(
-            async pvz => await this.pvzService.create(pvz, data.article, data.userId, String(key._id)),
-          ),
-        );
+          const pwz = await Promise.all(
+            data.pvz.map(
+              async pvz => await this.pvzService.create(pvz, data.article, data.userId, String(key._id)),
+            ),
+          );
 
-        const ids = pwz.map(data => data._id);
+          const ids = pwz.map(data => data._id);
 
-        await this.keysRepository.findOneAndUpdate({ _id: key._id }, { $push: { pwz: ids } });
+          await this.keysRepository.findOneAndUpdate({ _id: key._id }, { $push: { pwz: ids } });
 
-        return {
-          id: key,
-          average_id: average._id,
-          pwz,
-          article: data.article,
-          key: element,
-          key_id: key._id,
-        };
-      }),
-    ).subscribe({
-      next: dataObserver => {
-        const result = dataObserver;
+          return {
+            id: key,
+            average_id: average._id,
+            pwz,
+            article: data.article,
+            key: element,
+            key_id: key._id,
+          };
+        }),
+      )
+      .subscribe({
+        next: dataObserver => {
+          const result = dataObserver;
 
-        this.eventEmitter.emit('keys.update', { id, key: result.id });
+          this.eventEmitter.emit('keys.update', { id, key: result.id });
 
-        const dataParse: SearchPositionRMQ.Payload = {
-          article: result.article,
-          key: result.key,
-          key_id: result.key_id,
-          pvz: result.pwz.map(element => {
-            return {
-              name: element.name,
-              average_id: result.average_id,
-              addressId: element._id,
-              geo_address_id: element.geo_address_id,
-              periodId: element.position[0]._id,
-            };
-          }),
-        };
+          const dataParse: SearchPositionRMQ.Payload = {
+            article: result.article,
+            key: result.key,
+            key_id: result.key_id,
+            pvz: result.pwz.map(element => {
+              return {
+                name: element.name,
+                average_id: result.average_id,
+                addressId: element._id,
+                geo_address_id: element.geo_address_id,
+                periodId: element.position[0]._id,
+              };
+            }),
+          };
 
-        this.queueProvider.pushTask((async () => await this.fetchProvider.sendNewKey(dataParse)));
+          this.queueProvider.pushTask((async () => await this.fetchProvider.sendNewKey(dataParse)));
 
-        if (inc % 5 === 0) {
-          this.queueProvider.pushTask(
-            () => (setTimeout(
-              () => {
-                this.eventEmitter.emitAsync(EventsWS.SEND_ARTICLES, { userId: data.userId, event: EventsCS.CREATE_ARTICLE })
-              }, (1000 * 60) * inc)));
+          if (inc % 5 === 0) {
+            this.queueProvider.pushTask(
+              () => (setTimeout(
+                () => {
+                  this.eventEmitter.emitAsync(EventsWS.SEND_ARTICLES, { userId: data.userId, event: EventsCS.CREATE_ARTICLE })
+                }, (1000 * 60) * inc)));
+          }
+
+          inc++;
+        },
+        complete: () => {
+          this.eventEmitter.emitAsync(EventsWS.SEND_ARTICLES, { userId: data.userId, event: EventsCS.CREATE_ARTICLE });
         }
-
-        inc++;
-      },
-      complete: () => {
-        this.eventEmitter.emitAsync(EventsWS.SEND_ARTICLES, { userId: data.userId, event: EventsCS.CREATE_ARTICLE });
-      }
-    })
+      })
 
     this.eventEmitter.emit('metric.created', { article: id, user: data.userId });
 
@@ -120,9 +123,14 @@ export class KeysService {
     }, (1000 * 60) * 30)
   }
 
-  @Cron('16 21 * * *', { timeZone: 'Europe/Moscow' })
+  @Cron('05 0 * * *', { timeZone: 'Europe/Moscow' })
   async nightParse() {
-    const allKeys = await this.keysRepository.find({ active: true }, { path: 'pwz', select: 'name geo_address_id name', model: Pvz.name });
+    const allKeys = await this.keysRepository.find(
+      {
+        active: true,
+        $or: [{ active_sub: true }, { active_sub: { $exists: false } }]
+      },
+      { path: 'pwz', select: 'name geo_address_id', model: Pvz.name });
 
     const observe = from(allKeys).pipe(
       concatMap(async (element): Promise<SearchPositionRMQ.Payload> => {
@@ -228,5 +236,9 @@ export class KeysService {
         })
       );
     });
+  }
+
+  async keySubscriptionManagement(userId: number, update: boolean) {
+    return await this.keysRepository.updateMany({ userId }, { active_sub: update })
   }
 }
