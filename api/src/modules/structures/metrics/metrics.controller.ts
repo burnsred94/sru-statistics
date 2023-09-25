@@ -37,28 +37,4 @@ export class MetricsController {
     }
   }
 
-  @ApiAcceptedResponse({ description: 'Get metrics main page article' })
-  @UseGuards(JwtAuthGuard)
-  @Get()
-  async getMainPageMetrics(
-    @CurrentUser() user: User,
-    @Res() response: Response,
-  ) {
-    try {
-      const metrics = await this.metricsService.getMainPageMetrics(user);
-
-      return response.status(HttpStatus.OK).send({
-        data: metrics,
-        error: [],
-        status: response.statusCode,
-      });
-    } catch (error) {
-      this.logger.error(error.message);
-      return response.status(HttpStatus.OK).send({
-        data: [],
-        error: [{ message: error.message }],
-        status: response.statusCode,
-      });
-    }
-  }
 }

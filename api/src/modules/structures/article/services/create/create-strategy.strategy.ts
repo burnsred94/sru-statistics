@@ -3,7 +3,7 @@ import { User } from 'src/modules/auth';
 import { ArticleRepository } from '../../repositories';
 import { FetchProvider } from 'src/modules/fetch';
 import { TownsDestructor } from '../../utils';
-import { KeysService } from '../../../keys';
+import { Keys, KeysService } from '../../../keys';
 import { MessagesEvent } from 'src/interfaces';
 import { GetProductRMQ } from 'src/modules/rabbitmq/contracts/products';
 import { DEFAULT_PRODUCT_NAME } from '../../constants';
@@ -25,7 +25,10 @@ export class CreateArticleStrategy {
   ) { }
 
   async findNotActiveAddKeys(article: string, keys, user) {
-    const find_product = await this.articleRepository.findProductKeys(article, user, false);
+    const find_product = await this.articleRepository.findOne(
+      { article, userId: user, active: false },
+      { path: 'keys', select: 'active key', match: { active: false }, model: Keys.name }
+    );
 
     if (!find_product) {
       return false;
@@ -36,14 +39,18 @@ export class CreateArticleStrategy {
         keys,
         find_product.keys,
       );
+
       matchToNotActive.length > 0
-        ? setImmediate(() => this.keyService.activateKey(matchToNotActive))
+        ? setImmediate(async () => await this.keyService.updateMany(matchToNotActive as Array<Types.ObjectId>, { active: true }))
         : null;
 
-      await this.articleRepository.backOldArticle(find_product._id, user);
+      await this.articleRepository.findOneAndUpdate({ _id: find_product._id, userId: user }, { $set: { active: true } });
       this.logger.log(`Product activate article: ${article}, id: ${find_product._id}`);
 
-      const active_product = await this.articleRepository.findProductKeys(article, user, true);
+      const active_product = await this.articleRepository.findOne(
+        { article, userId: user },
+        { path: 'keys', select: 'active key', match: { active: true }, model: Keys.name }
+      );
       const matchToActiveKeys = await this.utilsDestructor.matchKeys(keys, active_product.keys);
 
       if (matchToActiveKeys.length > 0)
@@ -54,7 +61,11 @@ export class CreateArticleStrategy {
   }
 
   async checkArticleAddKeys(article: string, keys, user: User) {
-    const find_keys_active = await this.articleRepository.findProductKeys(article, user, true);
+    const find_keys_active = await this.articleRepository.findOne(
+      { article, userId: user },
+      { path: 'keys', select: 'active key', model: Keys.name }
+    );
+
 
     if (!find_keys_active) return false;
 
@@ -63,22 +74,24 @@ export class CreateArticleStrategy {
     const matchToActiveKeys = await this.utilsDestructor.matchKeys(keys, find_keys_active.keys);
     countAll += matchToActiveKeys.length;
 
-    const find_keys_not_active = await this.articleRepository.findProductKeys(
-      article,
-      user,
-      true,
-      false,
+
+    const find_keys_not_active = await this.articleRepository.findOne(
+      { article, userId: user },
+      { path: 'keys', select: 'active key', match: { active: false }, model: Keys.name }
     );
+
+    console.log(find_keys_not_active);
 
     if (find_keys_not_active.keys.length > 0) {
       const matchToNotActive = await this.utilsDestructor.matchKeysNotActive(
         keys,
         find_keys_not_active.keys,
       );
+      console.log(`matchToNotActive`, matchToNotActive, matchToActiveKeys)
       countActivate += matchToNotActive.length;
 
       matchToNotActive.length > 0
-        ? setImmediate(() => this.keyService.activateKey(matchToNotActive))
+        ? setImmediate(async () => await this.keyService.updateMany(matchToNotActive as Array<Types.ObjectId>, { active: true }))
         : null;
 
       await this.actionKey({ keys: matchToActiveKeys, article }, find_keys_active._id._id, user);
@@ -92,17 +105,18 @@ export class CreateArticleStrategy {
   }
 
   async createNewArticle(article: string, keys, user: User, product: GetProductRMQ.Response) {
-    const pagination = await this.paginationService.create()
 
     const newArticle = await this.articleRepository.create({
       productImg: product.status ? product.img : null,
       productRef: product.status ? product.product_url : null,
       userId: user,
       article: article,
-      pagination: pagination._id,
       active: true,
       productName: product.status ? product.product_name : DEFAULT_PRODUCT_NAME,
     });
+
+    const pagination = await this.paginationService.create({ key_limit: 10, page: 1, article_id: newArticle.id })
+    await this.articleRepository.findOneAndUpdate({ _id: pagination.article_id }, { pagination: pagination._id });
 
     await this.actionKey({ keys, article }, newArticle._id, user);
 

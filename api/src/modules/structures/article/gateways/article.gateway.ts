@@ -1,10 +1,11 @@
 import { Logger } from '@nestjs/common';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { OnEvent } from '@nestjs/event-emitter';
 import { SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { ArticleService } from '../services';
 import { EventsWS } from '../events';
-import { forEach } from 'lodash';
+import { EventsCS } from 'src/interfaces';
+
+
 
 @WebSocketGateway({
   cors: {
@@ -16,24 +17,29 @@ import { forEach } from 'lodash';
 export class ArticleGateway {
   private logger: Logger = new Logger('MessageGateway');
 
-  constructor(private readonly articleService: ArticleService) {}
-
-  clients = [];
+  clients = new Map<number, { client: Socket, exp: () => NodeJS.Timeout }>();
 
   @WebSocketServer() server: Server;
-  @SubscribeMessage('findByCity')
+  @SubscribeMessage('subscriber')
   async handleSendMessage(client: Socket, payload): Promise<void> {
-    this.clients = this.clients.filter(element => payload.data.userId !== element.userId);
+    const has = this.clients.has(payload.data.userId);
+    if (has) {
+      const data = this.clients.get(payload.data.userId);
+      this.handleDisconnect(data.client);
+    }
 
-    this.clients.push({
-      clientId: client.id,
-      sockets: client,
-      userId: payload.data.userId,
-      data: payload.data,
-      pagination: payload.query,
+    this.clients.set(payload.data.userId, {
+      client: client,
+      exp: (() => setTimeout(() => {
+        this.clients.delete(payload.data.userId),
+          this.logger.log(`Delete: ${client.id}`)
+      }, (60 * 1000) * 30))
     });
-    console.log(this.clients.length);
-    await this.sender({ userId: payload.data.userId });
+
+    const getClient = this.clients.get(payload.data.userId);
+    getClient.exp();
+
+    this.logger.log(`All Connections: ${this.clients.size}`);
   }
 
   afterInit(server: Server) {
@@ -42,7 +48,6 @@ export class ArticleGateway {
 
   async handleDisconnect(client: Socket) {
     this.logger.log(`Client Disconnected: ${client.id}`);
-    this.clients = this.clients.filter(element => client.id !== element.clientId);
   }
 
   async handleConnection(client: Socket, ...arguments_: any[]) {
@@ -50,20 +55,15 @@ export class ArticleGateway {
   }
 
   @OnEvent(EventsWS.SEND_ARTICLES)
-  async sender(payload: { userId: number }) {
-    setImmediate(async () => {
-      const find = this.clients.filter(userClient => userClient.userId === payload.userId);
+  async sender(payload: { userId: number, event: EventsCS }) {
+    const user = this.clients.get(payload.userId);
 
-      if (find.length > 0) {
-        forEach(find, async element => {
-          const data = await this.articleService.findByCity(
-            element.data,
-            payload.userId,
-            element.pagination,
-          );
-          element.sockets.compress(true).emit('findByCity', data);
-        });
-      }
-    });
+    if (user) {
+      user.client.compress(true).emit('subscriber', payload);
+    } else {
+      this.logger.log(`Not found connection User: ${payload.userId}`)
+    }
   }
+
 }
+

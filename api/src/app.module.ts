@@ -8,6 +8,7 @@ import { FetchModule } from './modules/fetch/fetch.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { UtilsModule } from './modules/utils/utils.module';
 import { StructuresModule } from './modules/structures/structures.module';
+import { LibraryModule } from './modules/lib/library.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { StructuresModule } from './modules/structures/structures.module';
     FetchModule,
     UtilsModule,
     StructuresModule,
+    LibraryModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

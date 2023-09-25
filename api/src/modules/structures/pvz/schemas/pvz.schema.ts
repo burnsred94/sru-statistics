@@ -1,7 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 import { User } from 'src/modules/auth/user';
 import { Periods } from '../../periods';
+
+export type PvzDocument = HydratedDocument<Pvz>;
 
 @Schema({
   versionKey: false,
@@ -9,9 +11,6 @@ import { Periods } from '../../periods';
 export class Pvz {
   @Prop({ type: Number })
   userId: User;
-
-  @Prop({ type: String })
-  status: string;
 
   @Prop({ type: String })
   city: string;
@@ -24,9 +23,6 @@ export class Pvz {
 
   @Prop({ type: String })
   article: string;
-
-  @Prop({ type: Boolean })
-  active: boolean;
 
   @Prop({ type: String })
   name: string;

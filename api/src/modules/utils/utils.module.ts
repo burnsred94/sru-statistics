@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { MathUtils } from './providers';
 
 @Module({
@@ -6,4 +6,4 @@ import { MathUtils } from './providers';
   providers: [MathUtils],
   exports: [MathUtils],
 })
-export class UtilsModule {}
+export class UtilsModule { }

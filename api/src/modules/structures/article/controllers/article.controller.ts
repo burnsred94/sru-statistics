@@ -19,6 +19,9 @@ import { Response } from 'express';
 import { initArticleMessage } from 'src/constatnts';
 import { FetchProvider } from 'src/modules/fetch';
 import { Types } from 'mongoose';
+import { RabbitMqResponser } from 'src/modules/rabbitmq/decorators';
+import { RmqExchanges, RmqServices } from 'src/modules/rabbitmq/exchanges';
+import { StatisticsGetArticlesRMQ } from 'src/modules/rabbitmq/contracts/statistics';
 
 @Controller('v1')
 export class ArticleController {
@@ -88,28 +91,6 @@ export class ArticleController {
     }
   }
 
-  @ApiAcceptedResponse({ description: 'Send length articles' })
-  @UseGuards(JwtAuthGuard)
-  @Get('/check-articles')
-  async checkArticles(@CurrentUser() user: User, @Res() response: Response) {
-    try {
-      const checkData = await this.articleService.checkData(user);
-
-      return response.status(HttpStatus.OK).send({
-        data: checkData,
-        error: [],
-        status: response.statusCode,
-      });
-    } catch (error) {
-      this.logger.error(error);
-      return response.status(HttpStatus.OK).send({
-        data: [],
-        error: [{ message: error.message }],
-        status: response.statusCode,
-      });
-    }
-  }
-
   @ApiAcceptedResponse({ description: 'Remove article' })
   @UseGuards(JwtAuthGuard)
   @Delete('remove-article')
@@ -142,9 +123,13 @@ export class ArticleController {
   @ApiAcceptedResponse({ description: 'Remove key' })
   @UseGuards(JwtAuthGuard)
   @Get('user-articles')
-  async userArticles(@CurrentUser() user: User, @Res() response: Response) {
+  async userArticles(
+    @CurrentUser() user: User,
+    @Query('search') search: string,
+    @Query('sort') sort: string,
+    @Res() response: Response) {
     try {
-      const articles = await this.articleService.articles(user);
+      const articles = await this.articleService.articles(user, { search, sort });
 
       return response.status(HttpStatus.OK).send({
         data: articles,
@@ -190,13 +175,14 @@ export class ArticleController {
   @UseGuards(JwtAuthGuard)
   @Post("article/:id")
   async getArticle(
-    @CurrentUser() user: User,
     @Param('id') id: Types.ObjectId,
     @Body() dto,
     @Query('search') search: string,
+    @Query('sort') sort: { frequency: number },
+    @Query('city') city: string,
     @Res() response: Response) {
     try {
-      const getArticle = await this.articleService.findArticle(id, { ...dto, search });
+      const getArticle = await this.articleService.findArticle(id, { ...dto, search, sort, city });
 
       return response.status(HttpStatus.OK).send({
         status: HttpStatus.OK,
@@ -210,6 +196,21 @@ export class ArticleController {
         error: [{ message: error.message }],
         status: error.statusCode,
       });
+    }
+  }
+
+
+  @RabbitMqResponser({
+    exchange: RmqExchanges.STATISTICS,
+    routingKey: StatisticsGetArticlesRMQ.routingKey,
+    queue: StatisticsGetArticlesRMQ.queue,
+    currentService: RmqServices.STATISTICS
+  })
+  async getDataUpload(payload: StatisticsGetArticlesRMQ.Payload) {
+    try {
+      return { articles: await this.articleService.getArticlesUpload(payload) };
+    } catch (error) {
+      this.logger.error(error.message);
     }
   }
 }

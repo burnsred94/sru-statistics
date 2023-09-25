@@ -3,13 +3,13 @@ import { KeysService } from '../keys';
 import { MetricsRepository } from './repositories';
 import { User } from 'src/modules/auth';
 import { Types } from 'mongoose';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { OnEvent } from '@nestjs/event-emitter';
-import { concatMap, from, reduce } from 'rxjs';
+import { concatMap, from } from 'rxjs';
 import { ArticleService } from '../article';
 import { PvzService } from '../pvz';
 import { MetricEntity } from './entities/metric.entity';
-import { map } from 'lodash';
+import { Average } from '../average';
 
 //"0 9-23/3 * * *"
 
@@ -28,22 +28,6 @@ export class MetricsService {
         private readonly pvzService: PvzService,
         private readonly metricsRepository: MetricsRepository,
     ) { }
-
-    async getMainPageMetrics(user: User) {
-        const data = await this.metricsRepository.find({ user: user });
-        return map(data, (element) => ({
-            _id: element.article,
-            middle_pos_organic: {
-                num: element.middle_pos_organic.at(-1).met,
-                data: element.middle_pos_organic.slice(-15),
-            },
-            middle_pos_adverts: {
-                num: element.middle_pos_adverts.at(-1).met,
-                data: element.middle_pos_adverts.slice(-15),
-            },
-            trend: element.top_1000.slice(-15)
-        }))
-    }
 
     async getMetrics(user: User, _id: Types.ObjectId) {
         const id = new Types.ObjectId(_id);
@@ -85,7 +69,7 @@ export class MetricsService {
             .pipe(
                 concatMap(async item => {
                     const article = await this.articleService.findOne(item.article);
-                    const keys = await this.keyService.findByMany({ _id: article.keys }, 'all');
+                    const keys = await this.keyService.find({ _id: article.keys }, { path: 'average', select: 'average', model: Average.name });
                     const observer = await this.pvzService.findByMetrics(item.user, article.article);
 
 
