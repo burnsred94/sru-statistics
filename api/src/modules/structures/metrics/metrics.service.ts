@@ -69,11 +69,11 @@ export class MetricsService {
             .pipe(
                 concatMap(async item => {
                     const article = await this.articleService.findOne(item.article);
-                  
+
                     if (article === null) {
                         return null
                     }
-                    const keys = await this.keyService.find({ _id: article.keys }, { path: 'average', select: 'average', model: Average.name });
+                    const keys = await this.keyService.find({ _id: article.keys }, { path: 'average', select: 'average start_position cpm', model: Average.name });
                     const observer = await this.pvzService.findByMetrics(item.user, article.article);
                     console.log(observer);
 
@@ -93,6 +93,9 @@ export class MetricsService {
                             if (value.start_position) {
                                 accumulator.ads.num = (accumulator.ads.num + Number(value.average));
                                 accumulator.ads.del = accumulator.ads.del + 1;
+
+                                accumulator.org.num = (accumulator.org.num + Number(value.start_position));
+                                accumulator.org.del = accumulator.org.del + 1;
                             } else {
                                 accumulator.org.num = (accumulator.org.num + Number(value.average));
                                 accumulator.org.del = accumulator.org.del + 1;
