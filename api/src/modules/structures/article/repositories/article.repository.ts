@@ -86,7 +86,7 @@ export class ArticleRepository extends AbstractRepository<ArticleDocument> {
           keys: { $size: '$keys' },
           middle_pos_organic: {
             num: { $arrayElemAt: ['$metrics.middle_pos_organic.met', -1] },
-            data: { $slice: ['$metrics.middle_pos_organic', -15] },
+            data: { $slice: ['$metrics.middle_pos_organic', -14] },
             color_metrics: {
               $cond: {
                 if: { $eq: [{ $arrayElemAt: ['$metrics.middle_pos_adverts.met', 0] }, { $arrayElemAt: ['$metrics.middle_pos_adverts.met', -1] }] },
@@ -103,7 +103,7 @@ export class ArticleRepository extends AbstractRepository<ArticleDocument> {
           },
           middle_pos_adverts: {
             num: { $arrayElemAt: ['$metrics.middle_pos_adverts.met', -1] },
-            data: { $slice: ['$metrics.middle_pos_adverts', -15] },
+            data: { $slice: ['$metrics.middle_pos_adverts', -14] },
             color_metrics: {
               $cond: {
                 if: { $eq: [{ $arrayElemAt: ['$metrics.middle_pos_adverts.met', 0] }, { $arrayElemAt: ['$metrics.middle_pos_adverts.met', -1] }] },
@@ -118,7 +118,7 @@ export class ArticleRepository extends AbstractRepository<ArticleDocument> {
               }
             }
           },
-          trend: '$metrics.indexes',
+          trend: { $slice: ['$metrics.middle_pos_adverts', -14] },
         },
       },
       {

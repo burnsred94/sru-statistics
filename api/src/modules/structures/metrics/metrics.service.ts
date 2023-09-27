@@ -13,10 +13,10 @@ import { Average } from '../average';
 
 //"0 9-23/3 * * *"
 
-export interface PayloadMetric {
-    _id: Types.ObjectId;
-    user: User;
-}
+// export interface PayloadMetric {
+//     _id: Types.ObjectId;
+//     user: User;
+// }
 
 @Injectable()
 export class MetricsService {
@@ -69,12 +69,13 @@ export class MetricsService {
             .pipe(
                 concatMap(async item => {
                     const article = await this.articleService.findOne(item.article);
+                  
                     if (article === null) {
                         return null
                     }
                     const keys = await this.keyService.find({ _id: article.keys }, { path: 'average', select: 'average', model: Average.name });
                     const observer = await this.pvzService.findByMetrics(item.user, article.article);
-
+                    console.log(observer);
 
                     const average: any = keys.map((value) => {
                         return value?.average.at(-1) === undefined ? 0 : value.average.at(-1);
@@ -117,7 +118,8 @@ export class MetricsService {
                 next: async dataObserver => {
                     if (!dataObserver) return;
 
-                    const find = await this.metricsRepository.findOne({ user: dataObserver.user, city: dataObserver.city });
+                    const find = await this.metricsRepository.findOne({ user: dataObserver.user, city: dataObserver.city, article: dataObserver.article });
+
                     const metric = await new MetricEntity().initMetric(dataObserver, find);
                     await this.metricsRepository.findOneAndUpdate({ user: dataObserver.user, article: dataObserver.article }, metric);
                 },
@@ -127,13 +129,13 @@ export class MetricsService {
     }
 
     @OnEvent('metric.created')
-    async create(data: PayloadMetric) {
-        await this.metricsRepository.create(data);
-        await this.dataGathering(data)
+    async create(data) {
+        const metric = await this.metricsRepository.create(data);
+        await this.dataGathering({ _id: metric._id, user: data.user, article: data.article });
     }
 
     @OnEvent('metric.checked')
-    async checkMetric(payload: PayloadMetric) {
+    async checkMetric(payload) {
         const check = await this.metricsRepository.findOne(payload);
         if (!check) await this.metricsRepository.create(payload), await this.dataGathering(payload);
 
