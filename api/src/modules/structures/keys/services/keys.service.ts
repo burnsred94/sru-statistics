@@ -227,6 +227,9 @@ export class KeysService {
   //Обновленние данных которые приходят из парсинга
   async updateData(payload: StatisticsUpdateRMQ.Payload) {
     setImmediate(async () => {
+      if (payload.position.position >= 0) {
+        payload.position.position = payload.position.position + 1 // Исправить в парсере и убрать
+      }
       this.queueProvider.pushTask(
         (async () => {
           await this.pvzService.update(

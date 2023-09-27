@@ -69,6 +69,9 @@ export class MetricsService {
             .pipe(
                 concatMap(async item => {
                     const article = await this.articleService.findOne(item.article);
+                    if (article === null) {
+                        return null
+                    }
                     const keys = await this.keyService.find({ _id: article.keys }, { path: 'average', select: 'average', model: Average.name });
                     const observer = await this.pvzService.findByMetrics(item.user, article.article);
 
@@ -112,11 +115,14 @@ export class MetricsService {
             )
             .subscribe({
                 next: async dataObserver => {
+                    if (!dataObserver) return;
+
                     const find = await this.metricsRepository.findOne({ user: dataObserver.user, city: dataObserver.city });
                     const metric = await new MetricEntity().initMetric(dataObserver, find);
                     await this.metricsRepository.findOneAndUpdate({ user: dataObserver.user, article: dataObserver.article }, metric);
                 },
                 complete: () => console.log('complete'),
+                error: (error) => this.logger.error(error.message),
             });
     }
 
