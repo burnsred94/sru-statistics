@@ -69,7 +69,7 @@ export class MetricsService {
             .pipe(
                 concatMap(async item => {
                     const article = await this.articleService.findOne(item.article);
-                    console.log(article)
+                  
                     if (article === null) {
                         return null
                     }
@@ -116,10 +116,10 @@ export class MetricsService {
             )
             .subscribe({
                 next: async dataObserver => {
-                    console.log(dataObserver);
                     if (!dataObserver) return;
 
                     const find = await this.metricsRepository.findOne({ user: dataObserver.user, city: dataObserver.city, article: dataObserver.article });
+
                     const metric = await new MetricEntity().initMetric(dataObserver, find);
                     await this.metricsRepository.findOneAndUpdate({ user: dataObserver.user, article: dataObserver.article }, metric);
                 },
