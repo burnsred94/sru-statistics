@@ -75,7 +75,6 @@ export class MetricsService {
                     }
                     const keys = await this.keyService.find({ _id: article.keys }, { path: 'average', select: 'average start_position cpm', model: Average.name });
                     const observer = await this.pvzService.findByMetrics(item.user, article.article);
-                    console.log(observer);
 
                     const average: any = keys.map((value) => {
                         return value?.average.at(-1) === undefined ? 0 : value.average.at(-1);
@@ -94,8 +93,6 @@ export class MetricsService {
                                 accumulator.ads.num = (accumulator.ads.num + Number(value.average));
                                 accumulator.ads.del = accumulator.ads.del + 1;
 
-                                accumulator.org.num = (accumulator.org.num + Number(value.start_position));
-                                accumulator.org.del = accumulator.org.del + 1;
                             } else {
                                 accumulator.org.num = (accumulator.org.num + Number(value.average));
                                 accumulator.org.del = accumulator.org.del + 1;
