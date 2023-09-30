@@ -12,7 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiAcceptedResponse } from '@nestjs/swagger';
-import { AddKeyDto, CreateArticleDto, RemoveKeyDto, RemoveArticleDto } from '../dto';
+import { AddKeyDto, CreateArticleDto, RemoveKeyDto, RemoveArticleDto, RefreshArticleDto } from '../dto';
 import { CurrentUser, JwtAuthGuard, User } from 'src/modules';
 import { ArticleService } from '../services';
 import { Response } from 'express';
@@ -35,7 +35,7 @@ export class ArticleController {
   @ApiAcceptedResponse({ description: 'Create Statistic' })
   @UseGuards(JwtAuthGuard)
   @Post('create')
-  async create(
+  async createArticle(
     @CurrentUser() user: User,
     @Body() data: CreateArticleDto,
     @Res() response: Response,
@@ -199,6 +199,22 @@ export class ArticleController {
     }
   }
 
+  @ApiAcceptedResponse({ description: 'Refresh article' })
+  @UseGuards(JwtAuthGuard)
+  @Post('refresh-article')
+  async refreshArticle(@Body() dto: RefreshArticleDto, @CurrentUser() user: User, response: Response) {
+    try {
+      await this.articleService.refreshArticle(dto.article, user)
+
+    } catch (error) {
+      this.logger.error(error);
+      return response.status(HttpStatus.OK).send({
+        data: [],
+        error: [{ message: error.message }],
+        status: error.statusCode,
+      });
+    }
+  }
 
   @RabbitMqResponser({
     exchange: RmqExchanges.STATISTICS,
