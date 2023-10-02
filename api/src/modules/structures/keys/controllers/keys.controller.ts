@@ -39,6 +39,12 @@ export class KeysController {
     }
   }
 
+  @Post('enabled-keys')
+  async httpEnabled(@Body() data: StatisticsEnabledRMQ.Payload) {
+    await this.enabledSubscription(data);
+    console.log(`enabled user keys: ${data.userId}`)
+  }
+
   @RabbitMqSubscriber({
     exchange: RmqExchanges.STATISTICS,
     routingKey: StatisticsDisabledRMQ.routingKey,

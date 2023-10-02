@@ -14,6 +14,8 @@ import { ArticleDocument } from '../../article';
 import { StatisticsUpdateRMQ } from 'src/modules/rabbitmq/contracts/statistics';
 import { QueueProvider } from 'src/modules/lib/queue';
 import { KeysDocument } from '../schemas';
+import { KeysRefreshService } from './keys-refresh.service';
+import { User } from 'src/modules/auth';
 
 @Injectable()
 export class KeysService {
@@ -21,6 +23,7 @@ export class KeysService {
 
   constructor(
     private readonly keysRepository: KeysRepository,
+    private readonly keysRefreshService: KeysRefreshService,
     private readonly pvzService: PvzService,
     private readonly queueProvider: QueueProvider,
     private readonly fetchProvider: FetchProvider,
@@ -243,5 +246,9 @@ export class KeysService {
 
   async keySubscriptionManagement(userId: number, update: boolean) {
     return await this.keysRepository.updateMany({ userId }, { active_sub: update })
+  }
+
+  async refreshAllKeysFromArticle(article: string, user: User) {
+    await this.keysRefreshService.refreshKeysInArticle(article, user);
   }
 }

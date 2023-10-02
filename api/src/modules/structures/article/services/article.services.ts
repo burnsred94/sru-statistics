@@ -190,6 +190,11 @@ export class ArticleService {
     });
   }
 
+  async refreshArticle(article: Types.ObjectId, user: User) {
+    const articleDocument = await this.articleRepository.findOne({ _id: article })
+    await this.keyService.refreshAllKeysFromArticle(articleDocument.article, user);
+  }
+
   //добовление ключей 
   @OnEvent('keys.update')
   async update(payload) {

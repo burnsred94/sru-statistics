@@ -6,7 +6,7 @@ export abstract class AbstractRepository<T extends Document> {
 
   async findOne(
     filterQuery: FilterQuery<T>,
-    populate?: PopulateOptions
+    populate?: PopulateOptions | (string | PopulateOptions)[]
   ): Promise<T | null> {
     return populate === undefined ? await this.abstractModel.findOne(filterQuery)
       .lean()
@@ -15,7 +15,7 @@ export abstract class AbstractRepository<T extends Document> {
         .lean();
   }
 
-  async find(filterQuery?: FilterQuery<T>, populate?: PopulateOptions): Promise<T[] | null> {
+  async find(filterQuery?: FilterQuery<T>, populate?: PopulateOptions | (string | PopulateOptions)[]): Promise<T[] | null> {
     return populate === undefined ?
       await this.abstractModel.find(filterQuery)
         .lean()
@@ -24,7 +24,7 @@ export abstract class AbstractRepository<T extends Document> {
         .lean()
   }
 
-  async create(createEntityData: unknown, populate?: PopulateOptions): Promise<T | null> {
+  async create(createEntityData: unknown, populate?: PopulateOptions | (string | PopulateOptions)[]): Promise<T | null> {
     const entity = new this.abstractModel(createEntityData);
     const create = await entity.save()
     return populate ? create.populate(populate) : create;
