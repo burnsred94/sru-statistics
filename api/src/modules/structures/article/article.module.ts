@@ -9,7 +9,6 @@ import { Article, ArticleSchema } from './schemas';
 import { ArticleController } from './controllers';
 import { ArticleService, CreateArticleStrategy } from './services';
 import { ArticleRepository } from './repositories';
-import { ArticleGateway } from './gateways';
 import { TownsDestructor } from './utils';
 import { UtilsModule } from '../../utils';
 import { PaginationModule } from '../pagination';
@@ -35,7 +34,6 @@ const STRUCTURES = [
     CreateArticleStrategy,
     ArticleRepository,
     JwtStrategy,
-    ArticleGateway,
     TownsDestructor,
   ],
   exports: [ArticleService],

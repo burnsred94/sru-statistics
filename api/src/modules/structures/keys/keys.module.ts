@@ -12,6 +12,7 @@ import { UtilsModule } from '../../utils';
 import { FetchModule } from '../../fetch';
 import { QueueModule } from 'src/modules/lib/queue';
 import { KeysUtilsModule } from './utils/keys-utils.module';
+import { EventsModule } from 'src/modules/lib/events/event.module';
 
 const STRUCTURES = [
   PvzModule,
@@ -28,6 +29,7 @@ const SERVICES = [
     MongooseModule.forFeature([{ name: Keys.name, schema: KeysSchema }]),
     forwardRef(() => FetchModule),
     UtilsModule,
+    EventsModule,
     KeysUtilsModule,
     QueueModule,
     RmqModule.register({ exchanges: [RmqExchanges.STATISTICS] }),

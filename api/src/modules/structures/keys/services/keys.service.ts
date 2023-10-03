@@ -16,6 +16,8 @@ import { QueueProvider } from 'src/modules/lib/queue';
 import { KeysDocument } from '../schemas';
 import { KeysRefreshService } from './keys-refresh.service';
 import { User } from 'src/modules/auth';
+import { EventPostmanDispatcher } from 'src/modules/lib/events/event-postman.dispatcher';
+import { EventPostmanEnum } from 'src/modules/lib/events/types/enum';
 
 @Injectable()
 export class KeysService {
@@ -24,6 +26,7 @@ export class KeysService {
   constructor(
     private readonly keysRepository: KeysRepository,
     private readonly keysRefreshService: KeysRefreshService,
+    private readonly eventPostmanDispatcher: EventPostmanDispatcher,
     private readonly pvzService: PvzService,
     private readonly queueProvider: QueueProvider,
     private readonly fetchProvider: FetchProvider,
@@ -42,7 +45,6 @@ export class KeysService {
 
   //Создание ключей через pipelines
   async create(data: IKey, id: Types.ObjectId) {
-    let inc = 0
 
     from(data.keys)
       .pipe(
@@ -104,19 +106,10 @@ export class KeysService {
 
           this.queueProvider.pushTask((async () => await this.fetchProvider.sendNewKey(dataParse)));
 
-          if (inc % 5 === 0) {
-            this.queueProvider.pushTask(
-              () => (setTimeout(
-                () => {
-                  this.eventEmitter.emitAsync(EventsWS.SEND_ARTICLES, { userId: data.userId, event: EventsCS.CREATE_ARTICLE })
-                }, (1000 * 60) * inc)));
-          }
-
-          inc++;
         },
         complete: () => {
-          this.eventEmitter.emitAsync(EventsWS.SEND_ARTICLES, { userId: data.userId, event: EventsCS.CREATE_ARTICLE });
           this.eventEmitter.emit('metric.created', { article: id, user: data.userId });
+          this.eventPostmanDispatcher.dispatch({ user: data.userId, count: data.keys.length, type: EventPostmanEnum.CREATE_ARTICLE })
         }
       })
 
@@ -217,13 +210,9 @@ export class KeysService {
         }),
       };
 
-      this.eventEmitter.emitAsync(EventsWS.SEND_ARTICLES, { userId: key.userId });
+      this.eventPostmanDispatcher.dispatch({ user: key.userId, count: 1, type: EventPostmanEnum.UPDATE_ONE_KEY });
 
-      this.queueProvider.pushTask((async () => await this.fetchProvider.sendNewKey(dataParse)))
-
-      setTimeout(() => {
-        this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: key.userId });
-      }, 10_000);
+      this.queueProvider.pushTask((async () => await this.fetchProvider.sendNewKey(dataParse)));
     }
   }
 
