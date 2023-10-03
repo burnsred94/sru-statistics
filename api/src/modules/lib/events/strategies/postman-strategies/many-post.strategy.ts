@@ -15,6 +15,7 @@ export class ManyPostStrategy implements StrategyEventSender {
 
     public eventSender(data: IEventPostman, callback: () => Promise<boolean>): void {
         const calculate_result = this.calculate(data.count);
+        callback();
 
         setImmediate(() => {
             this.runnerSend(calculate_result, callback)
