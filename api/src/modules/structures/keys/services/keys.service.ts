@@ -113,7 +113,6 @@ export class KeysService {
         }
       })
 
-
     setTimeout(() => {
       this.eventEmitter.emit('metric.gathering', { article: id, user: data.userId });
     }, (1000 * 60) * 30)
