@@ -21,9 +21,15 @@ export class FolderRepository extends AbstractRepository<FolderDocument> {
                     as: 'keys',
                 },
             },
-            { $unwind: '$keys' },
+            { $unwind: { path: '$keys', preserveNullAndEmptyArrays: true } },
             {
-                $match: { 'keys.active': true },
+                $match: {
+                    $or: [
+                        { 'keys.active': true },
+                        { keys: { $exists: false } },
+                        { keys: { $size: 0 } }
+                    ]
+                },
             },
             {
                 $group: {
@@ -42,7 +48,7 @@ export class FolderRepository extends AbstractRepository<FolderDocument> {
                     user: 1,
                     name: 1,
                     sum_frequency: 1,
-                    keys: { $size: '$keys' },
+                    keys: { $size: "$keys" },
                     createdAt: 1,
                     updatedAt: 1,
                 }
