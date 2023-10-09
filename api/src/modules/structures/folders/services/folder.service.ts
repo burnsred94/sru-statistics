@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { FolderRepository } from "../repositories";
-import { AddManyFolderDto, CreateFolderDto, GetOneFolderDto, RemovedKeysInFolderDto } from "../dto";
+import { AddManyFolderDto, CreateFolderDto, GetOneFolderDto, RemoveFolderDto, RemovedKeysInFolderDto } from "../dto";
 import { User } from "src/modules/auth";
 import { FolderDocument } from "../schemas";
 import { keysPopulate } from "../constants";
@@ -42,6 +42,10 @@ export class FolderService {
 
     async refreshFolder() {
         //
+    }
+
+    async removeFolder(dto: RemoveFolderDto, user: User): Promise<boolean> {
+        return await this.folderRepository.deleteMany({ _id: dto._id, user: user });
     }
 
 }

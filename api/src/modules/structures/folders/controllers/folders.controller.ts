@@ -3,7 +3,7 @@ import { FolderService } from '../services';
 import { Response } from 'express';
 import { CurrentUser, JwtAuthGuard, User } from 'src/modules/auth';
 import { ApiAcceptedResponse } from '@nestjs/swagger';
-import { AddManyFolderDto, CreateFolderDto, GetOneFolderDto, RemovedKeysInFolderDto } from '../dto';
+import { AddManyFolderDto, CreateFolderDto, GetOneFolderDto, RemoveFolderDto, RemovedKeysInFolderDto } from '../dto';
 import { TransformMongoIdPipe } from 'src/pipes';
 import { Types } from 'mongoose';
 
@@ -158,4 +158,32 @@ export class FoldersController {
             });
         }
     }
+
+    @Delete('remove-folder')
+    @UseGuards(JwtAuthGuard)
+    @ApiAcceptedResponse({ description: 'Removed keys from folder' })
+    async removeFolder(@Body() dto: RemoveFolderDto, @Res() response: Response, @CurrentUser() user: User) {
+        try {
+
+            const result = await this.folderService.removeFolder(dto, user)
+
+            response.status(HttpStatus.OK).send({
+                data: result,
+                errors: [],
+                status: HttpStatus.OK
+            });
+        } catch (error) {
+            this.logger.error(error);
+            response.status(HttpStatus.OK).send({
+                data: [],
+                errors: [
+                    {
+                        message: error.message
+                    }
+                ],
+                status: HttpStatus.OK
+            });
+        }
+    }
+
 } 
