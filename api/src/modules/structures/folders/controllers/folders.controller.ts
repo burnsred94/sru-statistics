@@ -1,11 +1,12 @@
-import { BadRequestException, Body, Controller, Delete, Get, HttpStatus, Logger, Param, Post, Query, Res, UseGuards, ValidationPipe } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, HttpStatus, Logger, Param, Post, Put, Query, Res, UseGuards, ValidationPipe } from '@nestjs/common';
 import { FolderService } from '../services';
 import { Response } from 'express';
 import { CurrentUser, JwtAuthGuard, User } from 'src/modules/auth';
 import { ApiAcceptedResponse } from '@nestjs/swagger';
-import { AddManyFolderDto, CreateFolderDto, GetOneFolderDto, RemoveFolderDto, RemovedKeysInFolderDto } from '../dto';
+import { AddManyFolderDto, CreateFolderDto, FolderUpdateDto, GetOneFolderDto, RemoveFolderDto, RemovedKeysInFolderDto } from '../dto';
 import { TransformMongoIdPipe } from 'src/pipes';
 import { Types } from 'mongoose';
+import { DUPLICATE_NAME } from '../constants';
 
 @Controller('keys-folders')
 export class FoldersController {
@@ -21,7 +22,7 @@ export class FoldersController {
 
             const checkDuplicate = await this.folderService.findOne({ user, article_id: dto.article_id, name: dto.name });
 
-            if (checkDuplicate) throw new BadRequestException('У вас уже есть папка с таким названием');
+            if (checkDuplicate) throw new BadRequestException(DUPLICATE_NAME);
 
             const result = await this.folderService.create(dto, user);
 
@@ -172,6 +173,37 @@ export class FoldersController {
         try {
 
             const result = await this.folderService.removeFolder(dto, user)
+
+            response.status(HttpStatus.OK).send({
+                data: result,
+                errors: [],
+                status: HttpStatus.OK
+            });
+        } catch (error) {
+            this.logger.error(error);
+            response.status(HttpStatus.OK).send({
+                data: [],
+                errors: [
+                    {
+                        message: error.message
+                    }
+                ],
+                status: HttpStatus.OK
+            });
+        }
+    }
+
+    @Put('update/:id')
+    @UseGuards(JwtAuthGuard)
+    @ApiAcceptedResponse({ description: 'Rename folder' })
+    async renameFolder(@Param('id', new TransformMongoIdPipe()) id: string, @Res() response: Response, @Body() dto: FolderUpdateDto, @CurrentUser() user: User) {
+        try {
+
+            const checkDuplicate = await this.folderService.findOne({ user, article_id: dto.article_id, name: dto.name });
+
+            if (checkDuplicate) throw new BadRequestException(DUPLICATE_NAME);
+
+            const result = await this.folderService.update({ _id: id, ...dto })
 
             response.status(HttpStatus.OK).send({
                 data: result,

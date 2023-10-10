@@ -4,7 +4,7 @@ import { AddManyFolderDto, CreateFolderDto, GetOneFolderDto, RemoveFolderDto, Re
 import { User } from "src/modules/auth";
 import { FolderDocument } from "../schemas";
 import { keysPopulateAndQuery } from "../constants";
-import { FilterQuery, PopulateOptions, Types } from "mongoose";
+import { FilterQuery, PopulateOptions, Types, UpdateQuery } from "mongoose";
 import { chunk } from "lodash";
 
 
@@ -25,11 +25,13 @@ export class FolderService {
     async findOne(filterQuery: FilterQuery<FolderDocument>, sortQuery?) {
         let populate: PopulateOptions | (string | PopulateOptions)[];
 
-        const pagination = sortQuery.pagination;
-
         if (sortQuery) {
             populate = await keysPopulateAndQuery(sortQuery);
-        };
+        } else {
+            return await this.folderRepository.findOne(filterQuery);
+        }
+
+        const pagination = sortQuery.pagination;
 
         const data = await this.folderRepository.findOne(filterQuery, populate);
         const total_keys = data.keys.length;
@@ -77,6 +79,10 @@ export class FolderService {
 
     async removeFolder(dto: RemoveFolderDto, user: User): Promise<boolean> {
         return await this.folderRepository.deleteMany({ _id: dto._id, user: user });
+    }
+
+    async update(updateQuery: UpdateQuery<FolderDocument>) {
+        return await this.folderRepository.findOneAndUpdate({ _id: updateQuery._id }, updateQuery)
     }
 
 }
