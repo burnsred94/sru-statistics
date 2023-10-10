@@ -79,13 +79,19 @@ export class FoldersController {
     async getOne(
         @Param('id', new TransformMongoIdPipe()) id: Types.ObjectId,
         @Body() dto: GetOneFolderDto,
+        @Query('search') search: string,
+        @Query('sort') sort: { frequency: number },
+        @Query('city') city: string,
         @Res() response: Response,
         @CurrentUser() user: User
     ) {
         try {
             if (!id) throw new BadRequestException(`Incorrect article parameter: ${id}`);
 
-            const result = await this.folderService.findOne({ _id: id, user }, dto);
+            const result = await this.folderService.findOne(
+                { _id: id, user },
+                { sort: sort, search, period: dto.period, city, pagination: dto.pagination }
+            );
 
             response.status(HttpStatus.OK).send({
                 data: result,

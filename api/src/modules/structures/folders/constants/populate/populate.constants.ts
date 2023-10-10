@@ -5,21 +5,50 @@ import { Periods } from "src/modules/structures/periods";
 import { Pvz } from "src/modules/structures/pvz";
 
 
-export const keysPopulate = async (query: FilterQuery<any>): Promise<PopulateOptions | (string | PopulateOptions)[]> => {
+export const keysPopulateAndQuery = async (query: FilterQuery<any>): Promise<PopulateOptions | (string | PopulateOptions)[]> => {
     if (!query.period) query.period = {};
+    let search = {};
+    let sort = { frequency: 1 }; // default
+    let city = {}
+
+    if (query.search !== undefined) search = { key: { $regex: query.search, $options: 'i' } };
+
+    if (query.sort !== undefined) sort = { frequency: Number(query.sort) };
+
+    if (query.city !== undefined) city = { city: query.city };
+
 
     return [
         {
-            path: 'keys', select: "key average pwz frequency", model: Keys.name,
+            path: "keys",
+            select: 'key average frequency active',
+            match: { active: true, ...search },
+            options: {
+                sort: sort,
+            },
+            model: Keys.name,
             populate: [
-                { path: 'average', select: "average timestamp start_position cpm", model: Average.name, match: { timestamp: { $in: query.period } } },
                 {
-                    path: 'pwz', select: "position name", model: Pvz.name,
+                    path: 'average',
+                    select: 'timestamp average start_position cpm difference',
+                    match: { timestamp: { $in: query.period } },
+                    model: Average.name,
+                },
+                {
+                    path: 'pwz',
+                    select: 'name position',
+                    match: { ...city },
+                    model: Pvz.name,
                     populate: {
-                        path: 'position', select: "position timestamp cpm promo_position difference", model: Periods.name, match: { timestamp: { $in: query.period } }
+                        path: 'position',
+                        select: 'position timestamp difference promo_position cpm',
+                        match: { timestamp: { $in: query.period } },
+                        model: Periods.name,
                     }
                 }
-            ],
+            ]
         }
     ]
 }
+
+
