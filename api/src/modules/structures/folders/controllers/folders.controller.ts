@@ -3,7 +3,7 @@ import { FolderService } from '../services';
 import { Response } from 'express';
 import { CurrentUser, JwtAuthGuard, User } from 'src/modules/auth';
 import { ApiAcceptedResponse } from '@nestjs/swagger';
-import { AddManyFolderDto, CreateFolderDto, FolderUpdateDto, GetOneFolderDto, RemoveFolderDto, RemovedKeysInFolderDto } from '../dto';
+import { AddManyFolderDto, CreateFolderDto, FolderUpdateDto, GetListDto, GetOneFolderDto, RemoveFolderDto, RemovedKeysInFolderDto } from '../dto';
 import { TransformMongoIdPipe } from 'src/pipes';
 import { Types } from 'mongoose';
 import { DUPLICATE_NAME } from '../constants';
@@ -45,14 +45,20 @@ export class FoldersController {
         }
     }
 
-    @Get('get-list/:article')
+    @Post('get-list/:article')
     @UseGuards(JwtAuthGuard)
     @ApiAcceptedResponse({ description: 'Get many folders from user' })
-    async getAll(@Param('article', new TransformMongoIdPipe()) article: Types.ObjectId, @Res() response: Response, @CurrentUser() user: User) {
+    async getAll(
+        @Param('article', new TransformMongoIdPipe()) article: Types.ObjectId,
+        @Res() response: Response,
+        @Query('search') search: string,
+        @CurrentUser() user: User,
+        @Body() dto: GetListDto,
+    ) {
         try {
             if (!article) throw new BadRequestException(`Incorrect article parameter: ${article}`);
 
-            const result = await this.folderService.findAll(user, article);
+            const result = await this.folderService.findAll(user, article, dto, { search });
 
             response.status(HttpStatus.OK).send({
                 data: result,
@@ -196,7 +202,12 @@ export class FoldersController {
     @Put('update/:id')
     @UseGuards(JwtAuthGuard)
     @ApiAcceptedResponse({ description: 'Rename folder' })
-    async renameFolder(@Param('id', new TransformMongoIdPipe()) id: string, @Res() response: Response, @Body() dto: FolderUpdateDto, @CurrentUser() user: User) {
+    async renameFolder(
+        @Param('id', new TransformMongoIdPipe()) id: string,
+        @Res() response: Response,
+        @Body() dto: FolderUpdateDto,
+        @CurrentUser() user: User
+    ) {
         try {
 
             const checkDuplicate = await this.folderService.findOne({ user, article_id: dto.article_id, name: dto.name });

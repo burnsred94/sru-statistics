@@ -4,3 +4,4 @@ export * from './folder-removed-keys.dto';
 export * from './remove-folder.dto';
 export * from './get-one-folder.dto';
 export * from './folder-update.dto';
+export * from './get-list.dto';

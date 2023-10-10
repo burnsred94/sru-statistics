@@ -1,28 +1,34 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { FolderRepository } from "../repositories";
-import { AddManyFolderDto, CreateFolderDto, GetOneFolderDto, RemoveFolderDto, RemovedKeysInFolderDto } from "../dto";
+import { AddManyFolderDto, CreateFolderDto, GetListDto, GetOneFolderDto, RemoveFolderDto, RemovedKeysInFolderDto } from "../dto";
 import { User } from "src/modules/auth";
 import { FolderDocument } from "../schemas";
 import { keysPopulateAndQuery } from "../constants";
-import { FilterQuery, PopulateOptions, Types, UpdateQuery } from "mongoose";
+import { FilterQuery, HydratedDocument, PopulateOptions, Types, UpdateQuery } from "mongoose";
 import { chunk } from "lodash";
+import { PaginationUtils } from "src/modules/utils/providers";
+import { IPaginationResponse } from "src/modules/utils/types";
 
 
 @Injectable()
 export class FolderService {
     protected readonly logger = new Logger(FolderService.name);
 
-    constructor(private readonly folderRepository: FolderRepository) { }
+    constructor(
+        private readonly folderRepository: FolderRepository,
+        private readonly paginationUtils: PaginationUtils,
+    ) { }
 
     async create(dto: CreateFolderDto, user: User): Promise<FolderDocument> {
         return await this.folderRepository.create({ user: user, ...dto });
     }
 
-    async findAll(user: User, article: Types.ObjectId): Promise<FolderDocument[]> {
-        return await this.folderRepository.findList(user, article);
+    async findAll(user: User, article: Types.ObjectId, dto: GetListDto, query?: { search: string }): Promise<IPaginationResponse> {
+        const data = await this.folderRepository.findList(user, article, query);
+        return await this.paginationUtils.paginate(dto.pagination, data, 'folders')
     }
 
-    async findOne(filterQuery: FilterQuery<FolderDocument>, sortQuery?) {
+    async findOne(filterQuery: FilterQuery<FolderDocument>, sortQuery?): Promise<IPaginationResponse | HydratedDocument<FolderDocument>> {
         let populate: PopulateOptions | (string | PopulateOptions)[];
 
         if (sortQuery) {
@@ -34,34 +40,8 @@ export class FolderService {
         const pagination = sortQuery.pagination;
 
         const data = await this.folderRepository.findOne(filterQuery, populate);
-        const total_keys = data.keys.length;
 
-        let keys: Types.ObjectId[],
-            page: number,
-            total: number,
-            page_size: number;
-
-        const chunks = chunk(data.keys, pagination.limit);
-
-        if (chunks[pagination.page - 1]) {
-            keys = chunks[pagination.page - 1],
-                page = pagination.page,
-                total = chunks.length,
-                page_size = pagination.limit;
-        } else {
-            keys = chunks[0],
-                page = 1,
-                total = chunks.length,
-                page_size = pagination.limit;
-        }
-
-        return {
-            keys,
-            meta: {
-                page, total, page_size,
-            },
-            total_keys,
-        }
+        return await this.paginationUtils.paginate(pagination, data.keys, 'keys');
     }
 
     async addedManyFolderKeys(dto: AddManyFolderDto, user: User) {
