@@ -32,7 +32,7 @@ export class PaginationUtils {
             }
 
             return {
-                [name]: element,
+                [name]: element ?? [],
                 meta: {
                     page, total, page_size,
                 },

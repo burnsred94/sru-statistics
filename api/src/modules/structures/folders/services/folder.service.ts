@@ -1,13 +1,15 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { FolderRepository } from "../repositories";
-import { AddManyFolderDto, CreateFolderDto, GetListDto, GetOneFolderDto, RemoveFolderDto, RemovedKeysInFolderDto } from "../dto";
+import { AddManyFolderDto, CreateFolderDto, GetListDto, RemoveFolderDto, RemovedKeysInFolderDto } from "../dto";
 import { User } from "src/modules/auth";
 import { FolderDocument } from "../schemas";
 import { keysPopulateAndQuery } from "../constants";
 import { FilterQuery, HydratedDocument, PopulateOptions, Types, UpdateQuery } from "mongoose";
-import { chunk } from "lodash";
 import { PaginationUtils } from "src/modules/utils/providers";
 import { IPaginationResponse } from "src/modules/utils/types";
+import { IManyFolderResponse } from "../types";
+import { reduce } from "lodash";
+
 
 
 @Injectable()
@@ -23,9 +25,43 @@ export class FolderService {
         return await this.folderRepository.create({ user: user, ...dto });
     }
 
-    async findAll(user: User, article: Types.ObjectId, dto: GetListDto, query?: { search: string }): Promise<IPaginationResponse> {
+    async createDuplicate(dto: CreateFolderDto, user: User): Promise<FolderDocument> {
+        let count = 0;
+        let find = false;
+
+        while (!find) {
+            const modified_name = count > 0 ? dto.name + ` (duplicate ${count})` : dto.name + ` (duplicate)`
+            const findName = await this.folderRepository.findOne({ user, article_id: dto.article_id, name: modified_name });
+            console.log(modified_name);
+
+            if (findName) {
+                count++;
+            } else {
+                find = true
+                return await this.folderRepository.create({ user: user, ...dto, name: modified_name });
+            }
+        }
+
+    }
+
+    async findAll(user: User, article: Types.ObjectId, dto: GetListDto, query?: { search: string }): Promise<IManyFolderResponse | HydratedDocument<FolderDocument>[]> {
         const data = await this.folderRepository.findList(user, article, query);
-        return await this.paginationUtils.paginate(dto.pagination, data, 'folders')
+
+        if (dto.list) {
+            const pagination_data = await this.paginationUtils.paginate(dto.pagination, data, 'folders');
+
+            const count_keys = reduce(data, (accumulator, element) => {
+                const count = element.keys
+                return accumulator + count;
+            }, 0)
+
+            return {
+                count_keys,
+                ...pagination_data
+            }
+        } else {
+            return data;
+        }
     }
 
     async findOne(filterQuery: FilterQuery<FolderDocument>, sortQuery?): Promise<IPaginationResponse | HydratedDocument<FolderDocument>> {

@@ -1,1 +1,1 @@
-export * from './interfaces/other';
+export * from './interfaces';

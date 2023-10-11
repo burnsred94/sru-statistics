@@ -10,7 +10,7 @@ export class FolderRepository extends AbstractRepository<FolderDocument> {
         super(folderModel)
     }
 
-    async findList(user: User, article: Types.ObjectId, query: { search: string }): Promise<FolderDocument[] | any[]> {
+    async findList(user: User, article: Types.ObjectId, query?: { search: string }): Promise<FolderDocument[] | any[]> {
         let search = {}
 
         if (query.search !== undefined) search = { name: { $regex: query.search, $options: 'i' } };
@@ -53,7 +53,6 @@ export class FolderRepository extends AbstractRepository<FolderDocument> {
                     name: 1,
                     sum_frequency: 1,
                     keys: { $size: "$keys" },
-                    all_count_keys: { $sum: "$keys" },
                     createdAt: 1,
                     updatedAt: 1,
                 }
