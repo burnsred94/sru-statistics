@@ -15,9 +15,7 @@ import { concatMap, from } from 'rxjs';
 export class KeysController {
   protected readonly logger = new Logger(KeysController.name);
 
-  constructor(
-    private readonly keysService: KeysService,
-  ) { }
+  constructor(private readonly keysService: KeysService) {}
 
   @Post('refresh')
   async refreshKey(@Body() key: RefreshKeyDto, @Res() response: Response) {
@@ -42,7 +40,7 @@ export class KeysController {
   @Post('enabled-keys')
   async httpEnabled(@Body() data: StatisticsEnabledRMQ.Payload) {
     await this.enabledSubscription(data);
-    console.log(`enabled user keys: ${data.userId}`)
+    console.log(`enabled user keys: ${data.userId}`);
   }
 
   @RabbitMqSubscriber({
@@ -56,16 +54,23 @@ export class KeysController {
       console.log(payload);
       from(payload.users)
         .pipe(
-          concatMap(async (element) => {
-            const disabled = await this.keysService.keySubscriptionManagement(element.userId, false)
-            return { user: element, status: disabled }
-          })
+          concatMap(async element => {
+            const disabled = await this.keysService.keySubscriptionManagement(
+              element.userId,
+              false,
+            );
+            return { user: element, status: disabled };
+          }),
         )
         .subscribe({
-          next: (value) => {
-            this.logger.log(`User ${value.user} disabled keys ${value.status ? `successfully` : `unsuccessfully`}`)
-          }
-        })
+          next: value => {
+            this.logger.log(
+              `User ${value.user} disabled keys ${
+                value.status ? `successfully` : `unsuccessfully`
+              }`,
+            );
+          },
+        });
     } catch (error) {
       this.logger.error(error.message);
     }
@@ -80,9 +85,10 @@ export class KeysController {
   async enabledSubscription(payload: StatisticsEnabledRMQ.Payload) {
     try {
       const enabled = await this.keysService.keySubscriptionManagement(payload.userId, true);
-      this.logger.log(enabled ?
-        `User ${payload.userId} enabled keys successfully` :
-        `User ${payload.userId} enabled keys unsuccessfully`
+      this.logger.log(
+        enabled
+          ? `User ${payload.userId} enabled keys successfully`
+          : `User ${payload.userId} enabled keys unsuccessfully`,
       );
     } catch (error) {
       this.logger.error(error.message);
@@ -102,5 +108,4 @@ export class KeysController {
       this.logger.error(error);
     }
   }
-
 }

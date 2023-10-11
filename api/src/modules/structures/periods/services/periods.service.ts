@@ -6,25 +6,23 @@ import { Types } from 'mongoose';
 export class PeriodsService {
   protected readonly logger = new Logger(PeriodsService.name);
 
-  constructor(
-    private readonly periodRepository: PeriodsRepository,
-  ) { }
+  constructor(private readonly periodRepository: PeriodsRepository) {}
 
   async create(difference = '0', date: string) {
     const result = await this.periodRepository.create({
       position: 'Ожидается',
       difference: difference,
-      timestamp: date
+      timestamp: date,
     });
     return result._id;
   }
 
-  async update(id: Types.ObjectId, data: { cpm: number; promotion: number; promoPosition: number; position: number }) {
+  async update(
+    id: Types.ObjectId,
+    data: { cpm: number; promotion: number; promoPosition: number; position: number },
+  ) {
     if (data.position === -3) {
-      return await this.periodRepository.findOneAndUpdate(
-        { _id: id },
-        { position: 'Ожидается' },
-      );
+      return await this.periodRepository.findOneAndUpdate({ _id: id }, { position: 'Ожидается' });
     }
 
     if (data.position > 0) {
@@ -37,12 +35,8 @@ export class PeriodsService {
         },
       );
     } else {
-      const pos =
-        data.position === -1 ? '1000+' : data.position === -2 ? 'Нет данных' : '1000+';
-      return await this.periodRepository.findOneAndUpdate(
-        { _id: id },
-        { position: pos },
-      );
+      const pos = data.position === -1 ? '1000+' : data.position === -2 ? 'Нет данных' : '1000+';
+      return await this.periodRepository.findOneAndUpdate({ _id: id }, { position: pos });
     }
   }
 

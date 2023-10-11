@@ -1,4 +1,4 @@
 export interface PaginationFolder {
-    page: number
-    limit: number
+  page: number;
+  limit: number;
 }

@@ -7,11 +7,8 @@ import { FolderService } from './services';
 import { UtilsModule } from 'src/modules/utils';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: Folder.name, schema: FolderSchema }]),
-    UtilsModule
-  ],
+  imports: [MongooseModule.forFeature([{ name: Folder.name, schema: FolderSchema }]), UtilsModule],
   controllers: [FoldersController],
-  providers: [FolderService, FolderRepository]
+  providers: [FolderService, FolderRepository],
 })
-export class FoldersModule { }
+export class FoldersModule {}

@@ -9,5 +9,5 @@ export namespace StatisticsDisabledRMQ {
     users: Array<{ userId: number }>;
   }
 
-  export class Response { }
+  export class Response {}
 }

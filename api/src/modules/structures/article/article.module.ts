@@ -13,12 +13,7 @@ import { TownsDestructor } from './utils';
 import { UtilsModule } from '../../utils';
 import { PaginationModule } from '../pagination';
 
-
-const STRUCTURES = [
-  PaginationModule,
-  KeysModule,
-  PvzModule,
-]
+const STRUCTURES = [PaginationModule, KeysModule, PvzModule];
 
 @Module({
   imports: [
@@ -38,4 +33,4 @@ const STRUCTURES = [
   ],
   exports: [ArticleService],
 })
-export class ArticleModule { }
+export class ArticleModule {}

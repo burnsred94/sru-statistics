@@ -155,15 +155,12 @@ export class ArticleService {
 
   //Дописать что бы не удалялся последний ключ
   async removeKey(data: RemoveKeyDto, user: User) {
-    // const getKey = await this.keyService.findById([{ _id: data.keyId, active: true }], 'all');
 
-    return await this.keyService.removeKey(data.keyId).then(data => {
-      if (data) {
-        this.eventEmitter.emit(EventsWS.SEND_ARTICLES, { userId: user });
+    return await this.keyService.removeKey(data.keysId, user).then(result => {
+      if (result) {
         return {
           event: MessagesEvent.DELETE_KEY,
-          article: data.article,
-          key: data.key,
+          length: data.keysId.length,
         };
       }
     });

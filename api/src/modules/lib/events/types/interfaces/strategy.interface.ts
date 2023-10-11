@@ -1,7 +1,5 @@
-import { IEventPostman } from ".";
-
+import { IEventPostman } from '.';
 
 export interface StrategyEventSender {
-    eventSender(data: IEventPostman, callback: () => Promise<boolean>): void;
+  eventSender(data: IEventPostman, callback: () => Promise<boolean>): void;
 }
-

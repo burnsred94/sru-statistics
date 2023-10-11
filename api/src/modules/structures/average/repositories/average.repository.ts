@@ -5,8 +5,7 @@ import { Model } from 'mongoose';
 import { AbstractRepository } from 'src/modules/database';
 
 @Injectable()
-export class AverageRepository extends AbstractRepository<AverageDocument>{
-
+export class AverageRepository extends AbstractRepository<AverageDocument> {
   constructor(@InjectModel(Average.name) readonly averageModel: Model<AverageDocument>) {
     super(averageModel);
   }

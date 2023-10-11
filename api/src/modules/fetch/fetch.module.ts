@@ -30,4 +30,4 @@ import { PvzModule } from '../structures/pvz';
   exports: [FetchProvider],
   controllers: [FetchController],
 })
-export class FetchModule { }
+export class FetchModule {}

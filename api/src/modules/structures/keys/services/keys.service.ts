@@ -35,17 +35,16 @@ export class KeysService {
   ) { }
 
   async count(searchQuery: FilterQuery<KeysDocument>) {
-    return await this.keysRepository.getCountDocuments(searchQuery)
+    return await this.keysRepository.getCountDocuments(searchQuery);
   }
 
   //Поиск всех ключей и возможность делать кастом populated
   async find(searchQuery: FilterQuery<ArticleDocument>, populate?: PopulateOptions) {
-    return await this.keysRepository.find(searchQuery, populate)
+    return await this.keysRepository.find(searchQuery, populate);
   }
 
   //Создание ключей через pipelines
   async create(data: IKey, id: Types.ObjectId) {
-
     from(data.keys)
       .pipe(
         concatMap(async element => {
@@ -61,11 +60,12 @@ export class KeysService {
             userId: data.userId,
             frequency: frequency,
             average: [average._id],
-          })
+          });
 
           const pwz = await Promise.all(
             data.pvz.map(
-              async pvz => await this.pvzService.create(pvz, data.article, data.userId, String(key._id)),
+              async pvz =>
+                await this.pvzService.create(pvz, data.article, data.userId, String(key._id)),
             ),
           );
 
@@ -104,18 +104,21 @@ export class KeysService {
             }),
           };
 
-          this.queueProvider.pushTask((async () => await this.fetchProvider.sendNewKey(dataParse)));
-
+          this.queueProvider.pushTask(async () => await this.fetchProvider.sendNewKey(dataParse));
         },
         complete: () => {
           this.eventEmitter.emit('metric.created', { article: id, user: data.userId });
-          this.eventPostmanDispatcher.dispatch({ user: data.userId, count: data.keys.length, type: EventPostmanEnum.CREATE_ARTICLE })
-        }
-      })
+          this.eventPostmanDispatcher.dispatch({
+            user: data.userId,
+            count: data.keys.length,
+            type: EventPostmanEnum.CREATE_ARTICLE,
+          });
+        },
+      });
 
     setTimeout(() => {
       this.eventEmitter.emit('metric.gathering', { article: id, user: data.userId });
-    }, (1000 * 60) * 30)
+    }, 1000 * 60 * 30);
   }
 
   @Cron('05 0 * * *', { timeZone: 'Europe/Moscow' })
@@ -123,9 +126,10 @@ export class KeysService {
     const allKeys = await this.keysRepository.find(
       {
         active: true,
-        $or: [{ active_sub: true }, { active_sub: { $exists: false } }]
+        $or: [{ active_sub: true }, { active_sub: { $exists: false } }],
       },
-      { path: 'pwz', select: 'name geo_address_id', model: Pvz.name });
+      { path: 'pwz', select: 'name geo_address_id', model: Pvz.name },
+    );
 
     const observe = from(allKeys).pipe(
       concatMap(async (element): Promise<SearchPositionRMQ.Payload> => {
@@ -135,7 +139,9 @@ export class KeysService {
 
         const pwz_data = await this.pvzService.addedPosition(element.pwz, average._id);
 
-        await this.keysRepository.findOneAndUpdate(element._id, { $push: { average: average._id } });
+        await this.keysRepository.findOneAndUpdate(element._id, {
+          $push: { average: average._id },
+        });
 
         const resolved = await Promise.all(pwz_data);
 
@@ -151,7 +157,7 @@ export class KeysService {
     observe.subscribe({
       next: data => {
         const send = data;
-        this.queueProvider.pushTask((async () => await this.fetchProvider.sendNewKey(send)))
+        this.queueProvider.pushTask(async () => await this.fetchProvider.sendNewKey(send));
       },
       complete: () => {
         this.logger.log(
@@ -172,24 +178,37 @@ export class KeysService {
     key_id: Types.ObjectId;
   }) {
     await this.averageService.update(payload);
-    const key = await this.keysRepository.findOne({ _id: payload.key_id }, { path: 'average', select: 'average', model: Average.name });
+    const key = await this.keysRepository.findOne(
+      { _id: payload.key_id },
+      { path: 'average', select: 'average', model: Average.name },
+    );
     const average = [key.average.at(-1), key.average.at(-2)].includes(undefined)
       ? []
-      : [key.average.at(-1), key.average.at(-2)]
+      : [key.average.at(-1), key.average.at(-2)];
 
     if (average.length > 0) await this.averageService.updateDiff(average);
   }
-  //Отключение ключа  
-  async removeKey(id: Types.ObjectId) {
-    return await this.keysRepository.findOneAndUpdate({ _id: id }, { $set: { active: false } });
+
+  async removeKey(ids: Types.ObjectId[], user: User) {
+    const result = await this.keysRepository.updateMany({ _id: ids }, { $set: { active: false } });
+    await this.eventPostmanDispatcher.dispatch({
+      user: user,
+      count: ids.length,
+      type: EventPostmanEnum.UPDATE_ONE_KEY,
+    });
+    return result;
   }
+
   //Активация ключей
   async activateKeys(ids: Types.ObjectId[]) {
     await this.keysRepository.updateMany(ids, { $set: { active: true } });
   }
   //Обновление одного ключа
   async refreshKey(_id: Types.ObjectId) {
-    const key = await this.keysRepository.findOne({ _id: _id }, { path: "pwz", select: "name position geo_address_id", model: Pvz.name })
+    const key = await this.keysRepository.findOne(
+      { _id: _id },
+      { path: 'pwz', select: 'name position geo_address_id', model: Pvz.name },
+    );
     if (key) {
       await this.averageService.updateRefresh(key.average.at(-1));
 
@@ -209,9 +228,13 @@ export class KeysService {
         }),
       };
 
-      this.eventPostmanDispatcher.dispatch({ user: key.userId, count: 1, type: EventPostmanEnum.UPDATE_ONE_KEY });
+      this.eventPostmanDispatcher.dispatch({
+        user: key.userId,
+        count: 1,
+        type: EventPostmanEnum.UPDATE_ONE_KEY,
+      });
 
-      this.queueProvider.pushTask((async () => await this.fetchProvider.sendNewKey(dataParse)));
+      this.queueProvider.pushTask(async () => await this.fetchProvider.sendNewKey(dataParse));
     }
   }
 
@@ -219,21 +242,24 @@ export class KeysService {
   async updateData(payload: StatisticsUpdateRMQ.Payload) {
     setImmediate(async () => {
       if (payload.position.position >= 0) {
-        payload.position.position = payload.position.position + 1 // Исправить в парсере и убрать
+        payload.position.position = payload.position.position + 1; // Исправить в парсере и убрать
       }
-      this.queueProvider.pushTask(
-        (async () => {
-          await this.pvzService.update(
-            payload,
-            async () => await this.updateAverage({ id: payload.averageId, average: payload.position, key_id: payload.key_id })
-          )
-        })
-      );
+      this.queueProvider.pushTask(async () => {
+        await this.pvzService.update(
+          payload,
+          async () =>
+            await this.updateAverage({
+              id: payload.averageId,
+              average: payload.position,
+              key_id: payload.key_id,
+            }),
+        );
+      });
     });
   }
 
   async keySubscriptionManagement(userId: number, update: boolean) {
-    return await this.keysRepository.updateMany({ userId }, { active_sub: update })
+    return await this.keysRepository.updateMany({ userId }, { active_sub: update });
   }
 
   async refreshAllKeysFromArticle(article: string, user: User) {

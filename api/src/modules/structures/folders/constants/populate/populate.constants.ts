@@ -1,54 +1,52 @@
-import { FilterQuery, PopulateOptions } from "mongoose";
-import { Average } from "src/modules/structures/average";
-import { Keys } from "src/modules/structures/keys";
-import { Periods } from "src/modules/structures/periods";
-import { Pvz } from "src/modules/structures/pvz";
+import { FilterQuery, PopulateOptions } from 'mongoose';
+import { Average } from 'src/modules/structures/average';
+import { Keys } from 'src/modules/structures/keys';
+import { Periods } from 'src/modules/structures/periods';
+import { Pvz } from 'src/modules/structures/pvz';
 
+export const keysPopulateAndQuery = async (
+  query: FilterQuery<any>,
+): Promise<PopulateOptions | (string | PopulateOptions)[]> => {
+  if (!query.period) query.period = {};
+  let search = {};
+  let sort = { frequency: 1 }; // default
+  let city = {};
 
-export const keysPopulateAndQuery = async (query: FilterQuery<any>): Promise<PopulateOptions | (string | PopulateOptions)[]> => {
-    if (!query.period) query.period = {};
-    let search = {};
-    let sort = { frequency: 1 }; // default
-    let city = {}
+  if (query.search !== undefined) search = { key: { $regex: query.search, $options: 'i' } };
 
-    if (query.search !== undefined) search = { key: { $regex: query.search, $options: 'i' } };
+  if (query.sort !== undefined) sort = { frequency: Number(query.sort) };
 
-    if (query.sort !== undefined) sort = { frequency: Number(query.sort) };
+  if (query.city !== undefined) city = { city: query.city };
 
-    if (query.city !== undefined) city = { city: query.city };
-
-
-    return [
+  return [
+    {
+      path: 'keys',
+      select: 'key average frequency active',
+      match: { active: true, ...search },
+      options: {
+        sort: sort,
+      },
+      model: Keys.name,
+      populate: [
         {
-            path: "keys",
-            select: 'key average frequency active',
-            match: { active: true, ...search },
-            options: {
-                sort: sort,
-            },
-            model: Keys.name,
-            populate: [
-                {
-                    path: 'average',
-                    select: 'timestamp average start_position cpm difference',
-                    match: { timestamp: { $in: query.period } },
-                    model: Average.name,
-                },
-                {
-                    path: 'pwz',
-                    select: 'name position',
-                    match: { ...city },
-                    model: Pvz.name,
-                    populate: {
-                        path: 'position',
-                        select: 'position timestamp difference promo_position cpm',
-                        match: { timestamp: { $in: query.period } },
-                        model: Periods.name,
-                    }
-                }
-            ]
-        }
-    ]
-}
-
-
+          path: 'average',
+          select: 'timestamp average start_position cpm difference',
+          match: { timestamp: { $in: query.period } },
+          model: Average.name,
+        },
+        {
+          path: 'pwz',
+          select: 'name position',
+          match: { ...city },
+          model: Pvz.name,
+          populate: {
+            path: 'position',
+            select: 'position timestamp difference promo_position cpm',
+            match: { timestamp: { $in: query.period } },
+            model: Periods.name,
+          },
+        },
+      ],
+    },
+  ];
+};

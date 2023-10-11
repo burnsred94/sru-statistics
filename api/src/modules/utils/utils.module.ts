@@ -6,4 +6,4 @@ import { MathUtils, PaginationUtils } from './providers';
   providers: [MathUtils, PaginationUtils],
   exports: [MathUtils, PaginationUtils],
 })
-export class UtilsModule { }
+export class UtilsModule {}

@@ -1,21 +1,19 @@
-import { Injectable, Optional } from "@nestjs/common";
-import { IEventPostman, StrategyEventSender } from "../types/interfaces";
-
+import { Injectable, Optional } from '@nestjs/common';
+import { IEventPostman, StrategyEventSender } from '../types/interfaces';
 
 @Injectable()
 export class EventSenderService {
+  private strategy: StrategyEventSender;
 
-    private strategy: StrategyEventSender
+  constructor(@Optional() strategy: StrategyEventSender) {
+    this.strategy = strategy;
+  }
 
-    constructor(@Optional() strategy: StrategyEventSender) {
-        this.strategy = strategy;
-    }
+  public setStrategy(strategy: StrategyEventSender) {
+    this.strategy = strategy;
+  }
 
-    public setStrategy(strategy: StrategyEventSender) {
-        this.strategy = strategy;
-    }
-
-    public postman(data: IEventPostman, callback: () => Promise<boolean>) {
-        this.strategy.eventSender(data, callback);
-    }
+  public postman(data: IEventPostman, callback: () => Promise<boolean>) {
+    this.strategy.eventSender(data, callback);
+  }
 }
