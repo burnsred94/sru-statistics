@@ -15,7 +15,7 @@ import { concatMap, from } from 'rxjs';
 export class KeysController {
   protected readonly logger = new Logger(KeysController.name);
 
-  constructor(private readonly keysService: KeysService) {}
+  constructor(private readonly keysService: KeysService) { }
 
   @Post('refresh')
   async refreshKey(@Body() key: RefreshKeyDto, @Res() response: Response) {
@@ -35,12 +35,6 @@ export class KeysController {
         status: error.statusCode,
       });
     }
-  }
-
-  @Post('enabled-keys')
-  async httpEnabled(@Body() data: StatisticsEnabledRMQ.Payload) {
-    await this.enabledSubscription(data);
-    console.log(`enabled user keys: ${data.userId}`);
   }
 
   @RabbitMqSubscriber({
@@ -65,8 +59,7 @@ export class KeysController {
         .subscribe({
           next: value => {
             this.logger.log(
-              `User ${value.user} disabled keys ${
-                value.status ? `successfully` : `unsuccessfully`
+              `User ${value.user} disabled keys ${value.status ? `successfully` : `unsuccessfully`
               }`,
             );
           },

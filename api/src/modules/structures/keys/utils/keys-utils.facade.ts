@@ -9,7 +9,7 @@ export class KeysUtilsFacade implements IFacadeUtils {
   constructor(
     private readonly keysPullRmqUtilsProvider: KeysPullRmqUtilsProvider,
     private readonly keysUpdatedRMQUtils: KeysUpdatedRMQUtils,
-  ) {}
+  ) { }
 
   public async pullIdsToSendRMQ(document: KeysDocument): Promise<IPullIdsResponse> {
     return await this.keysPullRmqUtilsProvider.pullIds(document);

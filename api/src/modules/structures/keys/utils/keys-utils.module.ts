@@ -11,4 +11,4 @@ const PROVIDERS = [KeysPullRmqUtilsProvider, KeysUpdatedRMQUtils];
   providers: [KeysUtilsFacade, ...PROVIDERS],
   exports: [KeysUtilsFacade],
 })
-export class KeysUtilsModule {}
+export class KeysUtilsModule { }

@@ -19,7 +19,7 @@ export class KeysRefreshService implements IKeysRefreshService {
     private readonly keysUtilsFaced: KeysUtilsFacade,
     private readonly fetchProvider: FetchProvider,
     private readonly eventPostmanDispatcher: EventPostmanDispatcher,
-  ) {}
+  ) { }
 
   async refreshKeysInArticle(article: string, user: User): Promise<void> {
     const findKeys = await this.keysRepository.find(

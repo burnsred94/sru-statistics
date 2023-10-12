@@ -27,7 +27,7 @@ export class MetricsService {
     private readonly keyService: KeysService,
     private readonly pvzService: PvzService,
     private readonly metricsRepository: MetricsRepository,
-  ) {}
+  ) { }
 
   async getMetrics(user: User, _id: Types.ObjectId) {
     const id = new Types.ObjectId(_id);
@@ -58,26 +58,24 @@ export class MetricsService {
     };
   }
 
-  @Cron('0 9-23/3 * * *', { timeZone: 'Europe/Moscow' })
-  @OnEvent('metric.gathering')
+  @Cron("0 9-23/3 * * *", { timeZone: "Europe/Moscow" })
+  @OnEvent("metric.gathering")
   async dataGathering(payload?) {
     from(
-      payload === undefined
-        ? await this.metricsRepository.find()
-        : await this.metricsRepository.find(payload),
+      payload === undefined ?
+        await this.metricsRepository.find() :
+        await this.metricsRepository.find(payload)
     )
       .pipe(
         concatMap(async item => {
           const article = await this.articleService.findOne(item.article);
 
           if (article === null) {
-            return null;
+            return null
           }
-          const keys = await this.keyService.find(
-            { _id: article.keys },
-            { path: 'average', select: 'average start_position cpm', model: Average.name },
-          );
+          const keys = await this.keyService.find({ _id: article.keys }, { path: 'average', select: 'average', model: Average.name });
           const observer = await this.pvzService.findByMetrics(item.user, article.article);
+          console.log(observer);
 
           const average: any = keys.map(value => {
             return value?.average.at(-1) === undefined ? 0 : value.average.at(-1);
@@ -96,28 +94,28 @@ export class MetricsService {
                 accumulator.top_1000 = accumulator.top_1000 + 1;
 
                 if (value.start_position) {
-                  accumulator.ads.num = accumulator.ads.num + Number(value.average);
+                  accumulator.ads.num = (accumulator.ads.num + Number(value.average));
                   accumulator.ads.del = accumulator.ads.del + 1;
                 } else {
-                  accumulator.org.num = accumulator.org.num + Number(value.average);
+                  accumulator.org.num = (accumulator.org.num + Number(value.average));
                   accumulator.org.del = accumulator.org.del + 1;
                 }
               }
               return accumulator;
-            },
-            {
-              ads: { num: 0, del: 0 },
-              org: { num: 0, del: 0 },
-              ts: new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' }).split(',')[0],
-              index: 0,
-              top_100: 0,
-              top_1000: 0,
-              article: item.article,
-              user: item.user,
-              city_metric: observer,
-            },
-          );
-        }),
+
+            }, {
+            ads: { num: 0, del: 0 },
+            org: { num: 0, del: 0 },
+            ts: new Date().toLocaleString("ru-RU", { timeZone: "Europe/Moscow" }).split(",")[0],
+            index: 0,
+            top_100: 0,
+            top_1000: 0,
+            article: item.article,
+            user: item.user,
+            city_metric: observer
+          });
+
+        })
       )
       .subscribe({
         next: async dataObserver => {

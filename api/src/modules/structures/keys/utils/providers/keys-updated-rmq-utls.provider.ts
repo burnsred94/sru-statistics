@@ -10,7 +10,7 @@ export class KeysUpdatedRMQUtils {
   constructor(
     private readonly averageService: AverageService,
     private readonly pvzService: PvzService,
-  ) {}
+  ) { }
 
   public async refreshKeyDataInDB(
     data: IPvzRMQSendStructure[],
