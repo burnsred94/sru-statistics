@@ -16,9 +16,6 @@ export class Pvz {
   city: string;
 
   @Prop({ type: String })
-  key_id: string;
-
-  @Prop({ type: String })
   geo_address_id: string;
 
   @Prop({ type: String })

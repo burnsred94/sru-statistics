@@ -18,6 +18,7 @@ import { CurrentUser, JwtAuthGuard, User } from 'src/modules/auth';
 import { ApiAcceptedResponse } from '@nestjs/swagger';
 import {
     AddManyFolderDto,
+    AddNewKeysToFolderDto,
     CreateFolderDto,
     FolderUpdateDto,
     GetListDto,
@@ -29,12 +30,16 @@ import { TransformMongoIdPipe } from 'src/pipes';
 import { HydratedDocument, Types } from 'mongoose';
 import { DUPLICATE_NAME } from '../constants';
 import { FolderDocument } from '../schemas';
+import { KeysService } from '../../keys';
 
 @Controller('keys-folders')
 export class FoldersController {
     protected readonly logger = new Logger(FoldersController.name);
 
-    constructor(private readonly folderService: FolderService) { }
+    constructor(
+        private readonly folderService: FolderService,
+        private readonly keysService: KeysService
+    ) { }
 
     @Post('new-folder')
     @UseGuards(JwtAuthGuard)
@@ -56,9 +61,10 @@ export class FoldersController {
                     name: dto.name,
                 });
 
-                const keys = checkDuplicate.keys as Types.ObjectId[];
+                const keys = checkDuplicate?.keys ? checkDuplicate.keys as Types.ObjectId[] : [];
 
                 result = await this.folderService.createDuplicate({ ...dto, keys }, user);
+
             } else {
                 const checkDuplicate = await this.folderService.findOne({
                     user,
@@ -273,6 +279,38 @@ export class FoldersController {
 
             response.status(HttpStatus.OK).send({
                 data: result,
+                errors: [],
+                status: HttpStatus.OK,
+            });
+        } catch (error) {
+            this.logger.error(error);
+            response.status(HttpStatus.OK).send({
+                data: [],
+                errors: [
+                    {
+                        message: error.message,
+                    },
+                ],
+                status: HttpStatus.OK,
+            });
+        }
+    }
+
+    @Post('parse-and-added/:id')
+    @UseGuards(JwtAuthGuard)
+    async addedNewKeysToFolder(
+        @Res() response: Response,
+        @Body() dto: AddNewKeysToFolderDto,
+        @CurrentUser() user: User,
+        @Param('id', new TransformMongoIdPipe()) id: Types.ObjectId
+    ) {
+        try {
+
+            // const addNewKeys = await this.keysService.a
+
+
+            response.status(HttpStatus.OK).send({
+                data: [],
                 errors: [],
                 status: HttpStatus.OK,
             });

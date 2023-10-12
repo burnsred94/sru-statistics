@@ -12,8 +12,11 @@ import { ArticleRepository } from './repositories';
 import { TownsDestructor } from './utils';
 import { UtilsModule } from '../../utils';
 import { PaginationModule } from '../pagination';
+import { ArticleBuilder } from './services/builders/article.builder';
+import { ProductsIntegrationModule, ProfilesIntegrationModule } from 'src/modules/integrations';
 
 const STRUCTURES = [PaginationModule, KeysModule, PvzModule];
+const INTEGRATIONS = [ProfilesIntegrationModule, ProductsIntegrationModule]
 
 @Module({
   imports: [
@@ -21,11 +24,13 @@ const STRUCTURES = [PaginationModule, KeysModule, PvzModule];
     EventEmitterModule.forRoot({ global: true, maxListeners: 10, verboseMemoryLeak: true }),
     FetchModule,
     UtilsModule,
+    ...INTEGRATIONS,
     ...STRUCTURES,
   ],
   controllers: [ArticleController],
   providers: [
     ArticleService,
+    ArticleBuilder,
     CreateArticleStrategy,
     ArticleRepository,
     JwtStrategy,
@@ -33,4 +38,4 @@ const STRUCTURES = [PaginationModule, KeysModule, PvzModule];
   ],
   exports: [ArticleService],
 })
-export class ArticleModule {}
+export class ArticleModule { }

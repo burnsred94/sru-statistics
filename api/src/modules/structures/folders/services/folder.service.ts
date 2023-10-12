@@ -36,12 +36,12 @@ export class FolderService {
         while (!find) {
             const modified_name =
                 count > 0 ? dto.name + ` (дубликат ${count})` : dto.name + ` (дубликат)`;
+
             const findName = await this.folderRepository.findOne({
                 user,
                 article_id: dto.article_id,
                 name: modified_name,
             });
-            console.log(modified_name);
 
             if (findName) {
                 count++;

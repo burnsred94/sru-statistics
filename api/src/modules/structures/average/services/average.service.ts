@@ -8,7 +8,7 @@ export class AverageService {
   constructor(
     private readonly averageRepository: AverageRepository,
     private readonly mathUtils: MathUtils,
-  ) {}
+  ) { }
 
   async create(data: { userId: number }) {
     const date = await this.mathUtils.currentDate();
@@ -85,8 +85,8 @@ export class AverageService {
         payload.average.position === -1
           ? '1000+'
           : payload.average.position === -2
-          ? 'Нет данных'
-          : '1000+';
+            ? 'Нет данных'
+            : '1000+';
 
       await this.averageRepository.findOneAndUpdate(
         { _id: payload.id },

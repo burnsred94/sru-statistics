@@ -9,7 +9,7 @@ import {
 import { User } from 'src/modules/auth';
 import { Keys, KeysService } from '../../keys';
 import { TownsDestructor } from '../utils';
-import { chunk, map } from 'lodash';
+import { chunk, map, uniq } from 'lodash';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { EventsWS } from '../events';
 import { GetProductRMQ } from 'src/modules/rabbitmq/contracts/products';
@@ -43,7 +43,13 @@ export class ArticleService {
   //Переделать на более оптимизированный запрос
   async create(data: CreateArticleDto, user: User, product?: GetProductRMQ.Response) {
     try {
-      const keys = await this.utilsDestructor.keysFilter(data.keys);
+      const article = await this.articleRepository.findOne({ user: user, article: data.article })
+
+      const keys = uniq(data.keys);
+
+      if (!article) {
+        return await this.createArticleStrategy.createNewArticle(data.article, keys, user, product);
+      }
 
       const checkProduct = await this.createArticleStrategy.findNotActiveAddKeys(
         data.article,
@@ -59,7 +65,6 @@ export class ArticleService {
       );
       if (checkKeys) return checkKeys;
 
-      return await this.createArticleStrategy.createNewArticle(data.article, keys, user, product);
     } catch (error) {
       return error.message;
     }
@@ -113,6 +118,7 @@ export class ArticleService {
   //Оптимизируется после создания
   async addKeys(data: AddKeyDto, user: User) {
     const { articleId, keys } = data;
+
     const find: HydratedDocument<Article> = await this.articleRepository.findOne(
       { _id: articleId },
       {

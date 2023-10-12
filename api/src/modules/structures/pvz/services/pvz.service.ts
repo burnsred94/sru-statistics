@@ -16,7 +16,7 @@ export class PvzService {
     private readonly pvzRepository: PvzRepository,
     private readonly periodsService: PeriodsService,
     private readonly mathUtils: MathUtils,
-  ) {}
+  ) { }
 
   //Расчет позиций для метрики по городам
   async findByMetrics(user: number, article: string) {
@@ -91,7 +91,7 @@ export class PvzService {
   }
 
   //Создание пвз + периуд
-  async create(value, article: string, userId: User, keyId: string) {
+  async create(value, article: string, userId: User, keyId?: string) {
     const date = await this.mathUtils.currentDate();
     const period = await this.periodsService.create('0', date);
 
@@ -103,7 +103,6 @@ export class PvzService {
         geo_address_id: value.addressId,
         position: [period],
         userId: userId,
-        key_id: keyId,
       },
       { path: 'position', select: 'position', model: Periods.name },
     );
