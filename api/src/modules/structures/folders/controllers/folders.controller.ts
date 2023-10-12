@@ -43,28 +43,36 @@ export class FoldersController {
         @Body() dto: CreateFolderDto,
         @Res() response: Response,
         @CurrentUser() user: User,
+        @Query('folder') folderId: Types.ObjectId,
         @Query('duplicate') duplicate: string,
     ) {
         try {
             let result: HydratedDocument<FolderDocument>;
             const control = JSON.parse(duplicate);
 
-            if (control) {
-                const checkDuplicate = await this.folderService.findOne({
-                    user,
-                    article_id: dto.article_id,
-                    name: dto.name,
-                });
+            const checkDuplicate = await this.folderService.findOne({
+                user,
+                article_id: dto.article_id,
+                name: dto.name,
+            });
+
+
+            if (folderId && control) {
+                if (checkDuplicate) throw new BadRequestException(DUPLICATE_NAME);
+
+                const folder = await this.folderService.findOne({ _id: folderId });
+                const keys = folder.keys as Types.ObjectId[]
+                result = await this.folderService.create({ name: dto.name, article_id: dto.article_id, keys: keys }, user)
+            }
+
+            if (control && !folderId) {
 
                 const keys = checkDuplicate?.keys ? checkDuplicate.keys as Types.ObjectId[] : [];
 
                 result = await this.folderService.createDuplicate({ ...dto, keys }, user);
-            } else {
-                const checkDuplicate = await this.folderService.findOne({
-                    user,
-                    article_id: dto.article_id,
-                    name: dto.name,
-                });
+
+            } else if (!control && !folderId) {
+
                 if (checkDuplicate) throw new BadRequestException(DUPLICATE_NAME);
                 result = await this.folderService.create(dto, user);
             }
