@@ -56,7 +56,7 @@ export class FoldersController {
                     name: dto.name,
                 });
 
-                const keys = checkDuplicate.keys as Types.ObjectId[];
+                const keys = checkDuplicate?.keys ? checkDuplicate.keys as Types.ObjectId[] : [];
 
                 result = await this.folderService.createDuplicate({ ...dto, keys }, user);
             } else {
