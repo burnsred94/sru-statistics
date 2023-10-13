@@ -21,6 +21,7 @@ import { Pvz } from '../../pvz';
 import { StatisticsGetArticlesRMQ } from 'src/modules/rabbitmq/contracts/statistics';
 import { Periods } from '../../periods';
 import { Pagination } from '../../pagination';
+import { ArticleBuilder } from './builders/article.builder';
 
 @Injectable()
 export class ArticleService {
@@ -30,6 +31,7 @@ export class ArticleService {
     private readonly createArticleStrategy: CreateArticleStrategy,
     private readonly articleRepository: ArticleRepository,
     private readonly keyService: KeysService,
+    private readonly articleBuilder: ArticleBuilder,
     private readonly utilsDestructor: TownsDestructor,
     private readonly eventEmitter: EventEmitter2,
   ) { }
@@ -48,22 +50,27 @@ export class ArticleService {
       const keys = uniq(data.keys);
 
       if (!article) {
-        return await this.createArticleStrategy.createNewArticle(data.article, keys, user, product);
+        await this.articleBuilder
+          .getProduct(data.article)
+          .getCities(user)
+          .initPagination()
+          .keywordCreate(keys, user)
+          .create()
       }
 
-      const checkProduct = await this.createArticleStrategy.findNotActiveAddKeys(
-        data.article,
-        keys,
-        user,
-      );
-      if (checkProduct) return checkProduct;
+      // const checkProduct = await this.createArticleStrategy.findNotActiveAddKeys(
+      //   data.article,
+      //   keys,
+      //   user,
+      // );
+      // if (checkProduct) return checkProduct;
 
-      const checkKeys = await this.createArticleStrategy.checkArticleAddKeys(
-        data.article,
-        keys,
-        user,
-      );
-      if (checkKeys) return checkKeys;
+      // const checkKeys = await this.createArticleStrategy.checkArticleAddKeys(
+      //   data.article,
+      //   keys,
+      //   user,
+      // );
+      // if (checkKeys) return checkKeys;
 
     } catch (error) {
       return error.message;

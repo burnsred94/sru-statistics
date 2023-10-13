@@ -9,7 +9,7 @@ export class ProfileIntegrationAdapter {
         return map(towns, ({ city, city_id, addresses }) => {
             return this.addressDestruction(addresses, city, city_id);
         })
-            .flat();
+            .flat()
     };
 
     private addressDestruction(address: Address[], city: string, city_id: string): IAdaptiveProfile[] {

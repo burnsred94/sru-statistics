@@ -28,7 +28,7 @@ export class Article {
   @Prop({ type: String, default: null })
   productImg: string;
 
-  @Prop({ type: Boolean })
+  @Prop({ type: Boolean, default: true })
   active: boolean;
 
   @Prop({ type: [Types.ObjectId], ref: Keys.name })
