@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -12,7 +13,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiAcceptedResponse } from '@nestjs/swagger';
-import { AddKeyDto, CreateArticleDto, RemoveKeyDto, RemoveArticleDto, RefreshArticleDto } from '../dto';
+import {
+  AddKeyDto,
+  CreateArticleDto,
+  RemoveKeyDto,
+  RemoveArticleDto,
+  RefreshArticleDto,
+} from '../dto';
 import { CurrentUser, JwtAuthGuard, User } from 'src/modules';
 import { ArticleService } from '../services';
 import { Response } from 'express';
@@ -127,7 +134,8 @@ export class ArticleController {
     @CurrentUser() user: User,
     @Query('search') search: string,
     @Query('sort') sort: string,
-    @Res() response: Response) {
+    @Res() response: Response,
+  ) {
     try {
       const articles = await this.articleService.articles(user, { search, sort });
 
@@ -154,12 +162,14 @@ export class ArticleController {
       const remove = await this.articleService.removeKey(dto, user);
 
       if (remove) {
-        const initArticle = initArticleMessage(remove.article, remove, remove.key);
+        const initArticle = initArticleMessage(null, remove);
         return response.status(HttpStatus.OK).send({
           status: HttpStatus.OK,
           data: { message: initArticle },
           errors: [],
         });
+      } else {
+        throw new BadRequestException('Невозможно удалить, ключи были удалены')
       }
     } catch (error) {
       this.logger.error(error);
@@ -173,14 +183,15 @@ export class ArticleController {
 
   @ApiAcceptedResponse({ description: 'Remove key' })
   @UseGuards(JwtAuthGuard)
-  @Post("article/:id")
+  @Post('article/:id')
   async getArticle(
     @Param('id') id: Types.ObjectId,
     @Body() dto,
     @Query('search') search: string,
     @Query('sort') sort: { frequency: number },
     @Query('city') city: string,
-    @Res() response: Response) {
+    @Res() response: Response,
+  ) {
     try {
       const getArticle = await this.articleService.findArticle(id, { ...dto, search, sort, city });
 
@@ -202,10 +213,13 @@ export class ArticleController {
   @ApiAcceptedResponse({ description: 'Refresh article' })
   @UseGuards(JwtAuthGuard)
   @Post('refresh-article')
-  async refreshArticle(@Body() dto: RefreshArticleDto, @CurrentUser() user: User, response: Response) {
+  async refreshArticle(
+    @Body() dto: RefreshArticleDto,
+    @CurrentUser() user: User,
+    response: Response,
+  ) {
     try {
-      await this.articleService.refreshArticle(dto.article, user)
-
+      await this.articleService.refreshArticle(dto.article, user);
     } catch (error) {
       this.logger.error(error);
       return response.status(HttpStatus.OK).send({
@@ -220,7 +234,7 @@ export class ArticleController {
     exchange: RmqExchanges.STATISTICS,
     routingKey: StatisticsGetArticlesRMQ.routingKey,
     queue: StatisticsGetArticlesRMQ.queue,
-    currentService: RmqServices.STATISTICS
+    currentService: RmqServices.STATISTICS,
   })
   async getDataUpload(payload: StatisticsGetArticlesRMQ.Payload) {
     try {

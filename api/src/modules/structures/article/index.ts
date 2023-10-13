@@ -5,4 +5,3 @@ export * from './services';
 export * from './schemas';
 export * from './repositories';
 export * from './utils';
-export * from './gateways';

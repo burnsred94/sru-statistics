@@ -18,4 +18,4 @@ const STRUCTURES = [ArticleModule, KeysModule, PvzModule];
   providers: [MetricsRepository, MetricsService],
   controllers: [MetricsController],
 })
-export class MetricsModule { }
+export class MetricsModule {}

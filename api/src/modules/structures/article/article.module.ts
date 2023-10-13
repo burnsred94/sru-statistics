@@ -9,17 +9,11 @@ import { Article, ArticleSchema } from './schemas';
 import { ArticleController } from './controllers';
 import { ArticleService, CreateArticleStrategy } from './services';
 import { ArticleRepository } from './repositories';
-import { ArticleGateway } from './gateways';
 import { TownsDestructor } from './utils';
 import { UtilsModule } from '../../utils';
 import { PaginationModule } from '../pagination';
 
-
-const STRUCTURES = [
-  PaginationModule,
-  KeysModule,
-  PvzModule,
-]
+const STRUCTURES = [PaginationModule, KeysModule, PvzModule];
 
 @Module({
   imports: [
@@ -35,9 +29,8 @@ const STRUCTURES = [
     CreateArticleStrategy,
     ArticleRepository,
     JwtStrategy,
-    ArticleGateway,
     TownsDestructor,
   ],
   exports: [ArticleService],
 })
-export class ArticleModule { }
+export class ArticleModule {}

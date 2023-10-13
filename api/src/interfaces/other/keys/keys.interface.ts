@@ -13,4 +13,3 @@ export interface IDestructure {
   city: string;
   city_id: string;
 }
-

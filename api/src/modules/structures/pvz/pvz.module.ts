@@ -18,4 +18,4 @@ import { UtilsModule } from '../../utils';
   providers: [PvzService, PvzRepository],
   exports: [PvzService],
 })
-export class PvzModule { }
+export class PvzModule {}

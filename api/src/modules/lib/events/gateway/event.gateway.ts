@@ -1,11 +1,7 @@
 import { Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
 import { SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { EventsWS } from '../events';
 import { EventsCS } from 'src/interfaces';
-
-
 
 @WebSocketGateway({
   cors: {
@@ -14,10 +10,10 @@ import { EventsCS } from 'src/interfaces';
   perMessageDeflate: true,
   transports: ['polling', 'websocket'],
 })
-export class ArticleGateway {
+export class EventGateway {
   private logger: Logger = new Logger('MessageGateway');
 
-  clients = new Map<number, { client: Socket, exp: () => NodeJS.Timeout }>();
+  clients = new Map<number, { client: Socket; exp: () => NodeJS.Timeout }>();
 
   @WebSocketServer() server: Server;
   @SubscribeMessage('subscriber')
@@ -30,10 +26,10 @@ export class ArticleGateway {
 
     this.clients.set(payload.data.userId, {
       client: client,
-      exp: (() => setTimeout(() => {
-        this.clients.delete(payload.data.userId),
-          this.logger.log(`Delete: ${client.id}`)
-      }, (60 * 1000) * 30))
+      exp: () =>
+        setTimeout(() => {
+          this.clients.delete(payload.data.userId), this.logger.log(`Delete: ${client.id}`);
+        }, 60 * 1000 * 30),
     });
 
     const getClient = this.clients.get(payload.data.userId);
@@ -54,16 +50,15 @@ export class ArticleGateway {
     this.logger.log(`Client Connected WS server: ${client.id}`);
   }
 
-  @OnEvent(EventsWS.SEND_ARTICLES)
-  async sender(payload: { userId: number, event: EventsCS }) {
+  async sender(payload: { userId: number; event: EventsCS }) {
     const user = this.clients.get(payload.userId);
 
     if (user) {
       user.client.compress(true).emit('subscriber', payload);
+      return true;
     } else {
-      this.logger.log(`Not found connection User: ${payload.userId}`)
+      this.logger.log(`Not found connection User: ${payload.userId}`);
+      return false;
     }
   }
-
 }
-

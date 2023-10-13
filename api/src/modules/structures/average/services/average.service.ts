@@ -8,7 +8,7 @@ export class AverageService {
   constructor(
     private readonly averageRepository: AverageRepository,
     private readonly mathUtils: MathUtils,
-  ) { }
+  ) {}
 
   async create(data: { userId: number }) {
     const date = await this.mathUtils.currentDate();
@@ -17,8 +17,8 @@ export class AverageService {
       userId: data.userId,
       delimiter: 0,
       loss_delimiter: 0,
-      difference: "0",
-      timestamp: date
+      difference: '0',
+      timestamp: date,
     });
   }
 
@@ -38,7 +38,6 @@ export class AverageService {
         { _id: payload.id },
         { $inc: { loss_delimiter: 1 } },
       );
-
     } else if (payload.average.position > 0) {
       if (payload.average.cpm > 0) {
         const old = average * delimiter;
@@ -70,7 +69,7 @@ export class AverageService {
           {
             average: String(result),
             $inc: { delimiter: 1 },
-          }
+          },
         );
 
         return find.delimiter === 14;
@@ -78,11 +77,16 @@ export class AverageService {
     }
 
     if (
-      average === 0 && delimiter + find.loss_delimiter === 4 ||
-      average === 0 && delimiter + find.loss_delimiter === 14 ||
-      average === 0 && delimiter + find.loss_delimiter === 7
+      (average === 0 && delimiter + find.loss_delimiter === 4) ||
+      (average === 0 && delimiter + find.loss_delimiter === 14) ||
+      (average === 0 && delimiter + find.loss_delimiter === 7)
     ) {
-      const pos = payload.average.position === -1 ? '1000+' : payload.average.position === -2 ? 'Нет данных' : '1000+';
+      const pos =
+        payload.average.position === -1
+          ? '1000+'
+          : payload.average.position === -2
+          ? 'Нет данных'
+          : '1000+';
 
       await this.averageRepository.findOneAndUpdate(
         { _id: payload.id },

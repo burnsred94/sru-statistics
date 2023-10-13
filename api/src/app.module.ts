@@ -26,4 +26,4 @@ import { LibraryModule } from './modules/lib/library.module';
     LibraryModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}

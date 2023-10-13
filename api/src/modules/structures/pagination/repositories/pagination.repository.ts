@@ -6,9 +6,9 @@ import { PaginationDocument, Pagination } from '../schemas';
 
 @Injectable()
 export class PaginationRepository extends AbstractRepository<PaginationDocument> {
-    protected readonly logger = new Logger(PaginationRepository.name);
+  protected readonly logger = new Logger(PaginationRepository.name);
 
-    constructor(@InjectModel(Pagination.name) private metricsModel: Model<PaginationDocument>) {
-        super(metricsModel);
-    }
+  constructor(@InjectModel(Pagination.name) private metricsModel: Model<PaginationDocument>) {
+    super(metricsModel);
+  }
 }

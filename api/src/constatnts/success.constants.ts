@@ -23,7 +23,7 @@ export const initArticleMessage = (data, options, option_data?) => {
       return `Ключи ${option_data} в артикул: ${data} были добавлены.`;
     }
     case MessagesEvent.DELETE_KEY: {
-      return `Ключ "${option_data}" был удален из артикула: ${data}.`;
+      return `Было удалено ${options.length} ключей из артикула`;
     }
     case MessagesEvent.ENABLED_ARTICLE: {
       return `Ваш артикул: ${data} был восстановлен.`;

@@ -6,27 +6,28 @@ export abstract class AbstractRepository<T extends Document> {
 
   async findOne(
     filterQuery: FilterQuery<T>,
-    populate?: PopulateOptions | (string | PopulateOptions)[]
+    populate?: PopulateOptions | (string | PopulateOptions)[],
   ): Promise<T | null> {
-    return populate === undefined ? await this.abstractModel.findOne(filterQuery)
-      .lean()
-      : await this.abstractModel.findOne(filterQuery)
-        .populate(populate)
-        .lean();
+    return populate === undefined
+      ? await this.abstractModel.findOne(filterQuery).lean()
+      : await this.abstractModel.findOne(filterQuery).populate(populate).lean();
   }
 
-  async find(filterQuery?: FilterQuery<T>, populate?: PopulateOptions | (string | PopulateOptions)[]): Promise<T[] | null> {
-    return populate === undefined ?
-      await this.abstractModel.find(filterQuery)
-        .lean()
-      : await this.abstractModel.find(filterQuery)
-        .populate(populate)
-        .lean()
+  async find(
+    filterQuery?: FilterQuery<T>,
+    populate?: PopulateOptions | (string | PopulateOptions)[],
+  ): Promise<T[] | null> {
+    return populate === undefined
+      ? await this.abstractModel.find(filterQuery).lean()
+      : await this.abstractModel.find(filterQuery).populate(populate).lean();
   }
 
-  async create(createEntityData: unknown, populate?: PopulateOptions | (string | PopulateOptions)[]): Promise<T | null> {
+  async create(
+    createEntityData: unknown,
+    populate?: PopulateOptions | (string | PopulateOptions)[],
+  ): Promise<T | null> {
     const entity = new this.abstractModel(createEntityData);
-    const create = await entity.save()
+    const create = await entity.save();
     return populate ? create.populate(populate) : create;
   }
 
@@ -44,7 +45,11 @@ export abstract class AbstractRepository<T extends Document> {
     return result.deletedCount >= 0;
   }
 
-  async updateMany(filterQuery: FilterQuery<T>, updateQuery: UpdateQuery<unknown>, options?: QueryOptions): Promise<boolean> {
+  async updateMany(
+    filterQuery: FilterQuery<T>,
+    updateQuery: UpdateQuery<unknown>,
+    options?: QueryOptions,
+  ): Promise<boolean> {
     const result = await this.abstractModel.updateMany(filterQuery, updateQuery, options);
     return result.modifiedCount > 0;
   }

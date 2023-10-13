@@ -1,5 +1,5 @@
-import { User } from "src/modules/auth";
+import { User } from 'src/modules/auth';
 
 export interface IKeysRefreshService {
-    refreshKeysInArticle: (article: string, user: User) => void;
+  refreshKeysInArticle: (article: string, user: User) => void;
 }

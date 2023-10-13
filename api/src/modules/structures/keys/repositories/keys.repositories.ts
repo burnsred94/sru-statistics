@@ -5,10 +5,10 @@ import { Keys, KeysDocument } from '../schemas';
 import { AbstractRepository } from 'src/modules/database';
 
 @Injectable()
-export class KeysRepository extends AbstractRepository<KeysDocument>{
+export class KeysRepository extends AbstractRepository<KeysDocument> {
   protected readonly logger = new Logger(KeysRepository.name);
 
   constructor(@InjectModel(Keys.name) readonly keysModel: Model<KeysDocument>) {
-    super(keysModel)
-  };
+    super(keysModel);
+  }
 }
