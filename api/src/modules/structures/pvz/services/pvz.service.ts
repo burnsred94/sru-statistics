@@ -88,7 +88,7 @@ export class PvzService {
         }),
       );
 
-    return lastValueFrom(observable);
+      return lastValueFrom(observable);
   }
 
   //Создание пвз + периуд

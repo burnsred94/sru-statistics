@@ -47,6 +47,7 @@ export class CreateArticleStrategy {
               active: true,
             }),
         )
+
         : null;
 
       await this.articleRepository.findOneAndUpdate(
@@ -103,6 +104,7 @@ export class CreateArticleStrategy {
               active: true,
             }),
         )
+
         : null;
 
       await this.actionKey({ keys: matchToActiveKeys, article }, find_keys_active._id._id, user);
@@ -131,7 +133,7 @@ export class CreateArticleStrategy {
       page: 1,
       article_id: newArticle.id,
     });
-
+    
     await this.articleRepository.findOneAndUpdate(
       { _id: pagination.article_id },
       { pagination: pagination._id },
