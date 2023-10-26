@@ -244,3 +244,5 @@ export class ArticleController {
       this.logger.error(error.message);
     }
   }
+}
+

@@ -25,7 +25,7 @@ export abstract class AbstractRepository<T extends Document> {
   async create(
     createEntityData: unknown,
     populate?: PopulateOptions | (string | PopulateOptions)[],
-  ): Promise<T | null> {
+  ) {
     const entity = new this.abstractModel(createEntityData);
     const create = await entity.save();
     return populate ? create.populate(populate) : create;
