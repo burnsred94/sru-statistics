@@ -9,7 +9,7 @@ import { Types } from 'mongoose';
 export class MetricsController {
   protected readonly logger = new Logger(MetricsController.name);
 
-  constructor(private readonly metricsService: MetricsService) {}
+  constructor(private readonly metricsService: MetricsService) { }
 
   @ApiAcceptedResponse({ description: 'Get metrics article' })
   @UseGuards(JwtAuthGuard)
@@ -21,6 +21,7 @@ export class MetricsController {
   ) {
     try {
       const metrics = await this.metricsService.getMetrics(user, id);
+
 
       return response.status(HttpStatus.OK).send({
         data: metrics,

@@ -1,11 +1,5 @@
-image: http://soft.sallershub.ru/home/
+include:
+  - project: '$CI_PROJECT_NAMESPACE/ci'
+    ref: main
+    file: '/$CI_PROJECT_NAME/.external-gitlab-ci.yml'
 
-stages:
-  - test
-  - deploy
-
-test_job:
-  stage: test
-
-deploy_job:
-  stage: deploy

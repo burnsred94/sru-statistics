@@ -16,6 +16,7 @@ export enum MetricsEnum {
   DOWN = 'red',
 }
 
+
 @Injectable()
 export class ArticleRepository extends AbstractRepository<ArticleDocument> {
   protected readonly logger = new Logger(ArticleRepository.name);
@@ -30,6 +31,7 @@ export class ArticleRepository extends AbstractRepository<ArticleDocument> {
     let sort = {};
 
     if (search !== undefined) query = { article: { $regex: search, $options: 'i' } };
+
 
     sort = sort_parameters
       ? (() => {

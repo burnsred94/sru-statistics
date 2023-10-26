@@ -15,6 +15,7 @@ import { PaginationModule } from '../pagination';
 
 const STRUCTURES = [PaginationModule, KeysModule, PvzModule];
 
+
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Article.name, schema: ArticleSchema }]),
@@ -22,6 +23,7 @@ const STRUCTURES = [PaginationModule, KeysModule, PvzModule];
     FetchModule,
     UtilsModule,
     ...STRUCTURES,
+    EventEmitterModule.forRoot({ global: true, maxListeners: 10, verboseMemoryLeak: true }),
   ],
   controllers: [ArticleController],
   providers: [
@@ -33,4 +35,4 @@ const STRUCTURES = [PaginationModule, KeysModule, PvzModule];
   ],
   exports: [ArticleService],
 })
-export class ArticleModule {}
+export class ArticleModule { }

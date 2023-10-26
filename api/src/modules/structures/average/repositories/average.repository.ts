@@ -8,5 +8,6 @@ import { AbstractRepository } from 'src/modules/database';
 export class AverageRepository extends AbstractRepository<AverageDocument> {
   constructor(@InjectModel(Average.name) readonly averageModel: Model<AverageDocument>) {
     super(averageModel);
+
   }
 }

@@ -17,6 +17,7 @@ export class KeysController {
 
   constructor(private readonly keysService: KeysService) { }
 
+
   @Post('refresh')
   async refreshKey(@Body() key: RefreshKeyDto, @Res() response: Response) {
     try {

@@ -38,6 +38,7 @@ export class KeysService {
     return await this.keysRepository.getCountDocuments(searchQuery);
   }
 
+
   //Поиск всех ключей и возможность делать кастом populated
   async find(searchQuery: FilterQuery<ArticleDocument>, populate?: PopulateOptions) {
     return await this.keysRepository.find(searchQuery, populate);
@@ -119,6 +120,7 @@ export class KeysService {
     setTimeout(() => {
       this.eventEmitter.emit('metric.gathering', { article: id, user: data.userId });
     }, 1000 * 60 * 30);
+
   }
 
   @Cron('05 0 * * *', { timeZone: 'Europe/Moscow' })

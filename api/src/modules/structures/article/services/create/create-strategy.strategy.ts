@@ -22,7 +22,7 @@ export class CreateArticleStrategy {
     private readonly paginationService: PaginationService,
     private readonly utilsDestructor: TownsDestructor,
     private readonly keyService: KeysService,
-  ) {}
+  ) { }
 
   async findNotActiveAddKeys(article: string, keys, user) {
     const find_product = await this.articleRepository.findOne(
@@ -116,11 +116,14 @@ export class CreateArticleStrategy {
   }
 
   async createNewArticle(article: string, keys, user: User, product: GetProductRMQ.Response) {
+    const pagination = await this.paginationService.create()
+
     const newArticle = await this.articleRepository.create({
       productImg: product.status ? product.img : null,
       productRef: product.status ? product.product_url : null,
       userId: user,
       article: article,
+      pagination: pagination._id,
       active: true,
       productName: product.status ? product.product_name : DEFAULT_PRODUCT_NAME,
     });

@@ -10,5 +10,6 @@ export class PvzRepository extends AbstractRepository<PvzDocument> {
 
   constructor(@InjectModel(Pvz.name) readonly pvzModel: Model<PvzDocument>) {
     super(pvzModel);
+
   }
 }

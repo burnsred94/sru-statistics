@@ -30,6 +30,7 @@ import { RabbitMqResponser } from 'src/modules/rabbitmq/decorators';
 import { RmqExchanges, RmqServices } from 'src/modules/rabbitmq/exchanges';
 import { StatisticsGetArticlesRMQ } from 'src/modules/rabbitmq/contracts/statistics';
 
+
 @Controller('v1')
 export class ArticleController {
   protected readonly logger = new Logger(ArticleController.name);
@@ -243,4 +244,3 @@ export class ArticleController {
       this.logger.error(error.message);
     }
   }
-}

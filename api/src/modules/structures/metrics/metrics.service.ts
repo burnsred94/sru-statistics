@@ -18,6 +18,7 @@ import { Average } from '../average';
 //     user: User;
 // }
 
+
 @Injectable()
 export class MetricsService {
     protected readonly logger = new Logger(MetricsService.name);
@@ -28,6 +29,7 @@ export class MetricsService {
         private readonly pvzService: PvzService,
         private readonly metricsRepository: MetricsRepository,
     ) { }
+
 
     async getMetrics(user: User, _id: Types.ObjectId) {
         const id = new Types.ObjectId(_id);
@@ -65,6 +67,7 @@ export class MetricsService {
             payload === undefined
                 ? await this.metricsRepository.find()
                 : await this.metricsRepository.find(payload),
+
         )
             .pipe(
                 concatMap(async item => {
@@ -137,6 +140,7 @@ export class MetricsService {
                 },
                 complete: () => console.log('complete'),
                 error: error => this.logger.error(error.message),
+
             });
     }
 
@@ -150,5 +154,6 @@ export class MetricsService {
     async checkMetric(payload) {
         const check = await this.metricsRepository.findOne(payload);
         if (!check) await this.metricsRepository.create(payload), await this.dataGathering(payload);
+
     }
 }

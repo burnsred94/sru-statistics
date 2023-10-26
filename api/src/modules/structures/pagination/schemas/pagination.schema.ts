@@ -16,5 +16,3 @@ export class Pagination {
   @Prop({ type: Number, default: 1 })
   page: number;
 }
-
-export const PaginationSchema = SchemaFactory.createForClass(Pagination);
