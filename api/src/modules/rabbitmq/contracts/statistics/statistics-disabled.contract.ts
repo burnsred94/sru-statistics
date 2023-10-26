@@ -6,7 +6,7 @@ export namespace StatisticsDisabledRMQ {
   export const queue = `queue-${StatisticsEventsRMQ.DISABLED_STATISTICS_FROM_SUB}`;
 
   export class Payload {
-    users: Array<number>;
+    users: Array<{ userId: number }>;
   }
 
   export class Response {}

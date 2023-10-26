@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -12,13 +13,23 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiAcceptedResponse } from '@nestjs/swagger';
-import { AddKeyDto, CreateArticleDto, RemoveKeyDto, RemoveArticleDto } from '../dto';
+import {
+  AddKeyDto,
+  CreateArticleDto,
+  RemoveKeyDto,
+  RemoveArticleDto,
+  RefreshArticleDto,
+} from '../dto';
 import { CurrentUser, JwtAuthGuard, User } from 'src/modules';
 import { ArticleService } from '../services';
 import { Response } from 'express';
 import { initArticleMessage } from 'src/constatnts';
 import { FetchProvider } from 'src/modules/fetch';
 import { Types } from 'mongoose';
+import { RabbitMqResponser } from 'src/modules/rabbitmq/decorators';
+import { RmqExchanges, RmqServices } from 'src/modules/rabbitmq/exchanges';
+import { StatisticsGetArticlesRMQ } from 'src/modules/rabbitmq/contracts/statistics';
+
 
 @Controller('v1')
 export class ArticleController {
@@ -32,7 +43,7 @@ export class ArticleController {
   @ApiAcceptedResponse({ description: 'Create Statistic' })
   @UseGuards(JwtAuthGuard)
   @Post('create')
-  async create(
+  async createArticle(
     @CurrentUser() user: User,
     @Body() data: CreateArticleDto,
     @Res() response: Response,
@@ -88,28 +99,6 @@ export class ArticleController {
     }
   }
 
-  @ApiAcceptedResponse({ description: 'Send length articles' })
-  @UseGuards(JwtAuthGuard)
-  @Get('/check-articles')
-  async checkArticles(@CurrentUser() user: User, @Res() response: Response) {
-    try {
-      const checkData = await this.articleService.checkData(user);
-
-      return response.status(HttpStatus.OK).send({
-        data: checkData,
-        error: [],
-        status: response.statusCode,
-      });
-    } catch (error) {
-      this.logger.error(error);
-      return response.status(HttpStatus.OK).send({
-        data: [],
-        error: [{ message: error.message }],
-        status: response.statusCode,
-      });
-    }
-  }
-
   @ApiAcceptedResponse({ description: 'Remove article' })
   @UseGuards(JwtAuthGuard)
   @Delete('remove-article')
@@ -142,9 +131,14 @@ export class ArticleController {
   @ApiAcceptedResponse({ description: 'Remove key' })
   @UseGuards(JwtAuthGuard)
   @Get('user-articles')
-  async userArticles(@CurrentUser() user: User, @Res() response: Response) {
+  async userArticles(
+    @CurrentUser() user: User,
+    @Query('search') search: string,
+    @Query('sort') sort: string,
+    @Res() response: Response,
+  ) {
     try {
-      const articles = await this.articleService.articles(user);
+      const articles = await this.articleService.articles(user, { search, sort });
 
       return response.status(HttpStatus.OK).send({
         data: articles,
@@ -169,12 +163,14 @@ export class ArticleController {
       const remove = await this.articleService.removeKey(dto, user);
 
       if (remove) {
-        const initArticle = initArticleMessage(remove.article, remove, remove.key);
+        const initArticle = initArticleMessage(null, remove);
         return response.status(HttpStatus.OK).send({
           status: HttpStatus.OK,
           data: { message: initArticle },
           errors: [],
         });
+      } else {
+        throw new BadRequestException('Невозможно удалить, ключи были удалены')
       }
     } catch (error) {
       this.logger.error(error);
@@ -188,15 +184,17 @@ export class ArticleController {
 
   @ApiAcceptedResponse({ description: 'Remove key' })
   @UseGuards(JwtAuthGuard)
-  @Post("article/:id")
+  @Post('article/:id')
   async getArticle(
-    @CurrentUser() user: User,
     @Param('id') id: Types.ObjectId,
     @Body() dto,
     @Query('search') search: string,
-    @Res() response: Response) {
+    @Query('sort') sort: { frequency: number },
+    @Query('city') city: string,
+    @Res() response: Response,
+  ) {
     try {
-      const getArticle = await this.articleService.findArticle(id, { ...dto, search });
+      const getArticle = await this.articleService.findArticle(id, { ...dto, search, sort, city });
 
       return response.status(HttpStatus.OK).send({
         status: HttpStatus.OK,
@@ -212,4 +210,37 @@ export class ArticleController {
       });
     }
   }
-}
+
+  @ApiAcceptedResponse({ description: 'Refresh article' })
+  @UseGuards(JwtAuthGuard)
+  @Post('refresh-article')
+  async refreshArticle(
+    @Body() dto: RefreshArticleDto,
+    @CurrentUser() user: User,
+    response: Response,
+  ) {
+    try {
+      await this.articleService.refreshArticle(dto.article, user);
+    } catch (error) {
+      this.logger.error(error);
+      return response.status(HttpStatus.OK).send({
+        data: [],
+        error: [{ message: error.message }],
+        status: error.statusCode,
+      });
+    }
+  }
+
+  @RabbitMqResponser({
+    exchange: RmqExchanges.STATISTICS,
+    routingKey: StatisticsGetArticlesRMQ.routingKey,
+    queue: StatisticsGetArticlesRMQ.queue,
+    currentService: RmqServices.STATISTICS,
+  })
+  async getDataUpload(payload: StatisticsGetArticlesRMQ.Payload) {
+    try {
+      return { articles: await this.articleService.getArticlesUpload(payload) };
+    } catch (error) {
+      this.logger.error(error.message);
+    }
+  }

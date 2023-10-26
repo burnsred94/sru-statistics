@@ -7,7 +7,6 @@ import { GetPositionWidgetsRMQ, SearchPositionRMQ } from 'src/modules/rabbitmq/c
 import { GetProductRMQ } from 'src/modules/rabbitmq/contracts/products';
 import { GetProfileRMQ, StartTrialProfileRMQ } from 'src/modules/rabbitmq/contracts/profile';
 import { GetPositionDto } from '../dto';
-import { TaskSenderQueue } from './task-sender-queue.provider';
 import { GetFrequencyRMQ } from 'src/modules/rabbitmq/contracts/core-keys';
 
 @Injectable()
@@ -17,7 +16,6 @@ export class FetchProvider {
   constructor(
     private readonly rmqPublisher: RabbitMqPublisher,
     private readonly rmqRequester: RabbitMqRequester,
-    private readonly taskSenderQueue: TaskSenderQueue,
   ) {}
 
   async startTrialPeriod(userId: User) {
@@ -74,15 +72,10 @@ export class FetchProvider {
   }
 
   async sendNewKey(payload: SearchPositionRMQ.Payload) {
-    setImmediate(() => {
-      this.taskSenderQueue.pushTask(
-        async () =>
-          await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
-            exchange: RmqExchanges.SEARCH,
-            routingKey: SearchPositionRMQ.routingKey,
-            payload: payload,
-          }),
-      );
+    await this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
+      exchange: RmqExchanges.SEARCH,
+      routingKey: SearchPositionRMQ.routingKey,
+      payload: payload,
     });
   }
 

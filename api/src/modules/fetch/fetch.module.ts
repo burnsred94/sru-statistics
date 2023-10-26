@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { GotModule } from '@t00nday/nestjs-got';
-import { FetchProvider, TaskSenderQueue } from './provider';
+import { FetchProvider } from './provider';
 import { RmqModule } from '../rabbitmq/rabbitmq.module';
 import { RmqExchanges } from '../rabbitmq/exchanges';
 import { RabbitRpcParamsFactory } from '@golevelup/nestjs-rabbitmq';
@@ -11,7 +11,7 @@ import { KeysModule } from '../structures/keys';
 import { PvzModule } from '../structures/pvz';
 
 @Module({
-  providers: [FetchProvider, FetchUtils, TaskSenderQueue],
+  providers: [FetchProvider, FetchUtils],
   imports: [
     ConfigModule,
     GotModule,
@@ -27,7 +27,7 @@ import { PvzModule } from '../structures/pvz';
       ],
     }),
   ],
-  exports: [FetchProvider, TaskSenderQueue],
+  exports: [FetchProvider],
   controllers: [FetchController],
 })
 export class FetchModule {}

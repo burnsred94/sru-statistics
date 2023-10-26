@@ -1,37 +1,33 @@
 import { Body, Controller, HttpStatus, Logger, Post, Res } from '@nestjs/common';
-import { KeysPvzService, KeysService } from '../services';
+import { KeysService } from '../services';
 import { RabbitMqSubscriber } from 'src/modules/rabbitmq/decorators';
 import { RmqExchanges, RmqServices } from 'src/modules/rabbitmq/exchanges';
 import {
   StatisticsDisabledRMQ,
   StatisticsEnabledRMQ,
+  StatisticsUpdateRMQ,
 } from 'src/modules/rabbitmq/contracts/statistics';
 import { Response } from 'express';
 import { RefreshKeyDto } from '../dto';
-import { initArticleMessage } from 'src/constatnts';
+import { concatMap, from } from 'rxjs';
 
 @Controller('keys')
 export class KeysController {
   protected readonly logger = new Logger(KeysController.name);
 
-  constructor(
-    private readonly keysService: KeysService,
-    private readonly keysPvzService: KeysPvzService,
-  ) { }
+  constructor(private readonly keysService: KeysService) { }
+
 
   @Post('refresh')
   async refreshKey(@Body() key: RefreshKeyDto, @Res() response: Response) {
     try {
-      const result = await this.keysService.refreshKey(key._id);
+      await this.keysService.refreshKey(key._id);
 
-      if (result) {
-        const message = initArticleMessage(result.key, result);
-        return response.status(HttpStatus.OK).send({
-          data: { message: message },
-          error: [],
-          status: HttpStatus.OK,
-        });
-      }
+      return response.status(HttpStatus.OK).send({
+        data: [],
+        error: [],
+        status: HttpStatus.OK,
+      });
     } catch (error) {
       this.logger.error(error);
       return response.status(HttpStatus.OK).send({
@@ -42,6 +38,12 @@ export class KeysController {
     }
   }
 
+  @Post('enabled-keys')
+  async httpEnabled(@Body() data: StatisticsEnabledRMQ.Payload) {
+    await this.enabledSubscription(data);
+    console.log(`enabled user keys: ${data.userId}`);
+  }
+
   @RabbitMqSubscriber({
     exchange: RmqExchanges.STATISTICS,
     routingKey: StatisticsDisabledRMQ.routingKey,
@@ -49,7 +51,29 @@ export class KeysController {
     currentService: RmqServices.STATISTICS,
   })
   async disableSubscription(payload: StatisticsDisabledRMQ.Payload) {
-    this.logger.log(payload.users);
+    try {
+      console.log(payload);
+      from(payload.users)
+        .pipe(
+          concatMap(async element => {
+            const disabled = await this.keysService.keySubscriptionManagement(
+              element.userId,
+              false,
+            );
+            return { user: element, status: disabled };
+          }),
+        )
+        .subscribe({
+          next: value => {
+            this.logger.log(
+              `User ${value.user} disabled keys ${value.status ? `successfully` : `unsuccessfully`
+              }`,
+            );
+          },
+        });
+    } catch (error) {
+      this.logger.error(error.message);
+    }
   }
 
   @RabbitMqSubscriber({
@@ -59,19 +83,29 @@ export class KeysController {
     currentService: RmqServices.STATISTICS,
   })
   async enabledSubscription(payload: StatisticsEnabledRMQ.Payload) {
-    this.logger.log(payload.userId);
+    try {
+      const enabled = await this.keysService.keySubscriptionManagement(payload.userId, true);
+      this.logger.log(
+        enabled
+          ? `User ${payload.userId} enabled keys successfully`
+          : `User ${payload.userId} enabled keys unsuccessfully`,
+      );
+    } catch (error) {
+      this.logger.error(error.message);
+    }
   }
 
-  // @RabbitMqSubscriber({
-  //   exchange: RmqExchanges.STATISTICS,
-  //   routingKey: StatisticsUpdatePwzRMQ.routingKey,
-  //   queue: StatisticsUpdatePwzRMQ.queue,
-  //   currentService: RmqServices.STATISTICS,
-  // })
-  // async statisticUpdatePwz(payload) {
-  //   const keysUser = await this.keysService.findKeysByUser(payload.userId);
-  //   if (keysUser.length > 0) {
-  //     setImmediate(async () => await this.keysPvzService.updateFromProfile(payload, keysUser));
-  //   }
-  // }
+  @RabbitMqSubscriber({
+    exchange: RmqExchanges.STATISTICS,
+    routingKey: StatisticsUpdateRMQ.routingKey,
+    queue: StatisticsUpdateRMQ.queue,
+    currentService: RmqServices.STATISTICS,
+  })
+  async updatePeriod(payload: StatisticsUpdateRMQ.Payload) {
+    try {
+      await this.keysService.updateData(payload);
+    } catch (error) {
+      this.logger.error(error);
+    }
+  }
 }

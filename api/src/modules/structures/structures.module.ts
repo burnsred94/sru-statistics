@@ -5,6 +5,7 @@ import { PvzModule } from './pvz';
 import { AverageModule } from './average';
 import { PeriodsModule } from './periods';
 import { MetricsModule } from './metrics/metrics.module';
+import { FoldersModule } from './folders/folders.module';
 
 const StructuresModules = [
   ArticleModule,
@@ -16,6 +17,6 @@ const StructuresModules = [
 ];
 
 @Module({
-  imports: [...StructuresModules],
+  imports: [...StructuresModules, FoldersModule],
 })
 export class StructuresModule { }

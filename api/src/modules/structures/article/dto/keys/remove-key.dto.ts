@@ -3,6 +3,6 @@ import { Types } from 'mongoose';
 
 export class RemoveKeyDto {
   @IsNotEmpty()
-  @IsString()
-  keyId: Types.ObjectId;
+  @IsString({ each: true })
+  keysId: Types.ObjectId[];
 }

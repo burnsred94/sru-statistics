@@ -6,9 +6,9 @@ import { PaginationService } from './pagination.service';
 import { PaginationController } from './pagination.controller';
 
 @Module({
-    imports: [MongooseModule.forFeature([{ name: Pagination.name, schema: PaginationSchema }])],
-    providers: [PaginationRepository, PaginationService],
-    controllers: [PaginationController],
-    exports: [PaginationService]
+  imports: [MongooseModule.forFeature([{ name: Pagination.name, schema: PaginationSchema }])],
+  providers: [PaginationRepository, PaginationService],
+  controllers: [PaginationController],
+  exports: [PaginationService],
 })
-export class PaginationModule { }
+export class PaginationModule {}

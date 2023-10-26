@@ -2,6 +2,12 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class MathUtils {
+  options: {
+    day: '2-digit';
+    month: '2-digit';
+    year: 'numeric';
+  };
+
   async calculateAverage(data: any[]): Promise<number> {
     let average = data.reduce((accumulator, item) => {
       let number_ = item.position.at(-1).position;
@@ -32,5 +38,15 @@ export class MathUtils {
     } else {
       return '0';
     }
+  }
+
+  async currentDate() {
+    let date = new Date();
+    date = new Date(date.toLocaleString('en-US', { timeZone: 'Europe/Moscow' }));
+    const formattedDate = new Date(date.setDate(date.getDate() + 0)).toLocaleDateString(
+      'ru-RU',
+      this.options,
+    );
+    return formattedDate;
   }
 }
