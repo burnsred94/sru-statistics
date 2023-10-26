@@ -42,11 +42,11 @@ export class CreateArticleStrategy {
 
       matchToNotActive.length > 0
         ? setImmediate(
-            async () =>
-              await this.keyService.updateMany(matchToNotActive as Array<Types.ObjectId>, {
-                active: true,
-              }),
-          )
+          async () =>
+            await this.keyService.updateMany(matchToNotActive as Array<Types.ObjectId>, {
+              active: true,
+            }),
+        )
         : null;
 
       await this.articleRepository.findOneAndUpdate(
@@ -98,11 +98,11 @@ export class CreateArticleStrategy {
 
       matchToNotActive.length > 0
         ? setImmediate(
-            async () =>
-              await this.keyService.updateMany(matchToNotActive as Array<Types.ObjectId>, {
-                active: true,
-              }),
-          )
+          async () =>
+            await this.keyService.updateMany(matchToNotActive as Array<Types.ObjectId>, {
+              active: true,
+            }),
+        )
         : null;
 
       await this.actionKey({ keys: matchToActiveKeys, article }, find_keys_active._id._id, user);
@@ -116,14 +116,12 @@ export class CreateArticleStrategy {
   }
 
   async createNewArticle(article: string, keys, user: User, product: GetProductRMQ.Response) {
-    const pagination = await this.paginationService.create()
 
     const newArticle = await this.articleRepository.create({
       productImg: product.status ? product.img : null,
       productRef: product.status ? product.product_url : null,
       userId: user,
       article: article,
-      pagination: pagination._id,
       active: true,
       productName: product.status ? product.product_name : DEFAULT_PRODUCT_NAME,
     });
@@ -133,6 +131,7 @@ export class CreateArticleStrategy {
       page: 1,
       article_id: newArticle.id,
     });
+
     await this.articleRepository.findOneAndUpdate(
       { _id: pagination.article_id },
       { pagination: pagination._id },

@@ -15,7 +15,7 @@ export class PaginationController {
   constructor(
     private readonly paginationService: PaginationService,
     private readonly eventEmitter: EventEmitter2,
-  ) {}
+  ) { }
 
   @ApiAcceptedResponse({ description: 'Update pagination from article' })
   @UseGuards(JwtAuthGuard)

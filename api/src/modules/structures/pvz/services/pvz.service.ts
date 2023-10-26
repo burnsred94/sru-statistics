@@ -18,53 +18,6 @@ export class PvzService {
     private readonly mathUtils: MathUtils,
   ) { }
 
-  async findByMetrics(user: number, article: string) {
-    const observable = from(
-      await this.pvzRepository.findAll({ userId: user, article: article, active: true })
-    )
-      .pipe(
-        reduce((accumulator, value: any) => {
-          let pos = 0
-          let old = 0
-
-          if (value.position.at(-1).cpm !== null && value.position.at(-1).cpm !== "0") {
-            pos = Number.isNaN(+value.position.at(-1).promo_position) ? 0 : Number(value.position.at(-1).promo_position);
-            old = Number.isNaN(+value.position.at(-2)?.promo_position) ? 0 : Number(value.position.at(-2).promo_position);
-          } else if (value.position.at(-1).cpm === null || value.position.at(-1).cpm === "0") {
-            pos = Number.isNaN(+value.position.at(-1).position) ? 0 : Number(value.position.at(-1).position);
-            old = Number.isNaN(+value.position.at(-2)?.position) ? 0 : Number(value.position.at(-2).position);
-          }
-
-          const index = accumulator.findIndex((object) => object.city === value.city);
-
-          if (index === -1) {
-            accumulator.push({ city: value.city, new: pos, old: old, del: pos > 0 ? 1 : 0, old_del: old > 0 ? 1 : 0 });
-          } else {
-            Number.isNaN(pos) ? null :
-              accumulator[index].new = accumulator[index].new + pos,
-              pos > 0 ? accumulator[index].del = accumulator[index].del + 1 : null;
-
-            Number.isNaN(old) ? null :
-              accumulator[index].old = accumulator[index].old + old,
-              old > 0 ? accumulator[index].old_del = accumulator[index].old_del + 1 : null;
-          }
-          return accumulator;
-        }, [])
-      )
-      .pipe(
-        rxjs_map(data => {
-          return map(data, (value) => {
-            let current = Math.round(value.new / value.del);
-            current = Number.isNaN(current) ? 0 : current;
-            let past = current;
-            if (value.old !== 0) past = Math.round(value.old / value.old_del);
-
-            return { city: value.city, pos: current, dynamic: current - past }
-          })
-        }))
-
-    return lastValueFrom(observable)
-  }
 
   //Расчет позиций для метрики по городам
   async findByMetrics(user: number, article: string) {
