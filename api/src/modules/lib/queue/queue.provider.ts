@@ -8,10 +8,12 @@ export class QueueProvider {
   concurrency: number;
   running: number;
   queue: Array<any>;
+  runtime: Promise<unknown>[]
 
   constructor(private readonly configService: ConfigService) {
     this.concurrency = 50;
     this.running = 0;
+    this.runtime = [];
     this.queue = [];
   }
 
@@ -27,21 +29,19 @@ export class QueueProvider {
   next() {
     while (this.running < this.concurrency && this.queue.length > 0) {
       const task = this.queue.shift();
-      setImmediate(() => {
-        task();
-      });
+      const runtimeTask = new Promise((resolve) => {
+        resolve(task())
+      })
+
+      this.runtime.push(runtimeTask);
 
       this.running++;
 
       if (this.running === this.concurrency) {
-        setImmediate(() => {
-          new Promise(resolve => {
-            setTimeout(() => {
-              this.running = 0;
-              resolve(this.next());
-            }, 2000);
-          });
-        });
+        Promise.all(this.runtime)
+          .then((values) => {
+            if (values) this.running = 0, this.next();
+          })
 
         break;
       }

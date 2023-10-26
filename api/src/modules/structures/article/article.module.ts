@@ -7,13 +7,17 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { PvzModule } from '../pvz';
 import { Article, ArticleSchema } from './schemas';
 import { ArticleController } from './controllers';
-import { ArticleService, CreateArticleStrategy } from './services';
+import { ArticleService } from './services';
 import { ArticleRepository } from './repositories';
-import { TownsDestructor } from './utils';
-import { UtilsModule } from '../../utils';
 import { PaginationModule } from '../pagination';
 import { ArticleBuilder } from './services/builders/article.builder';
 import { ProductsIntegrationModule, ProfilesIntegrationModule } from 'src/modules/integrations';
+import { UtilsModule } from 'src/modules/utils';
+import { EventsModule } from 'src/modules/lib/events/event.module';
+import { ValidationArticlePipe } from './pipe';
+import { HttpModule } from '@nestjs/axios';
+import { ArticleVisitor } from './services/visitors';
+import { MetricsModule } from '../metrics/metrics.module';
 
 const STRUCTURES = [PaginationModule, KeysModule, PvzModule];
 const INTEGRATIONS = [ProfilesIntegrationModule, ProductsIntegrationModule]
@@ -23,6 +27,9 @@ const INTEGRATIONS = [ProfilesIntegrationModule, ProductsIntegrationModule]
     MongooseModule.forFeature([{ name: Article.name, schema: ArticleSchema }]),
     EventEmitterModule.forRoot({ global: true, maxListeners: 10, verboseMemoryLeak: true }),
     FetchModule,
+    MetricsModule,
+    HttpModule,
+    EventsModule,
     UtilsModule,
     ...INTEGRATIONS,
     ...STRUCTURES,
@@ -31,10 +38,10 @@ const INTEGRATIONS = [ProfilesIntegrationModule, ProductsIntegrationModule]
   providers: [
     ArticleService,
     ArticleBuilder,
-    CreateArticleStrategy,
+    ArticleVisitor,
     ArticleRepository,
+    ValidationArticlePipe,
     JwtStrategy,
-    TownsDestructor,
   ],
   exports: [ArticleService],
 })

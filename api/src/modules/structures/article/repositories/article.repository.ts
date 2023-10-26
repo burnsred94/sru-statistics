@@ -1,5 +1,5 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { Article, ArticleDocument } from '../schemas/article.schema';
 import { Injectable, Logger } from '@nestjs/common';
 import { User } from 'src/modules/auth';
@@ -33,11 +33,11 @@ export class ArticleRepository extends AbstractRepository<ArticleDocument> {
 
     sort = sort_parameters
       ? (() => {
-          const elements = sort_parameters.split('#');
-          return {
-            [elements[0]]: Number(elements[1]),
-          };
-        })()
+        const elements = sort_parameters.split('#');
+        return {
+          [elements[0]]: Number(elements[1]),
+        };
+      })()
       : { createdAt: -1 };
 
     return await this.modelArticle
@@ -69,6 +69,7 @@ export class ArticleRepository extends AbstractRepository<ArticleDocument> {
             _id: '$_id',
             article: { $first: '$article' },
             userId: { $first: '$userId' },
+            count: { $first: '$count' },
             productName: { $first: '$productName' },
             metrics: { $first: '$metrics' },
             productImg: { $first: '$productImg' },
@@ -81,10 +82,10 @@ export class ArticleRepository extends AbstractRepository<ArticleDocument> {
             _id: 1,
             article: 1,
             userId: 1,
+            count: 1,
             productName: 1,
             productImg: 1,
             createdAt: 1,
-            keys: { $size: '$keys' },
             middle_pos_organic: {
               num: { $arrayElemAt: ['$metrics.middle_pos_organic.met', -1] },
               data: { $slice: ['$metrics.middle_pos_organic', -15] },

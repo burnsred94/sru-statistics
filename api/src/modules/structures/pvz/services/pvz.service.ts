@@ -8,6 +8,7 @@ import { MathUtils } from 'src/modules/utils/providers';
 import { from, lastValueFrom, reduce, map as rxjs_map } from 'rxjs';
 import { StatisticsUpdateRMQ } from 'src/modules/rabbitmq/contracts/statistics';
 
+
 @Injectable()
 export class PvzService {
   protected readonly logger = new Logger(PvzService.name);
@@ -90,8 +91,7 @@ export class PvzService {
     return lastValueFrom(observable);
   }
 
-  //Создание пвз + периуд
-  async create(value, article: string, userId: User, keyId?: string) {
+  async create(value, article: string, userId: User) {
     const date = await this.mathUtils.currentDate();
     const period = await this.periodsService.create('0', date);
 
@@ -108,32 +108,38 @@ export class PvzService {
     );
     return pvz;
   }
-  //Обновление позиции после парсинга
-  async update(data: StatisticsUpdateRMQ.Payload, callback: () => void) {
-    await this.periodsService.update(data.periodId, data.position);
-    await this.updatePeriod(data.addressId);
-    callback();
-  }
 
-  async addedPosition(data, averageId) {
-    return map(data, async element => {
-      const date = await this.mathUtils.currentDate();
+  async checkAndUpdate(id: Types.ObjectId) {
+    const date = await this.mathUtils.currentDate();
+    const address = await this.pvzRepository.findOne({ _id: id },
+      { path: 'position', select: 'position', match: { timestamp: date }, model: Periods.name }
+    );
+
+    if (address.position.length > 0) {
+      Promise.all(address.position.map((position) => {
+        return this.periodsService.update(position._id, { position: -3, promoPosition: null, cpm: 0, promotion: null });
+      }));
+
+      return address;
+
+    } else {
       const period = await this.periodsService.create('0', date);
 
-      await this.pvzRepository.findOneAndUpdate(element._id, {
+      const updateAddress = await this.pvzRepository.findOneAndUpdate({ _id: id }, {
         $push: {
           position: period._id,
         },
       });
 
-      return {
-        name: element.name,
-        periodId: period._id,
-        addressId: element._id,
-        geo_address_id: element.geo_address_id,
-        average_id: averageId,
-      };
-    });
+      return updateAddress;
+    }
+  }
+
+  //Обновление позиции после парсинга
+  async update(data: StatisticsUpdateRMQ.Payload) {
+    const periodUpdate = await this.periodsService.update(data.periodId, data.position);
+    await this.updatePeriod(data.addressId);
+    return periodUpdate ? true : false;
   }
 
   async updatePeriod(pvzId: Types.ObjectId) {
@@ -147,19 +153,5 @@ export class PvzService {
       const result = await this.mathUtils.calculateDiff(firstItem, secondItem);
       await this.periodsService.updateDiff(firstItem._id, result);
     }
-  }
-
-  async periodRefresh(pvzId: Types.ObjectId) {
-    const pvz = await this.pvzRepository.find(
-      { _id: pvzId },
-      { path: 'position', select: 'position promo_position cpm', model: Periods.name },
-    );
-    const id = pvz[0].position.at(-1)._id;
-    await this.periodsService.update(id, {
-      position: -3,
-      cpm: 0,
-      promotion: 0,
-      promoPosition: 0,
-    });
   }
 }

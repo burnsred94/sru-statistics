@@ -1,23 +1,16 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { FilterQuery, PopulateOptions, Types, UpdateQuery } from 'mongoose';
 import { KeysRepository } from '../repositories';
 import { Average, AverageService } from '../../average';
-import { EventsCS, IKey } from 'src/interfaces';
-import { Pvz, PvzService } from '../../pvz';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { concatMap, from } from 'rxjs';
-import { EventsWS } from '../../article/events';
-import { Cron } from '@nestjs/schedule';
-import { SearchPositionRMQ } from 'src/modules/rabbitmq/contracts/search';
-import { FetchProvider } from 'src/modules/fetch';
 import { ArticleDocument } from '../../article';
 import { StatisticsUpdateRMQ } from 'src/modules/rabbitmq/contracts/statistics';
 import { QueueProvider } from 'src/modules/lib/queue';
 import { KeysDocument } from '../schemas';
-import { KeysRefreshService } from './keys-refresh.service';
 import { User } from 'src/modules/auth';
-import { EventPostmanDispatcher } from 'src/modules/lib/events/event-postman.dispatcher';
-import { EventPostmanEnum } from 'src/modules/lib/events/types/enum';
+import { InspectorKeywords } from './inspectors/inspector-keywords.inspector';
+import { KeyBuilder } from './builders';
+import { ERROR_KEYWORD_UPDATE } from '../constants';
+import { UpdateKeywordService } from './updates';
 
 @Injectable()
 export class KeysService {
@@ -25,12 +18,10 @@ export class KeysService {
 
   constructor(
     private readonly keysRepository: KeysRepository,
-    private readonly keysRefreshService: KeysRefreshService,
-    private readonly eventPostmanDispatcher: EventPostmanDispatcher,
-    private readonly pvzService: PvzService,
+    private readonly keyBuilder: KeyBuilder,
+    private readonly inspectorKeywords: InspectorKeywords,
+    private readonly updateKeywordService: UpdateKeywordService,
     private readonly queueProvider: QueueProvider,
-    private readonly fetchProvider: FetchProvider,
-    private readonly eventEmitter: EventEmitter2,
     private readonly averageService: AverageService,
   ) { }
 
@@ -38,139 +29,33 @@ export class KeysService {
     return await this.keysRepository.getCountDocuments(searchQuery);
   }
 
+  async getOne(filterQuery: FilterQuery<KeysDocument>) {
+    return await this.keysRepository.findOne(filterQuery)
+  }
+
+  async inspectKeywords(userId: User, keywords: string[], article: string) {
+    const currentKeyword = this.keysRepository.find({ userId, article });
+    const currentNotActiveKeyword = this.keysRepository.find({ userId, article, active: false });
+
+    const [currentAll, notActive] = await Promise.all([currentKeyword, currentNotActiveKeyword]);
+
+    const getActive = this.inspectorKeywords.inspect(currentAll, keywords);
+    const getNotActive = this.inspectorKeywords.inspectNot(notActive, keywords);
+
+    const result = await Promise.all([getActive, getNotActive]);
+
+    return result;
+  }
+
   //Поиск всех ключей и возможность делать кастом populated
   async find(searchQuery: FilterQuery<ArticleDocument>, populate?: PopulateOptions) {
     return await this.keysRepository.find(searchQuery, populate);
   }
 
-  //Создание ключей через pipelines
-  async create(data: IKey, id: Types.ObjectId) {
-    from(data.keys)
-      .pipe(
-        concatMap(async element => {
-          const average = await this.averageService.create({
-            userId: data.userId as unknown as number,
-          });
-
-          const frequency = await this.fetchProvider.getFrequency(element);
-
-          const key = await this.keysRepository.create({
-            article: data.article,
-            key: element,
-            userId: data.userId,
-            frequency: frequency,
-            average: [average._id],
-          });
-
-          const pwz = await Promise.all(
-            data.pvz.map(
-              async pvz =>
-                await this.pvzService.create(pvz, data.article, data.userId, String(key._id)),
-            ),
-          );
-
-          const ids = pwz.map(data => data._id);
-
-          await this.keysRepository.findOneAndUpdate({ _id: key._id }, { $push: { pwz: ids } });
-
-          return {
-            id: key,
-            average_id: average._id,
-            pwz,
-            article: data.article,
-            key: element,
-            key_id: key._id,
-          };
-        }),
-      )
-      .subscribe({
-        next: dataObserver => {
-          const result = dataObserver;
-
-          this.eventEmitter.emit('keys.update', { id, key: result.id });
-
-          const dataParse: SearchPositionRMQ.Payload = {
-            article: result.article,
-            key: result.key,
-            key_id: result.key_id,
-            pvz: result.pwz.map(element => {
-              return {
-                name: element.name,
-                average_id: result.average_id,
-                addressId: element._id,
-                geo_address_id: element.geo_address_id,
-                periodId: element.position[0]._id,
-              };
-            }),
-          };
-
-          this.queueProvider.pushTask(async () => await this.fetchProvider.sendNewKey(dataParse));
-        },
-        complete: () => {
-          this.eventEmitter.emit('metric.created', { article: id, user: data.userId });
-          this.eventPostmanDispatcher.dispatch({
-            user: data.userId,
-            count: data.keys.length,
-            type: EventPostmanEnum.CREATE_ARTICLE,
-          });
-        },
-      });
-
-    setTimeout(() => {
-      this.eventEmitter.emit('metric.gathering', { article: id, user: data.userId });
-    }, 1000 * 60 * 30);
-  }
-
-  @Cron('05 0 * * *', { timeZone: 'Europe/Moscow' })
-  async nightParse() {
-    const allKeys = await this.keysRepository.find(
-      {
-        active: true,
-        $or: [{ active_sub: true }, { active_sub: { $exists: false } }],
-      },
-      { path: 'pwz', select: 'name geo_address_id', model: Pvz.name },
-    );
-
-    const observe = from(allKeys).pipe(
-      concatMap(async (element): Promise<SearchPositionRMQ.Payload> => {
-        const average = await this.averageService.create({
-          userId: element.userId as unknown as number,
-        });
-
-        const pwz_data = await this.pvzService.addedPosition(element.pwz, average._id);
-
-        await this.keysRepository.findOneAndUpdate(element._id, {
-          $push: { average: average._id },
-        });
-
-        const resolved = await Promise.all(pwz_data);
-
-        return {
-          article: element.article,
-          key: element.key,
-          key_id: element._id,
-          pvz: resolved,
-        };
-      }),
-    );
-
-    observe.subscribe({
-      next: data => {
-        const send = data;
-        this.queueProvider.pushTask(async () => await this.fetchProvider.sendNewKey(send));
-      },
-      complete: () => {
-        this.logger.log(
-          `Data created for parsing: count keys - ${allKeys.length
-          }, time - ${new Date().toLocaleDateString()}`,
-        );
-      },
-    });
-  }
-  //Обновление множества ключей
   async updateMany(ids: Array<Types.ObjectId>, updateQuery: UpdateQuery<unknown>) {
     return await this.keysRepository.updateMany({ _id: ids }, updateQuery);
   }
+
   //Обновление срденего для ключа и подсчет разницы
   async updateAverage(payload: {
     id: Types.ObjectId;
@@ -189,80 +74,42 @@ export class KeysService {
     if (average.length > 0) await this.averageService.updateDiff(average);
   }
 
-  async removeKey(ids: Types.ObjectId[], user: User) {
-    const result = await this.keysRepository.updateMany({ _id: ids }, { $set: { active: false } });
-    await this.eventPostmanDispatcher.dispatch({
-      user: user,
-      count: ids.length,
-      type: EventPostmanEnum.UPDATE_ONE_KEY,
-    });
-    return result;
+  async refreshKeyword(_id: Types.ObjectId) {
+    return this.keysRepository.findOne({ _id })
+      .then((keyword) => {
+        if (!keyword) throw new BadRequestException(ERROR_KEYWORD_UPDATE);
+
+        return this.keyBuilder
+          .getFrequency(keyword.key)
+          .initialUpdateData(keyword)
+          .getDocument(_id)
+      })
   }
 
-  //Активация ключей
-  async activateKeys(ids: Types.ObjectId[]) {
-    await this.keysRepository.updateMany(ids, { $set: { active: true } });
-  }
-  //Обновление одного ключа
-  async refreshKey(_id: Types.ObjectId) {
-    const key = await this.keysRepository.findOne(
-      { _id: _id },
-      { path: 'pwz', select: 'name position geo_address_id', model: Pvz.name },
-    );
-    if (key) {
-      await this.averageService.updateRefresh(key.average.at(-1));
-
-      const dataParse: SearchPositionRMQ.Payload = {
-        article: key.article,
-        key: key.key,
-        key_id: key._id,
-        pvz: key.pwz.map((element: any) => {
-          this.pvzService.periodRefresh(element._id);
-          return {
-            name: element.name,
-            average_id: key.average.at(-1),
-            addressId: element._id,
-            geo_address_id: element.geo_address_id,
-            periodId: element.position.at(-1)._id,
-          };
-        }),
-      };
-
-      this.eventPostmanDispatcher.dispatch({
-        user: key.userId,
-        count: 1,
-        type: EventPostmanEnum.UPDATE_ONE_KEY,
-      });
-
-      this.queueProvider.pushTask(async () => await this.fetchProvider.sendNewKey(dataParse));
-    }
-  }
-
-  //Обновленние данных которые приходят из парсинга
   async updateData(payload: StatisticsUpdateRMQ.Payload) {
-    setImmediate(async () => {
+    new Promise((resolve) => {
       if (payload.position.position >= 0) {
         payload.position.position = payload.position.position + 1; // Исправить в парсере и убрать
       }
-      this.queueProvider.pushTask(async () => {
-        await this.pvzService.update(
-          payload,
-          async () =>
-            await this.updateAverage({
-              id: payload.averageId,
-              average: payload.position,
-              key_id: payload.key_id,
-            }),
-        );
-      });
-    });
+
+      const document = this.keysRepository.findOne({ _id: payload.key_id });
+      const promiseData: Promise<StatisticsUpdateRMQ.Payload> = new Promise((resolve) => resolve(payload))
+      resolve(this.queueProvider.pushTask(async () => {
+        (() => this.updateKeywordService
+          .setDocument(document)
+          .setDataUpdate(promiseData)
+          .updateCurrentDate(promiseData)
+          .updateCurrentAverage(promiseData)
+          .getCheckUpdate()
+        )()
+      }))
+    })
+
   }
 
   async keySubscriptionManagement(userId: number, update: boolean) {
     return await this.keysRepository.updateMany({ userId }, { active_sub: update });
   }
 
-  async refreshAllKeysFromArticle(article: string, user: User) {
-    await this.keysRefreshService.refreshKeysInArticle(article, user);
-  }
+
 }

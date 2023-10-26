@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -24,11 +23,12 @@ import { CurrentUser, JwtAuthGuard, User } from 'src/modules';
 import { ArticleService } from '../services';
 import { Response } from 'express';
 import { initArticleMessage } from 'src/constatnts';
-import { FetchProvider } from 'src/modules/fetch';
 import { Types } from 'mongoose';
 import { RabbitMqResponser } from 'src/modules/rabbitmq/decorators';
 import { RmqExchanges, RmqServices } from 'src/modules/rabbitmq/exchanges';
 import { StatisticsGetArticlesRMQ } from 'src/modules/rabbitmq/contracts/statistics';
+import { ValidationArticlePipe } from '../pipe';
+import { MessagesEvent } from 'src/interfaces';
 
 @Controller('v1')
 export class ArticleController {
@@ -36,7 +36,6 @@ export class ArticleController {
 
   constructor(
     private readonly articleService: ArticleService,
-    private readonly fetchProvider: FetchProvider,
   ) { }
 
   @ApiAcceptedResponse({ description: 'Create Statistic' })
@@ -44,21 +43,16 @@ export class ArticleController {
   @Post('create')
   async createArticle(
     @CurrentUser() user: User,
-    @Body() data: CreateArticleDto,
+    @Body(new ValidationArticlePipe()) data: CreateArticleDto,
     @Res() response: Response,
   ) {
     try {
-      const productNameData = await this.fetchProvider.fetchArticleName(data.article);
+      const result = await this.articleService.create(data, user);
 
-      // if (!productNameData.product_name && !productNameData.product_url)
-      //   throw new BadRequestException(`Такого артикула не существует: ${data.article}`);
-
-      const create = await this.articleService.create(data, user, productNameData);
-
-      if (create) {
-        const initArticle = initArticleMessage(data.article, create);
+      if (result) {
+        const message = initArticleMessage(data.article, result);
         return response.status(HttpStatus.OK).send({
-          data: { message: initArticle },
+          data: { message },
           error: [],
           status: response.statusCode,
         });
@@ -78,10 +72,10 @@ export class ArticleController {
   @Post('add-key-by-article')
   async addKeys(@Body() dto: AddKeyDto, @CurrentUser() user: User, @Res() response: Response) {
     try {
-      const result = await this.articleService.addKeys(dto, user);
+      const result = await this.articleService.addKeywords(dto, user);
 
       if (result) {
-        const initArticle = initArticleMessage(result.article, result.message);
+        const initArticle = initArticleMessage(result.article, result);
         return response.status(HttpStatus.OK).send({
           status: HttpStatus.OK,
           data: { message: initArticle },
@@ -110,7 +104,7 @@ export class ArticleController {
       const remove = await this.articleService.removeArticle(dto, user);
 
       if (remove) {
-        const initArticle = initArticleMessage(remove, remove);
+        const initArticle = initArticleMessage({ articles: remove }, { event: MessagesEvent.DELETE_ARTICLES });
         return response.status(HttpStatus.OK).send({
           status: HttpStatus.OK,
           data: { message: initArticle },
@@ -159,18 +153,14 @@ export class ArticleController {
   @Delete('remove-key')
   async removeKey(@Body() dto: RemoveKeyDto, @CurrentUser() user: User, @Res() response: Response) {
     try {
-      const remove = await this.articleService.removeKey(dto, user);
+      const remove = await this.articleService.removeKeywords(dto, user);
 
-      if (remove) {
-        const initArticle = initArticleMessage(null, remove);
-        return response.status(HttpStatus.OK).send({
-          status: HttpStatus.OK,
-          data: { message: initArticle },
-          errors: [],
-        });
-      } else {
-        throw new BadRequestException('Невозможно удалить, ключи были удалены')
-      }
+      const initArticle = initArticleMessage(null, remove);
+      return response.status(HttpStatus.OK).send({
+        status: HttpStatus.OK,
+        data: { message: initArticle },
+        errors: [],
+      });
     } catch (error) {
       this.logger.error(error);
       return response.status(HttpStatus.OK).send({
@@ -216,16 +206,22 @@ export class ArticleController {
   async refreshArticle(
     @Body() dto: RefreshArticleDto,
     @CurrentUser() user: User,
-    response: Response,
+    @Res() response: Response,
   ) {
     try {
-      await this.articleService.refreshArticle(dto.article, user);
+      const result = await this.articleService.refreshArticle(dto.article, user);
+      const initArticle = initArticleMessage(result, result);
+      return response.status(HttpStatus.OK).send({
+        data: initArticle,
+        error: [],
+        status: HttpStatus.OK,
+      });
     } catch (error) {
       this.logger.error(error);
       return response.status(HttpStatus.OK).send({
         data: [],
-        error: [{ message: error.message }],
-        status: error.statusCode,
+        error: [{ message: error.response.message }],
+        status: error.status,
       });
     }
   }

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ArticleRepository } from '../repositories';
 import {
   AddKeyDto,
@@ -7,73 +7,91 @@ import {
   RemoveArticleDto,
 } from '../dto';
 import { User } from 'src/modules/auth';
-import { Keys, KeysService } from '../../keys';
-import { TownsDestructor } from '../utils';
-import { chunk, map, uniq } from 'lodash';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { EventsWS } from '../events';
-import { GetProductRMQ } from 'src/modules/rabbitmq/contracts/products';
+import { KeysService } from '../../keys';
 import { MessagesEvent } from 'src/interfaces';
-import { CreateArticleStrategy } from './create';
 import { FilterQuery, HydratedDocument, Types } from 'mongoose';
 import { Article } from '../schemas';
-import { Pvz } from '../../pvz';
 import { StatisticsGetArticlesRMQ } from 'src/modules/rabbitmq/contracts/statistics';
-import { Periods } from '../../periods';
 import { Pagination } from '../../pagination';
 import { ArticleBuilder } from './builders/article.builder';
+import { ArticleVisitor } from './visitors';
+import { Active } from '../types/classes';
+import { DEFAULT_ERROR_ALL_KEYWORDS_REMOVED, DEFAULT_ERROR_ALL_REMOVE_KEYWORDS_NOT_FIND } from '../constants';
+import { EventPostmanEnum } from 'src/modules/lib/events/types/enum';
+import { ARTICLE_POPULATE } from '../constants/populate';
+import { PaginationUtils } from 'src/modules/utils/providers';
+
 
 @Injectable()
 export class ArticleService {
   protected readonly logger = new Logger(ArticleService.name);
 
   constructor(
-    private readonly createArticleStrategy: CreateArticleStrategy,
     private readonly articleRepository: ArticleRepository,
-    private readonly keyService: KeysService,
+    private readonly paginationUtils: PaginationUtils,
+    private readonly keywordService: KeysService,
+    private readonly articleVisitor: ArticleVisitor,
     private readonly articleBuilder: ArticleBuilder,
-    private readonly utilsDestructor: TownsDestructor,
-    private readonly eventEmitter: EventEmitter2,
   ) { }
 
-  ///Получение артикулов для разводящей
-  async articles(id: User, query) {
-    const list = await this.articleRepository.findList(id, query.search, query.sort);
-    return { articles: list.articles, count_keys: await this.keyService.count({ active: true, userId: id }) }
-  }
 
-  //Переделать на более оптимизированный запрос
-  async create(data: CreateArticleDto, user: User, product?: GetProductRMQ.Response) {
+  async create(data: CreateArticleDto, user: User) {
     try {
-      const article = await this.articleRepository.findOne({ user: user, article: data.article })
+      const { keys, article } = data;
+      const findArticle = await this.articleRepository.findOne({ userId: user, article });
 
-      const keys = uniq(data.keys);
-
-      if (!article) {
-        await this.articleBuilder
-          .getProduct(data.article)
-          .getCities(user)
+      if (findArticle) {
+        const document = await this.articleRepository.findOneAndUpdate({ _id: findArticle._id }, { $set: { active: true } });
+        return this.addKeywords({ articleId: document._id, keys }, user);
+      } else {
+        const builder = this.articleBuilder
+          .create(keys.length, user, article)
           .initPagination()
-          .keywordCreate(keys, user)
-          .create()
+
+        const document = builder.document;
+
+        builder
+          .getProductAndUpdate(article)
+          .getCities(user)
+          .metricsCreate()
+          .keywordCreate(keys, user, article)
+
+        builder.activateSendPostman(keys.length, user)
+
+        return { event: MessagesEvent.CREATE_ARTICLE, article: document };
       }
 
-      // const checkProduct = await this.createArticleStrategy.findNotActiveAddKeys(
-      //   data.article,
-      //   keys,
-      //   user,
-      // );
-      // if (checkProduct) return checkProduct;
-
-      // const checkKeys = await this.createArticleStrategy.checkArticleAddKeys(
-      //   data.article,
-      //   keys,
-      //   user,
-      // );
-      // if (checkKeys) return checkKeys;
-
     } catch (error) {
-      return error.message;
+      this.logger.error(error.message);
+      throw error
+    }
+  }
+
+  async addKeywords(data: AddKeyDto, user: User) {
+    const { articleId, keys } = data;
+    const article: HydratedDocument<Article> = await this.articleRepository.findOne({ _id: articleId });
+
+    if (article) {
+      const comparisonCheck = await this.keywordService.inspectKeywords(user, keys, article.article);
+      const [newKeyword, oldKeyword] = comparisonCheck;
+      const count = newKeyword.length + oldKeyword.length;
+      const builder = this.articleBuilder;
+
+      builder
+        .setDocument(article)
+        .getCities(user)
+        .keywordCreate(newKeyword, user, article.article)
+        .countUp(count)
+
+      this.articleVisitor
+        .setDocument(article)
+        .activeKeywords(oldKeyword, { active: true })
+
+      count > 0 ? builder.activateSendPostman(count, user) : null;
+
+      return { event: MessagesEvent.ADD_KEYWORDS, newKeywords: newKeyword.length, oldKeywords: oldKeyword.length, article: article.article };
+    } else {
+      throw new BadRequestException(`Артикул не был найден, некорректные параметры запроса`);
     }
   }
 
@@ -82,141 +100,93 @@ export class ArticleService {
     return await this.articleRepository.findOne(filterQuery);
   }
 
-  //Поиск одного артикула
   async findArticle(_id: Types.ObjectId, query) {
-    await this.eventEmitter.emitAsync('pagination.check', { article_id: _id } as Pagination); //Временные события
-
     const data = await this.articleRepository.findArticle({ _id: _id }, query);
-    const total_keys = data.keys.length;
-
-    await this.eventEmitter.emitAsync('metric.checked', { article: data._id, user: data.userId }); //Временные события
-
-    let keys: Types.ObjectId[],
-      page: number,
-      total: number,
-      page_size: number;
-
-    const pagination = <{ key_limit: number, _id: Types.ObjectId, page: number }><unknown>data.pagination
-
-    const chunks = chunk(data.keys, pagination.key_limit);
-    if (chunks[pagination.page - 1]) {
-      keys = chunks[pagination.page - 1],
-        page = pagination.page,
-        total = chunks.length,
-        page_size = pagination.key_limit;
-    } else {
-      keys = chunks[0],
-        page = 1,
-        total = chunks.length,
-        page_size = pagination.key_limit;
-    }
+    const pagination = data.pagination as unknown as HydratedDocument<Pagination>
+    const { keys, count, meta } = await this.paginationUtils.paginate({ limit: pagination.key_limit, page: pagination.page }, data.keys, 'keys')
 
     return {
       article: {
         ...data, keys,
       },
-      meta: {
-        page, total, page_size,
-      },
-      total_keys,
+      meta,
+      total_keys: count
     }
   }
 
-  //Оптимизируется после создания
-  async addKeys(data: AddKeyDto, user: User) {
-    const { articleId, keys } = data;
-
-    const find: HydratedDocument<Article> = await this.articleRepository.findOne(
-      { _id: articleId },
-      {
-        path: 'keys',
-        select: 'pwz key userId',
-        model: Keys.name,
-        populate: { path: 'pwz', select: 'name', model: Pvz.name },
-      }
-    );
-
-    const message = await this.create({ article: find.article, keys: keys }, user);
-
+  async articles(id: User, query) {
+    const list = await this.articleRepository.findList(id, query.search, query.sort);
     return {
-      message,
-      article: find.article,
-    };
+      articles: list.articles, count_keys: list.articles.reduce((accumulator, currentValue) => {
+        return accumulator += currentValue.count
+      }, 0)
+    }
   }
 
-  //Переделать на более оптимизированный запрос, добавить событие
-  async removeArticle(data: RemoveArticleDto, id: User) {
-    const result = map(data.articleId, async element => {
-      const article = await this.articleRepository.findOneAndUpdate(
-        {
-          _id: element, userId: id,
-        },
-        {
-          active: false,
-        }
-      );
+  async removeArticle(data: RemoveArticleDto, user: User) {
+    const articles = data.articleId
 
-      const removedKey = await this.keyService.updateMany(article.keys, { active: false });
+    const response: Promise<HydratedDocument<Article>>[] = []
 
-      if (removedKey) {
-        return article.article;
-      }
-    });
-    const resolved = await Promise.all(result);
-    return { article: resolved, event: MessagesEvent.DELETE_ARTICLES };
+    while (articles.length > 0) {
+
+      const article = articles.shift();
+      const document = await this.articleRepository.findOne({ _id: article, userId: user, active: true });
+
+      const update = this.articleVisitor
+        .setDocument(document)
+        .switchArticle(new Active(false))
+
+      response.push(update);
+    }
+
+    return Promise.all(
+      response.map(element => element
+        .catch((error) => { throw error })
+        .then((document) => document.article))
+    )
   }
 
-  //Дописать что бы не удалялся последний ключ
-  async removeKey(data: RemoveKeyDto, user: User) {
+  async removeKeywords(data: RemoveKeyDto, user: User) {
+    const article = await this.articleRepository.findOne({ _id: data.articleId, userId: user });
 
-    return await this.keyService.removeKey(data.keysId, user).then(result => {
-      if (result) {
-        return {
-          event: MessagesEvent.DELETE_KEY,
-          length: data.keysId.length,
-        };
-      }
-    });
+    if (article.keys.length === data.keysId.length) {
+      throw new BadRequestException(DEFAULT_ERROR_ALL_KEYWORDS_REMOVED);
+    } else {
+      const getKeywords = await this.keywordService.find({ _id: data.keysId, userId: user, active: true });
+
+      if (getKeywords.length === 0) throw new BadRequestException(DEFAULT_ERROR_ALL_REMOVE_KEYWORDS_NOT_FIND);
+
+      this.articleVisitor
+        .setDocument(article)
+        .disabledKeywords(getKeywords, new Active(false))
+
+      this.articleVisitor.eventPostmanDispatcher
+        .dispatch({ count: data.keysId.length, user: user, type: EventPostmanEnum.CREATE_ARTICLE });
+
+      return {
+        event: MessagesEvent.DELETE_KEY,
+        length: data.keysId.length,
+      };
+    }
+
   }
 
-  //Поиск артикулов для выгрузки в Excel
   async getArticlesUpload(payload: StatisticsGetArticlesRMQ.Payload) {
-    return await this.articleRepository.find({ _id: payload.articles, userId: payload.userId }, {
-      path: 'keys',
-      select: 'key frequency pwz',
-      match: { active: true },
-      model: Keys.name,
-      populate: {
-        path: 'pwz',
-        select: 'city position',
-        model: Pvz.name,
-        populate: {
-          path: 'position',
-          select: 'position cpm promo_position timestamp difference',
-          match: { timestamp: { $in: payload.periods } },
-          model: Periods.name
-        }
-      }
-    });
+    return await this.articleRepository.find({ _id: payload.articles, userId: payload.userId }, ARTICLE_POPULATE);
   }
 
   async refreshArticle(article: Types.ObjectId, user: User) {
-    const articleDocument = await this.articleRepository.findOne({ _id: article })
-    await this.keyService.refreshAllKeysFromArticle(articleDocument.article, user);
-  }
-
-  //добовление ключей 
-  @OnEvent('keys.update')
-  async update(payload) {
-    await this.articleRepository.findOneAndUpdate({ _id: payload.id }, {
-      $push: {
-        keys: payload.key,
-      },
-    });
-  }
-
-  @OnEvent('pagination.create')
-  async updatePagination(payload: { pagination_id: Types.ObjectId, article_id: Types.ObjectId }) {
-    await this.articleRepository.findOneAndUpdate({ _id: payload.article_id }, { pagination: payload.pagination_id });
+    return this.articleRepository.findOne({ _id: article, userId: user })
+      .then((document) => {
+        if (!document) throw new BadRequestException(`Артикул не был найден`);
+        this.articleBuilder
+          .setDocument(document)
+          .getProductAndUpdate(document.article)
+          .updateArticle()
+        return { event: MessagesEvent.REFRESH_ARTICLE, article: document.article }
+      }).catch((error) => {
+        throw error
+      });
   }
 }

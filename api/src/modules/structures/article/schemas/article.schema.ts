@@ -31,6 +31,9 @@ export class Article {
   @Prop({ type: Boolean, default: true })
   active: boolean;
 
+  @Prop({ type: Number, default: 0 })
+  count: number;
+
   @Prop({ type: [Types.ObjectId], ref: Keys.name })
   keys?: Types.ObjectId[];
 }

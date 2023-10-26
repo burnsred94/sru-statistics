@@ -1,15 +1,21 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { Address, IAdaptiveProfile, IProfileApiResponse } from "../types";
 import { map } from "lodash";
 
 @Injectable()
 export class ProfileIntegrationAdapter {
+    private readonly logger = new Logger(ProfileIntegrationAdapter.name);
 
     async adaptiveResponseDataProfile({ towns }: IProfileApiResponse): Promise<IAdaptiveProfile[]> {
-        return map(towns, ({ city, city_id, addresses }) => {
-            return this.addressDestruction(addresses, city, city_id);
-        })
-            .flat()
+        try {
+            return map(towns, ({ city, _id, addresses }) => {
+                return this.addressDestruction(addresses, city, _id);
+            })
+                .flat()
+        } catch (error) {
+            this.logger.error(error.message);
+            throw error;
+        }
     };
 
     private addressDestruction(address: Address[], city: string, city_id: string): IAdaptiveProfile[] {

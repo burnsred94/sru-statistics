@@ -23,7 +23,7 @@ export class CoreKeysIntegrationService {
         } catch (error) {
             this.logger.error(error.message);
         } finally {
-            this.logger.log(`Sending message to exchange: ${RmqExchanges.CORE_KEYS} and routing: ${GetFrequencyRMQ.routingKey}`)
+            // this.logger.log(`Sending message to exchange: ${RmqExchanges.CORE_KEYS} and routing: ${GetFrequencyRMQ.routingKey}`)
         }
     }
 }

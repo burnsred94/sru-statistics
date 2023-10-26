@@ -3,12 +3,17 @@ import { KeysRepository } from "../../repositories";
 import { User } from "src/modules/auth";
 import { HydratedDocument, Types } from "mongoose";
 import { CoreKeysIntegrationService } from "src/modules/integrations/core-keys/services";
-import { AverageService } from "src/modules/structures/average";
+import { Average, AverageService } from "src/modules/structures/average";
 import { IAdaptiveProfile } from "src/modules/integrations/profiles/types";
-import { forEach, result } from "lodash";
-import { PvzDocument, PvzService } from "src/modules/structures/pvz";
-import { IKeySendData } from "../../types/interfaces";
-import { KeysDocument } from "../../schemas";
+import { map } from "lodash";
+import { Keys } from "../../schemas";
+import { IPreparationKey } from "src/modules/structures/article/services/builders/article.builder";
+import { PvzService } from "src/modules/structures/pvz";
+import { KeywordsContextService } from "src/modules/core/update/keywords-context/keywords-context.service";
+import { STRATEGY_REFRESH } from "src/modules/core/update/keywords-context/types";
+import { KeysRefreshPopulate } from "../../constants";
+import { Active, ActiveSub } from "src/modules/structures/article/types/classes";
+
 
 
 
@@ -16,92 +21,144 @@ import { KeysDocument } from "../../schemas";
 export class KeyBuilder {
     protected readonly logger = new Logger(KeyBuilder.name);
 
-    document: Promise<Types.ObjectId>;
+    document: Promise<HydratedDocument<Keys>>;
 
-    send_data = {
-        pwz: []
-    } as IKeySendData;
-    private keyword: string;
-    private user: User;
-    private article: string;
-    private average: Types.ObjectId;
-    private address = [] as Promise<Types.ObjectId>[];
+    private average: Promise<HydratedDocument<Average>>;
+    private address: Promise<Types.ObjectId[]>;
     private frequency: Promise<number>;
 
     constructor(
         private readonly keysRepository: KeysRepository,
+        private readonly keywordsRefreshContext: KeywordsContextService,
         private readonly addressService: PvzService,
         private readonly averageService: AverageService,
         private readonly coreKeysIntegrationService: CoreKeysIntegrationService
-    ) { }
+    ) {
+    }
 
-    create() {
-        Promise.all([Promise.all(this.address), this.frequency])
-            .then((data) => {
-                const [addresses, frequency] = data;
-                const key = this.keysRepository.create(
-                    { average: [this.average], key: this.keyword, frequency, user: this.user, pwz: addresses, article: this.article }
+    create(key: string, user: User, article: string, address: Promise<IPreparationKey>) {
+        const document = Promise.resolve(address)
+            .then(async (data) => {
+                const resolve = await Promise.all([data.address, data.average, data.frequency, data.pwz]);
+                const [address, average, frequency] = resolve;
+
+                const document = await this.keysRepository.create(
+                    { average, key, frequency, userId: user, pwz: address, article },
+                    KeysRefreshPopulate
                 );
-                console.log(key);
-                // this.document = key.then((doc) => doc._id);
+                this.keywordsRefreshContext.setProcessor(STRATEGY_REFRESH.KEYWORDS_DATA_REFRESH);
+                this.keywordsRefreshContext.refresh(document);
+
+                return document
             })
 
-
+        this.document = document
         return this
     }
 
     createAverage(user: User) {
-        this.user = user;
-
-        this.averageService.create({ userId: user as unknown as number })
-            .then((result) => {
-                this.average = result._id;
-                this.send_data.average_id = result._id;
-            })
+        this.average = this.averageService.create({ userId: user as unknown as number });
         return this
     }
 
-    createAddress(cities: IAdaptiveProfile[], article: string) {
-        this.send_data.article = article;
+    createAddress(cities: IAdaptiveProfile[], article: string, user: User): Promise<IPreparationKey> {
 
-        forEach(cities, (element) => {
-            const address = this.addressService.create(cities, article, this.user)
-                .then((result) => {
-                    this.send_data.pwz.push({
-                        name: element.address,
-                        average_id: this.average,
-                        addressId: element.addressId,
-                        geo_address_id: element.city_id,
-                        periodId: result.position.at(-1)._id,
-                    })
-                    return result._id;
-                });
+        this.address = Promise.all(
+            map(cities, async (element) => {
+                try {
+                    const document = await this.addressService.create(element, article, user);
+                    return document._id;
+                } catch (error) {
+                    this.logger.error(error.message);
+                    throw error;
+                }
+            })
+        )
 
-            this.address.push(address);
-        });
+        const result: Promise<IPreparationKey> = Promise.resolve(
+            Object.create({ address: this.address, average: this.average, frequency: this.frequency })
+        )
 
-        return this
+        return result
     }
 
     getFrequency(key: string) {
-        this.send_data.key = key;
-        this.keyword = key;
-        const frequency = this.coreKeysIntegrationService.getFrequency(key);
-        this.frequency = frequency;
+        this.frequency = this.coreKeysIntegrationService.getFrequency(key)
+            .catch((error) => {
+                this.logger.error({
+                    target: `Error method: ${this.getFrequency.name}`,
+                    error: `Error: ${error.message}`
+                });
+
+                return 0
+            });
+
         return this
     }
 
-    getDocument() {
-        return this.document;
+    enabledKeyword(keyword: HydratedDocument<Keys>, switchQuery: ActiveSub | Active) {
+        Promise.resolve(this.frequency)
+            .then(async (frequency) => {
+                const { pwz } = keyword;
+
+                const average = await this.averageService.checkAndUpdate(keyword.average.at(-1));
+
+                if (average) {
+                    this.keysRepository.findOneAndUpdate({ _id: keyword._id }, { $set: { frequency: frequency, ...switchQuery }, $push: { average: average } });
+                } else {
+                    this.keysRepository.findOneAndUpdate({ _id: keyword._id }, { $set: { frequency: frequency, ...switchQuery } });
+                }
+
+                new Promise(async (resolve) => {
+                    const updatedAddress = [];
+                    while (pwz.length > 0) {
+                        const address = pwz.shift();
+                        const result = await this.addressService.checkAndUpdate(address);
+                        updatedAddress.push(result);
+                    }
+                    resolve([keyword, updatedAddress]);
+                }).then(async ([keyword]) => {
+                    const item = await this.keysRepository.findOne({ _id: keyword._id }, KeysRefreshPopulate);
+
+                    this.keywordsRefreshContext.setProcessor(STRATEGY_REFRESH.KEYWORDS_DATA_REFRESH);
+                    this.keywordsRefreshContext.refresh(item);
+                })
+            })
+        return this;
     }
 
-    getSendData(): IKeySendData {
-        return this.send_data;
+    disabledKeywords(keyword: HydratedDocument<Keys>, switchQuery: ActiveSub | Active) {
+        this.keysRepository.findOneAndUpdate({ _id: keyword._id }, { $set: switchQuery })
+        return this;
     }
 
-    async confirm() {
-        this.address = [];
-        this.send_data = null;
+    initialUpdateData(keyword: HydratedDocument<Keys>) {
+        Promise.resolve(this.frequency)
+            .then(async (frequency) => {
+                const { pwz } = keyword;
+                const average = await this.averageService.checkAndUpdate(keyword.average.at(-1));
+                this.keysRepository.findOneAndUpdate({ _id: keyword._id }, { $set: { frequency }, $push: { average } });
+
+                new Promise(async (resolve) => {
+                    const updatedAddress = [];
+                    while (pwz.length > 0) {
+                        const address = pwz.shift();
+                        const result = await this.addressService.checkAndUpdate(address);
+                        updatedAddress.push(result);
+                    }
+                    resolve([keyword, updatedAddress]);
+                }).then(async ([keyword]) => {
+                    const item = await this.keysRepository.findOne({ _id: keyword._id }, KeysRefreshPopulate);
+
+                    this.keywordsRefreshContext.setProcessor(STRATEGY_REFRESH.KEYWORDS_DATA_REFRESH);
+                    this.keywordsRefreshContext.refresh(item);
+                })
+            })
+        return this;
+    }
+
+    async getDocument(_id?: Types.ObjectId) {
+        return _id ? this.keysRepository.findOne({ _id }, KeysRefreshPopulate) : this.document.then((document) => document._id);
     }
 
 }

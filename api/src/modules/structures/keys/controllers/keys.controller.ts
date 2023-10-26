@@ -15,12 +15,12 @@ import { concatMap, from } from 'rxjs';
 export class KeysController {
   protected readonly logger = new Logger(KeysController.name);
 
-  constructor(private readonly keysService: KeysService) {}
+  constructor(private readonly keysService: KeysService) { }
 
   @Post('refresh')
   async refreshKey(@Body() key: RefreshKeyDto, @Res() response: Response) {
     try {
-      await this.keysService.refreshKey(key._id);
+      await this.keysService.refreshKeyword(key._id);
 
       return response.status(HttpStatus.OK).send({
         data: [],
@@ -37,11 +37,11 @@ export class KeysController {
     }
   }
 
-  @Post('enabled-keys')
-  async httpEnabled(@Body() data: StatisticsEnabledRMQ.Payload) {
-    await this.enabledSubscription(data);
-    console.log(`enabled user keys: ${data.userId}`);
-  }
+  // @Post('enabled-keys')
+  // async httpEnabled(@Body() data: StatisticsEnabledRMQ.Payload) {
+  //   await this.enabledSubscription(data);
+  //   console.log(`enabled user keys: ${data.userId}`);
+  // }
 
   @RabbitMqSubscriber({
     exchange: RmqExchanges.STATISTICS,
@@ -51,7 +51,6 @@ export class KeysController {
   })
   async disableSubscription(payload: StatisticsDisabledRMQ.Payload) {
     try {
-      console.log(payload);
       from(payload.users)
         .pipe(
           concatMap(async element => {
@@ -65,8 +64,7 @@ export class KeysController {
         .subscribe({
           next: value => {
             this.logger.log(
-              `User ${value.user} disabled keys ${
-                value.status ? `successfully` : `unsuccessfully`
+              `User ${value.user} disabled keys ${value.status ? `successfully` : `unsuccessfully`
               }`,
             );
           },
@@ -102,10 +100,6 @@ export class KeysController {
     currentService: RmqServices.STATISTICS,
   })
   async updatePeriod(payload: StatisticsUpdateRMQ.Payload) {
-    try {
-      await this.keysService.updateData(payload);
-    } catch (error) {
-      this.logger.error(error);
-    }
+    await this.keysService.updateData(payload);
   }
 }

@@ -1,11 +1,13 @@
-import { IsArray, IsNotEmpty, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsArray, IsString } from 'class-validator';
+import { keywordsUniq } from '../../utils';
 
 export class CreateArticleDto {
-  @IsNotEmpty()
   @IsString()
   article: string;
 
-  @IsNotEmpty()
+  @Transform((data) => keywordsUniq(data.obj.keys))
   @IsArray()
   keys: Array<string>;
 }
+
