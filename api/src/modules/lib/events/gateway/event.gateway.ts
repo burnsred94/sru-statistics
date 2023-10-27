@@ -7,6 +7,7 @@ import { EventsCS } from 'src/interfaces';
   cors: {
     origin: '*',
   },
+  namespace: 'statistics',
   perMessageDeflate: true,
   transports: ['polling', 'websocket'],
 })
