@@ -1,5 +1,5 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, Types } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { Article, ArticleDocument } from '../schemas/article.schema';
 import { Injectable, Logger } from '@nestjs/common';
 import { User } from 'src/modules/auth';
@@ -160,7 +160,7 @@ export class ArticleRepository extends AbstractRepository<ArticleDocument> {
     let search = {};
     let sort = { frequency: 1 }; // default
     let city = {};
-
+    console.log(search)
     if (query.search !== undefined) search = { key: { $regex: query.search, $options: 'i' } };
 
     if (query.sort !== undefined) sort = { frequency: Number(query.sort) };

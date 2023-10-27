@@ -12,7 +12,6 @@ import { TownsDestructor } from '../utils';
 import { chunk, map } from 'lodash';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
-import { EventsWS } from '../events';
 import { GetProductRMQ } from 'src/modules/rabbitmq/contracts/products';
 import { MessagesEvent } from 'src/interfaces';
 import { CreateArticleStrategy } from './create';
@@ -109,7 +108,7 @@ export class ArticleService {
       },
       total_keys,
     }
- 
+
   }
 
   //Оптимизируется после создания
