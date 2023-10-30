@@ -8,7 +8,7 @@ export class AverageService {
   constructor(
     private readonly averageRepository: AverageRepository,
     private readonly mathUtils: MathUtils,
-  ) { }
+  ) {}
 
   async create(data: { userId: number }) {
     const date = await this.mathUtils.currentDate();
@@ -27,7 +27,6 @@ export class AverageService {
     average: { cpm: number; promotion: number; promoPosition: number; position: number };
     key_id: Types.ObjectId;
   }) {
-
     const find = await this.averageRepository.findOne({ _id: payload.id });
     const average = Number.isNaN(+find.average) ? 0 : Number(find.average);
     const promo = find.start_position === null ? 0 : Number(find.start_position);
@@ -85,8 +84,8 @@ export class AverageService {
         payload.average.position === -1
           ? '1000+'
           : payload.average.position === -2
-            ? 'Нет данных'
-            : '1000+';
+          ? 'Нет данных'
+          : '1000+';
 
       await this.averageRepository.findOneAndUpdate(
         { _id: payload.id },
@@ -121,14 +120,17 @@ export class AverageService {
     const date = await this.mathUtils.currentDate();
     const average = await this.averageRepository.findOne({ _id });
     if (average.timestamp === date) {
-      await this.averageRepository.findOneAndUpdate({ _id }, {
-        $set: {
-          average: 'Ожидается',
-          delimiter: 0,
-          loss_delimiter: 0,
-          difference: '0',
-        }
-      })
+      await this.averageRepository.findOneAndUpdate(
+        { _id },
+        {
+          $set: {
+            average: 'Ожидается',
+            delimiter: 0,
+            loss_delimiter: 0,
+            difference: '0',
+          },
+        },
+      );
     } else {
       return await this.averageRepository.create({
         average: 'Ожидается',

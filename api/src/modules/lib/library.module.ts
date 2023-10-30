@@ -5,4 +5,4 @@ import { EventsModule } from './events/event.module';
 @Module({
   imports: [QueueModule, EventsModule],
 })
-export class LibraryModule { }
+export class LibraryModule {}

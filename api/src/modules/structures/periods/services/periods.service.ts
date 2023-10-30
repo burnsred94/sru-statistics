@@ -8,7 +8,7 @@ import { IUpdateSearch } from 'src/types/interfaces';
 export class PeriodsService {
   protected readonly logger = new Logger(PeriodsService.name);
 
-  constructor(private readonly periodRepository: PeriodsRepository) { }
+  constructor(private readonly periodRepository: PeriodsRepository) {}
 
   async create(difference = '0', date: string) {
     const result = await this.periodRepository.create({
@@ -21,8 +21,10 @@ export class PeriodsService {
 
   async update(_id: Types.ObjectId, data: IUpdateSearch) {
     if (data.position === -3) {
-      return await this.periodRepository.findOneAndUpdate({ _id },
-        { position: DEFAULT_DATE.WAITING_DATA, cpm: null, difference: '0', promo_position: null });
+      return await this.periodRepository.findOneAndUpdate(
+        { _id },
+        { position: DEFAULT_DATE.WAITING_DATA, cpm: null, difference: '0', promo_position: null },
+      );
     }
 
     if (data.position > 0) {
@@ -35,7 +37,12 @@ export class PeriodsService {
         },
       );
     } else {
-      const pos = data.position === -1 ? DEFAULT_DATE.NOT_FIND_LIMIT : data.position === -2 ? DEFAULT_DATE.NOT_FIND : DEFAULT_DATE.NOT_FIND_LIMIT;
+      const pos =
+        data.position === -1
+          ? DEFAULT_DATE.NOT_FIND_LIMIT
+          : data.position === -2
+          ? DEFAULT_DATE.NOT_FIND
+          : DEFAULT_DATE.NOT_FIND_LIMIT;
       return await this.periodRepository.findOneAndUpdate({ _id }, { position: pos });
     }
   }

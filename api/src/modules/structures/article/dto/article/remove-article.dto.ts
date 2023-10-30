@@ -5,9 +5,9 @@ import { map } from 'lodash';
 import { Types } from 'mongoose';
 
 export class RemoveArticleDto {
-  @Transform((data) => {
-    data.value = map(data.value, (value) => TransformMongoId(value))
-    data.obj.articleId = map(data.obj.articleId, (value) => TransformMongoId(value))
+  @Transform(data => {
+    data.value = map(data.value, value => TransformMongoId(value));
+    data.obj.articleId = map(data.obj.articleId, value => TransformMongoId(value));
     return data.value;
   })
   @IsArray()

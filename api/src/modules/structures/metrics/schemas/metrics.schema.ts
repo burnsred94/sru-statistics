@@ -21,8 +21,11 @@ export class Metrics {
   @Prop({ type: Number, required: true })
   user: number;
 
-  @Prop({ type: Types.ObjectId, required: true })
+  @Prop({ type: Types.ObjectId })
   article: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId })
+  folder: Types.ObjectId;
 
   @Prop({ type: Array<MetricData>, default: [] })
   top_100: Array<MetricData>;

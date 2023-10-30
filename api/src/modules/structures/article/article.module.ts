@@ -18,9 +18,10 @@ import { ValidationArticlePipe } from './pipe';
 import { HttpModule } from '@nestjs/axios';
 import { ArticleVisitor } from './services/visitors';
 import { MetricsModule } from '../metrics/metrics.module';
+import { ArticleMetricsService } from './services/metrics'
 
 const STRUCTURES = [PaginationModule, KeysModule, PvzModule];
-const INTEGRATIONS = [ProfilesIntegrationModule, ProductsIntegrationModule]
+const INTEGRATIONS = [ProfilesIntegrationModule, ProductsIntegrationModule];
 
 @Module({
   imports: [
@@ -40,9 +41,10 @@ const INTEGRATIONS = [ProfilesIntegrationModule, ProductsIntegrationModule]
     ArticleBuilder,
     ArticleVisitor,
     ArticleRepository,
+    ArticleMetricsService,
     ValidationArticlePipe,
     JwtStrategy,
   ],
-  exports: [ArticleService],
+  exports: [ArticleService, ArticleMetricsService],
 })
 export class ArticleModule { }

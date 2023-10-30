@@ -1,15 +1,13 @@
-import { Injectable } from "@nestjs/common";
-import { Cron } from "@nestjs/schedule";
-import { KeywordRefreshService } from "../../update/keywords-refresh/services/keyword.refresh.service";
+import { Injectable } from '@nestjs/common';
+import { Cron } from '@nestjs/schedule';
+import { KeywordRefreshService } from '../../update/keywords-refresh/services/keyword.refresh.service';
 
 @Injectable()
 export class RefreshNightKeywords {
+  constructor(private readonly keywordRefreshService: KeywordRefreshService) { }
 
-    constructor(private readonly keywordRefreshService: KeywordRefreshService) { }
-
-    @Cron("39 03 * * *", { timeZone: 'Europe/Moscow' })
-    async taskKeywordsNightUpdate() {
-        this.keywordRefreshService.updateNight();
-    }
-
+  @Cron('05 0 * * *', { timeZone: 'Europe/Moscow' })
+  async taskKeywordsNightUpdate() {
+    this.keywordRefreshService.updateNight();
+  }
 }

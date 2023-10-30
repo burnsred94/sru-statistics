@@ -6,8 +6,7 @@ export class CreateArticleDto {
   @IsString()
   article: string;
 
-  @Transform((data) => keywordsUniq(data.obj.keys))
+  @Transform(data => keywordsUniq(data.obj.keys))
   @IsArray()
   keys: Array<string>;
 }
-

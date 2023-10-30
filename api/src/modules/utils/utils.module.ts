@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { MathUtils, PaginationUtils } from './providers';
+import { MathUtils, MetricMathUtils, PaginationUtils } from './providers';
 
 @Module({
   imports: [],
-  providers: [MathUtils, PaginationUtils],
-  exports: [MathUtils, PaginationUtils],
+  providers: [MathUtils, PaginationUtils, MetricMathUtils],
+  exports: [MathUtils, PaginationUtils, MetricMathUtils],
 })
 export class UtilsModule { }

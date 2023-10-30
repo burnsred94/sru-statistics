@@ -30,7 +30,7 @@ export class KeysService {
   }
 
   async getOne(filterQuery: FilterQuery<KeysDocument>) {
-    return await this.keysRepository.findOne(filterQuery)
+    return await this.keysRepository.findOne(filterQuery);
   }
 
   async inspectKeywords(userId: User, keywords: string[], article: string) {
@@ -47,8 +47,7 @@ export class KeysService {
     return result;
   }
 
-  //Поиск всех ключей и возможность делать кастом populated
-  async find(searchQuery: FilterQuery<ArticleDocument>, populate?: PopulateOptions) {
+  async find(searchQuery: FilterQuery<ArticleDocument>, populate?: PopulateOptions | (string | PopulateOptions)[]) {
     return await this.keysRepository.find(searchQuery, populate);
   }
 
@@ -75,41 +74,38 @@ export class KeysService {
   }
 
   async refreshKeyword(_id: Types.ObjectId) {
-    return this.keysRepository.findOne({ _id })
-      .then((keyword) => {
-        if (!keyword) throw new BadRequestException(ERROR_KEYWORD_UPDATE);
+    return this.keysRepository.findOne({ _id }).then(keyword => {
+      if (!keyword) throw new BadRequestException(ERROR_KEYWORD_UPDATE);
 
-        return this.keyBuilder
-          .getFrequency(keyword.key)
-          .initialUpdateData(keyword)
-          .getDocument(_id)
-      })
+      return this.keyBuilder.getFrequency(keyword.key).initialUpdateData(keyword).getDocument(_id);
+    });
   }
 
   async updateData(payload: StatisticsUpdateRMQ.Payload) {
-    new Promise((resolve) => {
+    new Promise(resolve => {
       if (payload.position.position >= 0) {
         payload.position.position = payload.position.position + 1; // Исправить в парсере и убрать
       }
 
       const document = this.keysRepository.findOne({ _id: payload.key_id });
-      const promiseData: Promise<StatisticsUpdateRMQ.Payload> = new Promise((resolve) => resolve(payload))
-      resolve(this.queueProvider.pushTask(async () => {
-        (() => this.updateKeywordService
-          .setDocument(document)
-          .setDataUpdate(promiseData)
-          .updateCurrentDate(promiseData)
-          .updateCurrentAverage(promiseData)
-          .getCheckUpdate()
-        )()
-      }))
-    })
-
+      const promiseData: Promise<StatisticsUpdateRMQ.Payload> = new Promise(resolve =>
+        resolve(payload),
+      );
+      resolve(
+        this.queueProvider.pushTask(async () => {
+          (() =>
+            this.updateKeywordService
+              .setDocument(document)
+              .setDataUpdate(promiseData)
+              .updateCurrentDate(promiseData)
+              .updateCurrentAverage(promiseData)
+              .getCheckUpdate())();
+        }),
+      );
+    });
   }
 
   async keySubscriptionManagement(userId: number, update: boolean) {
     return await this.keysRepository.updateMany({ userId }, { active_sub: update });
   }
-
-
 }

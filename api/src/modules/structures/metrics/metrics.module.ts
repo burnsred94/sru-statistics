@@ -6,11 +6,9 @@ import { MetricsRepository } from './repositories';
 import { MetricsService } from './services/metrics.service';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: Metrics.name, schema: MetricsSchema }]),
-  ],
+  imports: [MongooseModule.forFeature([{ name: Metrics.name, schema: MetricsSchema }])],
   providers: [MetricsRepository, MetricsService],
   exports: [MetricsService],
   controllers: [MetricsController],
 })
-export class MetricsModule { }
+export class MetricsModule {}

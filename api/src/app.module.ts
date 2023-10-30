@@ -27,7 +27,7 @@ import { CoreModule } from './modules/core/core.module';
     StructuresModule,
     LibraryModule,
     IntegrationModule,
-    CoreModule
+    CoreModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}

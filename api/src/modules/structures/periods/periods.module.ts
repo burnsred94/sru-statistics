@@ -5,10 +5,8 @@ import { PeriodsService } from './services/periods.service';
 import { PeriodsRepository } from './repositories';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: Periods.name, schema: PeriodSchema }]),
-  ],
+  imports: [MongooseModule.forFeature([{ name: Periods.name, schema: PeriodSchema }])],
   providers: [PeriodsService, PeriodsRepository],
   exports: [PeriodsService],
 })
-export class PeriodsModule { }
+export class PeriodsModule {}

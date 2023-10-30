@@ -1,2 +1,2 @@
 export * from './metric-default.entity';
-export * from './metric.entity'
+export * from './metric.entity';

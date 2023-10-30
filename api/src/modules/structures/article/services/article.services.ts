@@ -1,26 +1,23 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ArticleRepository } from '../repositories';
-import {
-  AddKeyDto,
-  CreateArticleDto,
-  RemoveKeyDto,
-  RemoveArticleDto,
-} from '../dto';
+import { AddKeyDto, CreateArticleDto, RemoveKeyDto, RemoveArticleDto } from '../dto';
 import { User } from 'src/modules/auth';
 import { KeysService } from '../../keys';
 import { MessagesEvent } from 'src/interfaces';
-import { FilterQuery, HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 import { Article } from '../schemas';
 import { StatisticsGetArticlesRMQ } from 'src/modules/rabbitmq/contracts/statistics';
 import { Pagination } from '../../pagination';
 import { ArticleBuilder } from './builders/article.builder';
 import { ArticleVisitor } from './visitors';
 import { Active } from '../types/classes';
-import { DEFAULT_ERROR_ALL_KEYWORDS_REMOVED, DEFAULT_ERROR_ALL_REMOVE_KEYWORDS_NOT_FIND } from '../constants';
+import {
+  DEFAULT_ERROR_ALL_KEYWORDS_REMOVED,
+  DEFAULT_ERROR_ALL_REMOVE_KEYWORDS_NOT_FIND,
+} from '../constants';
 import { EventPostmanEnum } from 'src/modules/lib/events/types/enum';
 import { ARTICLE_POPULATE } from '../constants/populate';
 import { PaginationUtils } from 'src/modules/utils/providers';
-
 
 @Injectable()
 export class ArticleService {
@@ -34,19 +31,19 @@ export class ArticleService {
     private readonly articleBuilder: ArticleBuilder,
   ) { }
 
-
   async create(data: CreateArticleDto, user: User) {
     try {
       const { keys, article } = data;
       const findArticle = await this.articleRepository.findOne({ userId: user, article });
 
       if (findArticle) {
-        const document = await this.articleRepository.findOneAndUpdate({ _id: findArticle._id }, { $set: { active: true } });
+        const document = await this.articleRepository.findOneAndUpdate(
+          { _id: findArticle._id },
+          { $set: { active: true } },
+        );
         return this.addKeywords({ articleId: document._id, keys }, user);
       } else {
-        const builder = this.articleBuilder
-          .create(keys.length, user, article)
-          .initPagination()
+        const builder = this.articleBuilder.create(keys.length, user, article).initPagination();
 
         const document = builder.document;
 
@@ -54,25 +51,30 @@ export class ArticleService {
           .getProductAndUpdate(article)
           .getCities(user)
           .metricsCreate()
-          .keywordCreate(keys, user, article)
+          .keywordCreate(keys, user, article);
 
-        builder.activateSendPostman(keys.length, user)
+        builder.activateSendPostman(keys.length, user);
 
         return { event: MessagesEvent.CREATE_ARTICLE, article: document };
       }
-
     } catch (error) {
       this.logger.error(error.message);
-      throw error
+      throw error;
     }
   }
 
   async addKeywords(data: AddKeyDto, user: User) {
     const { articleId, keys } = data;
-    const article: HydratedDocument<Article> = await this.articleRepository.findOne({ _id: articleId });
+    const article: HydratedDocument<Article> = await this.articleRepository.findOne({
+      _id: articleId,
+    });
 
     if (article) {
-      const comparisonCheck = await this.keywordService.inspectKeywords(user, keys, article.article);
+      const comparisonCheck = await this.keywordService.inspectKeywords(
+        user,
+        keys,
+        article.article,
+      );
       const [newKeyword, oldKeyword] = comparisonCheck;
       const count = newKeyword.length + oldKeyword.length;
       const builder = this.articleBuilder;
@@ -81,70 +83,79 @@ export class ArticleService {
         .setDocument(article)
         .getCities(user)
         .keywordCreate(newKeyword, user, article.article)
-        .countUp(count)
+        .countUp(count);
 
-      this.articleVisitor
-        .setDocument(article)
-        .activeKeywords(oldKeyword, { active: true })
+      this.articleVisitor.setDocument(article).activeKeywords(oldKeyword, { active: true });
 
       count > 0 ? builder.activateSendPostman(count, user) : null;
 
-      return { event: MessagesEvent.ADD_KEYWORDS, newKeywords: newKeyword.length, oldKeywords: oldKeyword.length, article: article.article };
+      return {
+        event: MessagesEvent.ADD_KEYWORDS,
+        newKeywords: newKeyword.length,
+        oldKeywords: oldKeyword.length,
+        article: article.article,
+      };
     } else {
       throw new BadRequestException(`Артикул не был найден, некорректные параметры запроса`);
     }
   }
 
-  //Нужен для Метрики
-  async findOne(filterQuery: FilterQuery<Article>) {
-    return await this.articleRepository.findOne(filterQuery);
-  }
-
   async findArticle(_id: Types.ObjectId, query) {
     const data = await this.articleRepository.findArticle({ _id: _id }, query);
-    const pagination = data.pagination as unknown as HydratedDocument<Pagination>
-    const { keys, count, meta } = await this.paginationUtils.paginate({ limit: pagination.key_limit, page: pagination.page }, data.keys, 'keys')
+    const pagination = data.pagination as unknown as HydratedDocument<Pagination>;
+    const { keys, count, meta } = await this.paginationUtils.paginate(
+      { limit: pagination.key_limit, page: pagination.page },
+      data.keys,
+      'keys',
+    );
 
     return {
       article: {
-        ...data, keys,
+        ...data,
+        keys,
       },
       meta,
-      total_keys: count
-    }
+      total_keys: count,
+    };
   }
 
   async articles(id: User, query) {
     const list = await this.articleRepository.findList(id, query.search, query.sort);
     return {
-      articles: list.articles, count_keys: list.articles.reduce((accumulator, currentValue) => {
-        return accumulator += currentValue.count
-      }, 0)
-    }
+      articles: list.articles,
+      count_keys: list.articles.reduce((accumulator, currentValue) => {
+        return (accumulator += currentValue.count);
+      }, 0),
+    };
   }
 
   async removeArticle(data: RemoveArticleDto, user: User) {
-    const articles = data.articleId
+    const articles = data.articleId;
 
-    const response: Promise<HydratedDocument<Article>>[] = []
+    const response: Promise<HydratedDocument<Article>>[] = [];
 
     while (articles.length > 0) {
-
       const article = articles.shift();
-      const document = await this.articleRepository.findOne({ _id: article, userId: user, active: true });
+      const document = await this.articleRepository.findOne({
+        _id: article,
+        userId: user,
+        active: true,
+      });
 
-      const update = this.articleVisitor
-        .setDocument(document)
-        .switchArticle(new Active(false))
+      const update = this.articleVisitor.setDocument(document).switchArticle(new Active(false));
 
       response.push(update);
     }
 
     return Promise.all(
-      response.map(element => element
-        .catch((error) => { throw error })
-        .then((document) => document.article))
-    )
+      response.map(element =>
+        element
+          .catch(error => {
+            throw error;
+          })
+          .then(document => document.article),
+      ),
+    );
   }
 
   async removeKeywords(data: RemoveKeyDto, user: User) {
@@ -153,40 +164,50 @@ export class ArticleService {
     if (article.keys.length === data.keysId.length) {
       throw new BadRequestException(DEFAULT_ERROR_ALL_KEYWORDS_REMOVED);
     } else {
-      const getKeywords = await this.keywordService.find({ _id: data.keysId, userId: user, active: true });
+      const getKeywords = await this.keywordService.find({
+        _id: data.keysId,
+        userId: user,
+        active: true,
+      });
 
-      if (getKeywords.length === 0) throw new BadRequestException(DEFAULT_ERROR_ALL_REMOVE_KEYWORDS_NOT_FIND);
+      if (getKeywords.length === 0)
+        throw new BadRequestException(DEFAULT_ERROR_ALL_REMOVE_KEYWORDS_NOT_FIND);
 
-      this.articleVisitor
-        .setDocument(article)
-        .disabledKeywords(getKeywords, new Active(false))
+      this.articleVisitor.setDocument(article).disabledKeywords(getKeywords, new Active(false));
 
-      this.articleVisitor.eventPostmanDispatcher
-        .dispatch({ count: data.keysId.length, user: user, type: EventPostmanEnum.CREATE_ARTICLE });
+      this.articleVisitor.eventPostmanDispatcher.dispatch({
+        count: data.keysId.length,
+        user: user,
+        type: EventPostmanEnum.CREATE_ARTICLE,
+      });
 
       return {
         event: MessagesEvent.DELETE_KEY,
         length: data.keysId.length,
       };
     }
-
   }
 
   async getArticlesUpload(payload: StatisticsGetArticlesRMQ.Payload) {
-    return await this.articleRepository.find({ _id: payload.articles, userId: payload.userId }, ARTICLE_POPULATE);
+    return await this.articleRepository.find(
+      { _id: payload.articles, userId: payload.userId },
+      ARTICLE_POPULATE,
+    );
   }
 
   async refreshArticle(article: Types.ObjectId, user: User) {
-    return this.articleRepository.findOne({ _id: article, userId: user })
-      .then((document) => {
+    return this.articleRepository
+      .findOne({ _id: article, userId: user })
+      .then(document => {
         if (!document) throw new BadRequestException(`Артикул не был найден`);
         this.articleBuilder
           .setDocument(document)
           .getProductAndUpdate(document.article)
-          .updateArticle()
-        return { event: MessagesEvent.REFRESH_ARTICLE, article: document.article }
-      }).catch((error) => {
-        throw error
+          .updateArticle();
+        return { event: MessagesEvent.REFRESH_ARTICLE, article: document.article };
+      })
+      .catch(error => {
+        throw error;
       });
   }
 }

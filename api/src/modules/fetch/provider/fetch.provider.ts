@@ -16,7 +16,7 @@ export class FetchProvider {
   constructor(
     private readonly rmqPublisher: RabbitMqPublisher,
     private readonly rmqRequester: RabbitMqRequester,
-  ) { }
+  ) {}
 
   async startTrialPeriod(userId: User) {
     await this.rmqPublisher.publish({

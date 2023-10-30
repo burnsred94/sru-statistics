@@ -1,8 +1,7 @@
-
 export class Active {
-    active: boolean
+  active: boolean;
 
-    constructor(active: boolean) {
-        this.active = active;
-    }
-};
+  constructor(active: boolean) {
+    this.active = active;
+  }
+}

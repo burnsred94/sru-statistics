@@ -34,9 +34,7 @@ import { MessagesEvent } from 'src/interfaces';
 export class ArticleController {
   protected readonly logger = new Logger(ArticleController.name);
 
-  constructor(
-    private readonly articleService: ArticleService,
-  ) { }
+  constructor(private readonly articleService: ArticleService) {}
 
   @ApiAcceptedResponse({ description: 'Create Statistic' })
   @UseGuards(JwtAuthGuard)
@@ -104,7 +102,10 @@ export class ArticleController {
       const remove = await this.articleService.removeArticle(dto, user);
 
       if (remove) {
-        const initArticle = initArticleMessage({ articles: remove }, { event: MessagesEvent.DELETE_ARTICLES });
+        const initArticle = initArticleMessage(
+          { articles: remove },
+          { event: MessagesEvent.DELETE_ARTICLES },
+        );
         return response.status(HttpStatus.OK).send({
           status: HttpStatus.OK,
           data: { message: initArticle },

@@ -24,4 +24,4 @@ import { FetchUtils } from './utils';
   exports: [FetchProvider],
   controllers: [FetchController],
 })
-export class FetchModule { }
+export class FetchModule {}

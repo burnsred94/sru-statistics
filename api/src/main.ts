@@ -10,10 +10,7 @@ import { RpcExceptionFilter } from './modules/rabbitmq/utils';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
-    new FastifyAdapter()
-  );
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
 
   const configService: ConfigService = app.get(ConfigService);
 

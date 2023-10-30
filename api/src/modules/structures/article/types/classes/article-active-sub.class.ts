@@ -1,3 +1,3 @@
 export class ActiveSub {
-    active_sub: boolean
-};
+  active_sub: boolean;
+}

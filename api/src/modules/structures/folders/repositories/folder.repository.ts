@@ -3,6 +3,7 @@ import { Folder, FolderDocument } from '../schemas';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { User } from 'src/modules/auth';
+import { MetricsEnum } from '../../article';
 
 export class FolderRepository extends AbstractRepository<FolderDocument> {
   constructor(@InjectModel(Folder.name) readonly folderModel: Model<FolderDocument>) {
@@ -35,10 +36,20 @@ export class FolderRepository extends AbstractRepository<FolderDocument> {
         },
       },
       {
+        $lookup: {
+          from: 'metrics',
+          localField: '_id',
+          foreignField: 'folder',
+          as: 'metrics',
+        },
+      },
+      { $unwind: '$metrics' },
+      {
         $group: {
           _id: '$_id',
           name: { $first: '$name' },
           user: { $first: '$user' },
+          metrics: { $first: '$metrics' },
           sum_frequency: { $sum: '$keys.frequency' },
           createdAt: { $first: '$createdAt' },
           updatedAt: { $first: '$updatedAt' },
@@ -54,10 +65,66 @@ export class FolderRepository extends AbstractRepository<FolderDocument> {
           keys: { $size: '$keys' },
           createdAt: 1,
           updatedAt: 1,
+          middle_pos_organic: {
+            num: { $arrayElemAt: ['$metrics.middle_pos_organic.met', -1] },
+            data: { $slice: ['$metrics.middle_pos_organic', -15] },
+            color_metrics: {
+              $cond: {
+                if: {
+                  $eq: [
+                    { $arrayElemAt: ['$metrics.middle_pos_organic.met', 0] },
+                    { $arrayElemAt: ['$metrics.middle_pos_organic.met', -1] },
+                  ],
+                },
+                then: MetricsEnum.NEUTRAL,
+                else: {
+                  $cond: {
+                    if: {
+                      $gt: [
+                        { $arrayElemAt: ['$metrics.middle_pos_organic.met', 0] },
+                        { $arrayElemAt: ['$metrics.middle_pos_organic.met', -1] },
+                      ],
+                    },
+                    then: MetricsEnum.DOWN,
+                    else: MetricsEnum.UP,
+                  },
+                },
+              },
+            },
+          },
+          middle_pos_adverts: {
+            num: { $arrayElemAt: ['$metrics.middle_pos_adverts.met', -1] },
+            data: { $slice: ['$metrics.middle_pos_adverts', -15] },
+            color_metrics: {
+              $cond: {
+                if: {
+                  $eq: [
+                    { $arrayElemAt: ['$metrics.middle_pos_adverts.met', 0] },
+                    { $arrayElemAt: ['$metrics.middle_pos_adverts.met', -1] },
+                  ],
+                },
+                then: MetricsEnum.NEUTRAL,
+                else: {
+                  $cond: {
+                    if: {
+                      $gt: [
+                        { $arrayElemAt: ['$metrics.middle_pos_adverts.met', 0] },
+                        { $arrayElemAt: ['$metrics.middle_pos_adverts.met', -1] },
+                      ],
+                    },
+                    then: MetricsEnum.UP,
+                    else: MetricsEnum.DOWN,
+                  },
+                },
+              },
+            },
+          },
+          trend: { $slice: ['$metrics.indexes', -15] },
         },
       },
     ]);
 
     return result as FolderDocument[];
   }
+
 }

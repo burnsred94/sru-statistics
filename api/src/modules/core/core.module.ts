@@ -1,9 +1,8 @@
-import { Module } from "@nestjs/common";
-import { UpdateModule } from "./update";
+import { Module } from '@nestjs/common';
+import { UpdateModule } from './update';
 import { ScheduleModule } from './schedule/schedule.module';
 
-
 @Module({
-    imports: [UpdateModule, ScheduleModule],
+  imports: [UpdateModule, ScheduleModule],
 })
-export class CoreModule { }
+export class CoreModule {}

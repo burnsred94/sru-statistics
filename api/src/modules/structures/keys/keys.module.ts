@@ -34,4 +34,4 @@ const SERVICES = [KeysService, KeyBuilder, InspectorKeywords, UpdateKeywordServi
   exports: [...SERVICES],
   controllers: [KeysController],
 })
-export class KeysModule { }
+export class KeysModule {}

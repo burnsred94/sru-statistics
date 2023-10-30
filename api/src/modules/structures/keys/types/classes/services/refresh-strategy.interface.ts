@@ -1,4 +1,4 @@
 export interface IRefreshStrategy {
-    refresh(keywords?: string): void;
-    send(): void;
+  refresh(keywords?: string): void;
+  send(): void;
 }
