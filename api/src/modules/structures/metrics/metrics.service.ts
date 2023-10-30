@@ -3,7 +3,7 @@ import { KeysService } from '../keys';
 import { MetricsRepository } from './repositories';
 import { User } from 'src/modules/auth';
 import { Types } from 'mongoose';
-import { Cron } from '@nestjs/schedule';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { OnEvent } from '@nestjs/event-emitter';
 import { concatMap, from } from 'rxjs';
 import { ArticleService } from '../article';
@@ -60,7 +60,7 @@ export class MetricsService {
         };
     }
 
-    @Cron('0 9-23/3 * * *', { timeZone: 'Europe/Moscow' })
+    @Cron(CronExpression.EVERY_10_SECONDS, { timeZone: 'Europe/Moscow' })
     @OnEvent('metric.gathering')
     async dataGathering(payload?) {
         from(
