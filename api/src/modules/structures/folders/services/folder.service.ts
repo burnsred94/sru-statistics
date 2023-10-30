@@ -36,6 +36,7 @@ export class FolderService {
   ) { }
 
   async create(dto: CreateFolderDto, user: User): Promise<FolderDocument> {
+    console.log('c')
     const folder = await this.folderRepository.create({ user: user, ...dto });
     this.initMetricKeywords(folder, dto.keys, dto.article_id);
     return folder
@@ -102,12 +103,17 @@ export class FolderService {
     sortQuery?,
   ): Promise<{ metric: any, folder: IPaginationResponse } | { metric: any, folder: HydratedDocument<FolderDocument> }> {
     let populate: PopulateOptions | (string | PopulateOptions)[];
+    let metric;
 
     if (sortQuery) {
       populate = await keysPopulateAndQuery(sortQuery);
     } else {
       const folder = await this.folderRepository.findOne(filterQuery);
-      const metric = await this.metricService.getMetrics(filterQuery.user, filterQuery._id);
+
+      if (folder) {
+        metric = await this.metricService.getMetrics(filterQuery.user, folder?._id);
+      }
+
       return {
         metric,
         folder
@@ -119,7 +125,7 @@ export class FolderService {
     const data = await this.folderRepository.findOne(filterQuery, populate);
 
     const response = await this.paginationUtils.paginate(pagination, data.keys, 'keys');
-    const metric = await this.metricService.getMetrics(filterQuery.user, filterQuery._id);
+    metric = await this.metricService.getMetrics(filterQuery.user, data._id);
     return {
       metric,
       folder: response
@@ -178,6 +184,7 @@ export class FolderService {
   }
 
   private async initMetricKeywords(folder: HydratedDocument<FolderDocument>, keys: Types.ObjectId[], article_id: Types.ObjectId) {
+    console.log(folder, article_id)
     await this.metricService.create({
       folder: folder._id,
       userId: folder.user,

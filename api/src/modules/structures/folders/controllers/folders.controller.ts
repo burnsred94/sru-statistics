@@ -71,7 +71,7 @@ export class FoldersController {
           name: dto.name,
         });
 
-        if (checkDuplicate) throw new BadRequestException(DUPLICATE_NAME);
+        if (checkDuplicate.folder) throw new BadRequestException(DUPLICATE_NAME);
         result = await this.folderService.create(dto, user);
       }
 
