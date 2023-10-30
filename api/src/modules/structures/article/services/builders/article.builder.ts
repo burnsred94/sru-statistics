@@ -46,7 +46,7 @@ export class ArticleBuilder extends AbstractArticleService {
         .create({
           article: article,
           userId: user,
-          productName: 'Поиск называния артикула...',
+          productName: 'Поиск названия артикула...',
           productRef: '#',
           productImg: '',
           count,
@@ -165,7 +165,6 @@ export class ArticleBuilder extends AbstractArticleService {
   }
 
   countUp(count: number) {
-    console.log(count);
     Promise.resolve(this.document).then(document => {
       this.articleRepository.findOneAndUpdate({ _id: document._id }, { $inc: { count: count } });
     });

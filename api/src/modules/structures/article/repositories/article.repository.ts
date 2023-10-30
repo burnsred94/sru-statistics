@@ -31,13 +31,15 @@ export class ArticleRepository extends AbstractRepository<ArticleDocument> {
 
     if (search !== undefined) query = { article: { $regex: search, $options: 'i' } };
 
+    console.log(search)
+
     sort = sort_parameters
       ? (() => {
-          const elements = sort_parameters.split('#');
-          return {
-            [elements[0]]: Number(elements[1]),
-          };
-        })()
+        const elements = sort_parameters.split('#');
+        return {
+          [elements[0]]: Number(elements[1]),
+        };
+      })()
       : { createdAt: -1 };
 
     return await this.modelArticle
