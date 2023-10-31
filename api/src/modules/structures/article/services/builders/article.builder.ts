@@ -188,7 +188,7 @@ export class ArticleBuilder extends AbstractArticleService {
           const builder = this.keyBuilder;
 
           const document = (await builder.getDocument(keyword)) as HydratedDocument<Keys>;
-
+          super.activateSendPostman(keys.length, document.userId);
           return builder.initialUpdateData(document);
         }),
       );
