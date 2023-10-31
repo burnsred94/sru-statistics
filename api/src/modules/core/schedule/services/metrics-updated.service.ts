@@ -11,8 +11,8 @@ export class MetricsUpdatedService {
 
   @Cron("0 9-23/1 * * *", { timeZone: "Europe/Moscow" })
   async taskUpdateMetrics() {
-    new Promise((resolve) => resolve(this.metricRefreshService.taskMetricArticleUpdate()))
-    new Promise((resolve) => resolve(this.metricRefreshService.taskMetricsFolderUpdate()))
+    this.metricRefreshService.taskMetricArticleUpdate()
+    this.metricRefreshService.taskMetricsFolderUpdate()
   }
 }
 

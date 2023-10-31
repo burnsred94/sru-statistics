@@ -57,11 +57,11 @@ export class FolderMetricsService {
     folderMetric(folder: Types.ObjectId, user: User) {
         return new Promise((resolve) => {
             Promise.resolve(this.documents)
-                .then((keywords) => {
+                .then(async (keywords) => {
                     const elements = keywords as unknown as HydratedDocument<Keys>[]
                     const addresses = elements.flatMap((value) => value.pwz)
-                    const cityMetric = this.metricMathUtils.getCityMetric(addresses)
-                    const table: Promise<IMetric> = this.metricMathUtils.getTableMetric(keywords, user, this.article, cityMetric)
+                    const cityMetric = await this.metricMathUtils.getCityMetric(addresses)
+                    const table = await this.metricMathUtils.getTableMetric(keywords, user, this.article, cityMetric)
                     resolve(table);
                 })
         })

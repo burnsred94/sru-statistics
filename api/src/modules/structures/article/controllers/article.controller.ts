@@ -185,7 +185,6 @@ export class ArticleController {
   ) {
     try {
       const getArticle = await this.articleService.findArticle(id, { ...dto, search, sort, city });
-
       return response.status(HttpStatus.OK).send({
         status: HttpStatus.OK,
         data: getArticle,

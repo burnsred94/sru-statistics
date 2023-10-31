@@ -6,4 +6,4 @@ import { MetricsRefreshModule } from './metrics-refresh/metrics-refresh.module';
 @Module({
   imports: [KeywordContextModule, KeywordRefreshModule, MetricsRefreshModule],
 })
-export class UpdateModule {}
+export class UpdateModule { }

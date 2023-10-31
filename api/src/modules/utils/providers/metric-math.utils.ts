@@ -8,47 +8,44 @@ import { Keys } from "src/modules/structures/keys";
 @Injectable()
 export class MetricMathUtils {
 
-    async getTableMetric(keywords: HydratedDocument<Keys>[], user: User, article: Types.ObjectId, cityMetric: Promise<ICityMetric[]>): Promise<IMetric> {
-        const cityMetric_1 = await Promise.resolve(cityMetric);
-        return await new Promise((resolve) => {
+    async getTableMetric(keywords: HydratedDocument<Keys>[], user: User, article: Types.ObjectId, cityMetric: ICityMetric[]): Promise<IMetric> {
+        const cityMetric_1 = await Promise.resolve(cityMetric)
 
-            const average: any = keywords.map(value_1 => {
-                return value_1?.average.at(-1) === undefined ? 0 : value_1.average.at(-1);
-            });
-
-            const result = average.reduce(
-                (accumulator, value_2) => {
-                    if (value_2.average !== undefined &&
-                        value_2.average !== null &&
-                        value_2.average.length < 4) {
-                        accumulator.index = accumulator.index + 1;
-
-                        if (value_2.average <= 100) accumulator.top_100 = accumulator.top_100 + 1;
-                        accumulator.top_1000 = accumulator.top_1000 + 1;
-
-                        if (value_2.start_position) {
-                            accumulator.ads.num = accumulator.ads.num + Number(value_2.average);
-                            accumulator.ads.del = accumulator.ads.del + 1;
-                        } else {
-                            accumulator.org.num = accumulator.org.num + Number(value_2.average);
-                            accumulator.org.del = accumulator.org.del + 1;
-                        }
-                    }
-                    return accumulator;
-                }, {
-                ads: { num: 0, del: 0 },
-                org: { num: 0, del: 0 },
-                ts: new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' }).split(',')[0],
-                index: 0,
-                top_100: 0,
-                top_1000: 0,
-                article,
-                user,
-                city_metric: cityMetric_1
-            });
-
-            resolve(result);
+        const average: any = keywords.map(value_1 => {
+            return value_1?.average.at(-1) === undefined ? 0 : value_1.average.at(-1);
         });
+
+        return average.reduce(
+            (accumulator, value_2) => {
+                if (value_2.average !== undefined &&
+                    value_2.average !== null &&
+                    value_2.average.length < 4) {
+                    accumulator.index = accumulator.index + 1;
+
+                    if (value_2.average <= 100) accumulator.top_100 = accumulator.top_100 + 1;
+                    accumulator.top_1000 = accumulator.top_1000 + 1;
+
+                    if (value_2.start_position) {
+                        accumulator.ads.num = accumulator.ads.num + Number(value_2.average);
+                        accumulator.ads.del = accumulator.ads.del + 1;
+                    } else {
+                        accumulator.org.num = accumulator.org.num + Number(value_2.average);
+                        accumulator.org.del = accumulator.org.del + 1;
+                    }
+                }
+                return accumulator;
+            }, {
+            ads: { num: 0, del: 0 },
+            org: { num: 0, del: 0 },
+            ts: new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' }).split(',')[0],
+            index: 0,
+            top_100: 0,
+            top_1000: 0,
+            article,
+            user,
+            city_metric: cityMetric_1
+        });
+
     }
 
     getCityMetric(address) {

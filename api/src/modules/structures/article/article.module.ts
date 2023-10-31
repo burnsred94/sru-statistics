@@ -19,6 +19,7 @@ import { HttpModule } from '@nestjs/axios';
 import { ArticleVisitor } from './services/visitors';
 import { MetricsModule } from '../metrics/metrics.module';
 import { ArticleMetricsService } from './services/metrics'
+import { QueueModule } from 'src/modules/lib/queue';
 
 const STRUCTURES = [PaginationModule, KeysModule, PvzModule];
 const INTEGRATIONS = [ProfilesIntegrationModule, ProductsIntegrationModule];
@@ -32,6 +33,7 @@ const INTEGRATIONS = [ProfilesIntegrationModule, ProductsIntegrationModule];
     HttpModule,
     EventsModule,
     UtilsModule,
+    QueueModule,
     ...INTEGRATIONS,
     ...STRUCTURES,
   ],
