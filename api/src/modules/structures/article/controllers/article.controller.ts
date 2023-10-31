@@ -34,7 +34,7 @@ import { MessagesEvent } from 'src/interfaces';
 export class ArticleController {
   protected readonly logger = new Logger(ArticleController.name);
 
-  constructor(private readonly articleService: ArticleService) {}
+  constructor(private readonly articleService: ArticleService) { }
 
   @ApiAcceptedResponse({ description: 'Create Statistic' })
   @UseGuards(JwtAuthGuard)
@@ -209,6 +209,7 @@ export class ArticleController {
     @Res() response: Response,
   ) {
     try {
+      console.log(dto.article)
       const result = await this.articleService.refreshArticle(dto.article, user);
       const initArticle = initArticleMessage(result, result);
       return response.status(HttpStatus.OK).send({

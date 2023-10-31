@@ -196,7 +196,7 @@ export class ArticleService {
     );
   }
 
-  async refreshArticle(article: Types.ObjectId, user: User) {
+  async refreshArticle(article: string, user: User) {
     return this.articleRepository
       .findOne({ _id: article, userId: user })
       .then(document => {

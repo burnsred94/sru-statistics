@@ -186,9 +186,7 @@ export class ArticleBuilder extends AbstractArticleService {
       Promise.all(
         keys.map(async keyword => {
           const builder = this.keyBuilder;
-
           const document = (await builder.getDocument(keyword)) as HydratedDocument<Keys>;
-          super.activateSendPostman(keys.length, document.userId);
           return builder.initialUpdateData(document);
         }),
       );
