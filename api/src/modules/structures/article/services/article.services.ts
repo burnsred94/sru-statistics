@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, Scope } from '@nestjs/common';
 import { ArticleRepository } from '../repositories';
 import { AddKeyDto, CreateArticleDto, RemoveKeyDto, RemoveArticleDto } from '../dto';
 import { User } from 'src/modules/auth';
@@ -19,7 +19,7 @@ import { EventPostmanEnum } from 'src/modules/lib/events/types/enum';
 import { ARTICLE_POPULATE } from '../constants/populate';
 import { PaginationUtils } from 'src/modules/utils/providers';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class ArticleService {
   protected readonly logger = new Logger(ArticleService.name);
 
