@@ -213,7 +213,7 @@ export class ArticleController {
       const result = await this.articleService.refreshArticle(dto.article, user);
       const initArticle = initArticleMessage(result, result);
       return response.status(HttpStatus.OK).send({
-        data: initArticle,
+        data: { message: initArticle },
         error: [],
         status: HttpStatus.OK,
       });
