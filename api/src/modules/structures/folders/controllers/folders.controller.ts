@@ -267,13 +267,13 @@ export class FoldersController {
     @CurrentUser() user: User,
   ) {
     try {
-      const checkDuplicate = await this.folderService.findOne({
+      const { folder } = await this.folderService.findOne({
         user,
         article_id: dto.article_id,
         name: dto.name,
       });
 
-      if (checkDuplicate) throw new BadRequestException(DUPLICATE_NAME);
+      if (folder) throw new BadRequestException(DUPLICATE_NAME);
 
       const result = await this.folderService.update({ _id: id, ...dto });
 

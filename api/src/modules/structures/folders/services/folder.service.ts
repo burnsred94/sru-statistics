@@ -109,7 +109,6 @@ export class FolderService {
       populate = await keysPopulateAndQuery(sortQuery);
     } else {
       const folder = await this.folderRepository.findOne(filterQuery);
-
       if (folder) {
         metric = await this.metricService.getMetrics(filterQuery.user, folder?._id);
       }
