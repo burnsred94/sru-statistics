@@ -2,13 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ArticleRepository } from '../../repositories'
 import { HydratedDocument } from 'mongoose';
 import { Article } from '../../schemas';
-import { Keys } from 'src/modules/structures/keys';
+import { KeysService } from 'src/modules/structures/keys';
 import { from, map, } from 'rxjs';
-import { ARTICLE_POPULATE } from '../../constants/populate';
 import { IMetric } from '../../types/interfaces';
 import { MetricMathUtils } from 'src/modules/utils/providers';
-
-
+import { Average } from 'src/modules/structures/average';
+import { Pvz } from 'src/modules/structures/pvz';
+import { Periods } from 'src/modules/structures/periods';
 
 @Injectable()
 export class ArticleMetricsService {
@@ -21,11 +21,12 @@ export class ArticleMetricsService {
     constructor(
         private readonly articleRepository: ArticleRepository,
         private readonly metricMathUtils: MetricMathUtils,
+        private readonly keywordService: KeysService
     ) { }
 
     getDocuments() {
-        this.documents = this.articleRepository.find({ active: true }, ARTICLE_POPULATE)
-        return this
+        this.documents = Promise.resolve(this.articleRepository.find({ active: true }))
+        return this;
     }
 
     getKeywordsDocument() {
@@ -37,11 +38,29 @@ export class ArticleMetricsService {
                     }))
                     .subscribe({
                         next: async ({ article, keywords, user }) => {
-                            const elements = keywords as unknown as HydratedDocument<Keys>[]
-                            const addresses = elements.flatMap((value) => value.pwz)
-                            const cityMetric = this.metricMathUtils.getCityMetric(addresses)
-                            const table: Promise<IMetric> = this.metricMathUtils.getTableMetric(elements, user, article, cityMetric)
-                            this.dataFromUpdate.push(table);
+                            new Promise(async (resolve) => {
+                                const elements = await this.keywordService.find({ _id: keywords, active: true, $or: [{ active_sub: true }, { active_sub: { $exists: false } }] }, [
+                                    {
+                                        path: 'average',
+                                        select: 'timestamp average start_position cpm difference',
+                                        model: Average.name,
+                                    },
+                                    {
+                                        path: 'pwz',
+                                        select: 'name position',
+                                        model: Pvz.name,
+                                        populate: {
+                                            path: 'position',
+                                            select: 'position timestamp difference promo_position cpm',
+                                            model: Periods.name,
+                                        },
+                                    },
+                                ],)
+                                const addresses = elements.flatMap((value) => value.pwz)
+                                const cityMetric = this.metricMathUtils.getCityMetric(addresses)
+                                const table: Promise<IMetric> = this.metricMathUtils.getTableMetric(elements, user, article, cityMetric)
+                                resolve(this.dataFromUpdate.push(table));
+                            })
                         }
                     },)
                     .closed
