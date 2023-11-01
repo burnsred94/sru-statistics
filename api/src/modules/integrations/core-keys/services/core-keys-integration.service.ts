@@ -7,7 +7,7 @@ import { RabbitMqRequester } from 'src/modules/rabbitmq/services';
 export class CoreKeysIntegrationService {
   protected readonly logger = new Logger(CoreKeysIntegrationService.name);
 
-  constructor(private readonly rmqRequester: RabbitMqRequester) {}
+  constructor(private readonly rmqRequester: RabbitMqRequester) { }
 
   async getFrequency(key: string): Promise<number> {
     try {
@@ -17,7 +17,7 @@ export class CoreKeysIntegrationService {
       >({
         exchange: RmqExchanges.CORE_KEYS,
         routingKey: GetFrequencyRMQ.routingKey,
-        timeout: 5000 * 10,
+        timeout: 5000 * 50_000,
         payload: { key: key },
       });
 

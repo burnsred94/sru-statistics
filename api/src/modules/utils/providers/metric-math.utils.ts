@@ -9,7 +9,6 @@ import { Keys } from "src/modules/structures/keys";
 export class MetricMathUtils {
 
     async getTableMetric(keywords: HydratedDocument<Keys>[], user: User, article: Types.ObjectId, cityMetric: ICityMetric[]): Promise<IMetric> {
-        const cityMetric_1 = await Promise.resolve(cityMetric)
 
         const average: any = keywords.map(value_1 => {
             return value_1?.average.at(-1) === undefined ? 0 : value_1.average.at(-1);
@@ -43,7 +42,7 @@ export class MetricMathUtils {
             top_1000: 0,
             article,
             user,
-            city_metric: cityMetric_1
+            city_metric: cityMetric
         });
 
     }

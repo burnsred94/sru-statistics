@@ -29,21 +29,23 @@ export class QueueProvider {
   next() {
     while (this.running < this.concurrency && this.queue.length > 0) {
       const task = this.queue.shift();
-      const runtimeTask = new Promise(resolve => {
-        resolve(task());
-      });
+      setTimeout(() => {
 
-      this.runtime.push(runtimeTask);
-
-      this.running++;
-
-      if (this.running === this.concurrency) {
-        Promise.all(this.runtime).then(values => {
-          if (values) (this.running = 0), this.next();
+        const runtimeTask = new Promise(resolve => {
+          resolve(task());
         });
 
-        break;
-      }
+        this.runtime.push(runtimeTask);
+
+        this.running++;
+
+        if (this.running === this.concurrency) {
+          Promise.all(this.runtime).then(values => {
+            if (values) (this.running = 0), this.next();
+          });
+
+        }
+      }, 200)
       this.logger.debug(
         `Length current task: ${this.queue.length}, concurrent: ${this.concurrency}, ${this.running}`,
       );

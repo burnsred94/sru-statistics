@@ -19,7 +19,7 @@ export class ParserIntegrationAdapter {
           average_id: keywords.average.at(-1)._id,
           addressId: element._id,
           geo_address_id: element.geo_address_id,
-          periodId: element.position[0]._id,
+          periodId: element.position.at(-1)._id,
         };
       }),
     };

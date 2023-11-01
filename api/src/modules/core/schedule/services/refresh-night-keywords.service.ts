@@ -8,6 +8,6 @@ export class RefreshNightKeywords {
 
   @Cron('05 0 * * *', { timeZone: 'Europe/Moscow' })
   async taskKeywordsNightUpdate() {
-    this.keywordRefreshService.updateNight();
+    this.keywordRefreshService.updateNight()
   }
 }

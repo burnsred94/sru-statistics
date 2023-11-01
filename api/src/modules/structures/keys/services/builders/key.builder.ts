@@ -13,6 +13,7 @@ import { KeywordsContextService } from 'src/modules/core/update/keywords-context
 import { STRATEGY_REFRESH } from 'src/modules/core/update/keywords-context/types';
 import { KeysRefreshPopulate } from '../../constants';
 import { Active, ActiveSub } from 'src/modules/structures/article/types/classes';
+import { QueueProvider } from 'src/modules/lib/queue';
 
 @Injectable()
 export class KeyBuilder {
@@ -29,8 +30,9 @@ export class KeyBuilder {
     private readonly keywordsRefreshContext: KeywordsContextService,
     private readonly addressService: PvzService,
     private readonly averageService: AverageService,
+    private readonly queueProvider: QueueProvider,
     private readonly coreKeysIntegrationService: CoreKeysIntegrationService,
-  ) {}
+  ) { }
 
   create(key: string, user: User, article: string, address: Promise<IPreparationKey>) {
     const document = Promise.resolve(address).then(async data => {
@@ -130,29 +132,29 @@ export class KeyBuilder {
     return this;
   }
 
-  initialUpdateData(keyword: HydratedDocument<Keys>) {
+  initialUpdateData(keyword: HydratedDocument<Keys>, callback?) {
     Promise.resolve(this.frequency).then(async frequency => {
       const { pwz } = keyword;
       const average = await this.averageService.checkAndUpdate(keyword.average.at(-1));
-      this.keysRepository.findOneAndUpdate(
+
+      await this.keysRepository.findOneAndUpdate(
         { _id: keyword._id },
         { $set: { frequency }, $push: { average } },
       );
 
-      new Promise(async resolve => {
-        const updatedAddress = [];
-        while (pwz.length > 0) {
-          const address = pwz.shift();
-          const result = await this.addressService.checkAndUpdate(address);
-          updatedAddress.push(result);
-        }
-        resolve([keyword, updatedAddress]);
-      }).then(async ([keyword]) => {
-        const item = await this.keysRepository.findOne({ _id: keyword._id }, KeysRefreshPopulate);
+      const addresses = map(pwz, async (value) => await this.addressService.checkAndUpdate(value))
+      const resolved = await Promise.all(addresses);
 
-        this.keywordsRefreshContext.setProcessor(STRATEGY_REFRESH.KEYWORDS_DATA_REFRESH);
-        this.keywordsRefreshContext.refresh(item);
-      });
+      if (resolved) {
+        return keyword._id
+      }
+
+    }).then(async (_id) => {
+      const item = await this.keysRepository.findOne({ _id }, KeysRefreshPopulate);
+
+      if (callback) callback();
+      this.keywordsRefreshContext.setProcessor(STRATEGY_REFRESH.KEYWORDS_DATA_REFRESH);
+      this.queueProvider.pushTask(() => this.keywordsRefreshContext.refresh(item));
     });
     return this;
   }

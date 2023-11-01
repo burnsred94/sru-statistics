@@ -13,15 +13,16 @@ export class ParserIntegrationService {
   constructor(
     private readonly rmqPublisher: RabbitMqPublisher,
     private readonly parserIntegrationAdapter: ParserIntegrationAdapter,
-  ) {}
+  ) { }
 
   async sendToQueue(keyword: HydratedDocument<Keys>) {
-    this.parserIntegrationAdapter.preparationData(keyword).then(data => {
-      this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
-        exchange: RmqExchanges.SEARCH,
-        routingKey: SearchPositionRMQ.routingKey,
-        payload: data,
+    this.parserIntegrationAdapter.preparationData(keyword)
+      .then(data => {
+        this.rmqPublisher.publish<SearchPositionRMQ.Payload>({
+          exchange: RmqExchanges.SEARCH,
+          routingKey: SearchPositionRMQ.routingKey,
+          payload: data,
+        });
       });
-    });
   }
 }

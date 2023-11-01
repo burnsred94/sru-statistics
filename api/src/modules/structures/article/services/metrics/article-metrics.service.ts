@@ -2,13 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ArticleRepository } from '../../repositories'
 import { HydratedDocument } from 'mongoose';
 import { Article } from '../../schemas';
-import { KeysService } from 'src/modules/structures/keys';
+import { Keys, KeysService } from 'src/modules/structures/keys';
 import { concatMap, from, } from 'rxjs';
 import { MetricMathUtils } from 'src/modules/utils/providers';
-import { Average } from 'src/modules/structures/average';
-import { Pvz } from 'src/modules/structures/pvz';
-import { Periods } from 'src/modules/structures/periods';
 import { MetricsService } from 'src/modules/structures/metrics/services';
+import { ARTICLE_POPULATE_METRIC } from '../../constants/populate';
 
 @Injectable()
 export class ArticleMetricsService {
@@ -25,7 +23,7 @@ export class ArticleMetricsService {
     ) { }
 
     getDocuments() {
-        this.documents = Promise.resolve(this.articleRepository.find({ active: true }))
+        this.documents = this.articleRepository.find({ active: true }, ARTICLE_POPULATE_METRIC)
         return this;
     }
 
@@ -33,40 +31,29 @@ export class ArticleMetricsService {
         Promise.resolve(this.documents)
             .then((async (documents) => {
                 const complete = from(documents)
-                    .pipe(concatMap(async (value) => {
-                        const { _id, userId, keys } = value;
+                    .pipe(
+                        concatMap(async (value, index) => {
+                            return new Promise(async (resolve) => {
+                                const { _id, userId, keys } = value;
 
-                        if (keys.length === 0) return value;
+                                const elements = keys as unknown as HydratedDocument<Keys>[]
 
-                        const elements = await this.keywordService.find({ _id: keys, active: true, $or: [{ active_sub: true }, { active_sub: { $exists: false } }] }, [
-                            {
-                                path: 'average',
-                                select: 'timestamp average start_position cpm difference',
-                                model: Average.name,
-                            },
-                            {
-                                path: 'pwz',
-                                select: 'name position',
-                                model: Pvz.name,
-                                populate: {
-                                    path: 'position',
-                                    select: 'position timestamp difference promo_position cpm',
-                                    model: Periods.name,
-                                },
-                            },
-                        ],)
-                        const addresses = elements.flatMap((value) => value.pwz)
-                        const cityMetric = await this.metricMathUtils.getCityMetric(addresses)
-                        const table = await this.metricMathUtils.getTableMetric(elements, userId, _id, cityMetric);
-                        return this.metricService.updateMetric(table)
-                    }))
+                                if (elements.length === 0) resolve([null, _id, index]);
+
+                                const addresses = elements.flatMap((value) => value.pwz)
+                                const cityMetric = await this.metricMathUtils.getCityMetric(addresses);
+                                console.log(cityMetric);
+                                const table = await this.metricMathUtils.getTableMetric(elements, userId, _id, cityMetric);
+                                resolve([this.metricService.updateMetric(table), _id, index])
+                            })
+                        }))
                     .subscribe({
-                        next: (value) => {
-                            if (value) {
-                                console.log(`Update ${value._id}`)
+                        next: ([init, _id, index]) => {
+                            if (_id && init) {
+                                this.logger.log(`Update ${_id} element: ${index + 1}`)
                             }
                         },
-                        complete: () => this.logger.log(`Folder metric update complete`)
+                        complete: () => this.logger.log(`Article metric update complete`)
                     },)
                     .closed
 

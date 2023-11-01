@@ -8,7 +8,7 @@ export const ARTICLE_POPULATE: PopulateOptions | (string | PopulateOptions)[] = 
   {
     path: 'keys',
     select: 'key average frequency active pwz',
-    // match: { active: true, $or: [{ active_sub: true }, { active_sub: { $exists: false } }] },
+    match: { active: true, $or: [{ active_sub: true }, { active_sub: { $exists: false } }] },
     model: Keys.name,
     populate: [
       {
@@ -19,6 +19,32 @@ export const ARTICLE_POPULATE: PopulateOptions | (string | PopulateOptions)[] = 
       {
         path: 'pwz',
         select: 'name position',
+        model: Pvz.name,
+        populate: {
+          path: 'position',
+          select: 'position timestamp difference promo_position cpm',
+          model: Periods.name,
+        },
+      },
+    ],
+  }
+]
+
+export const ARTICLE_POPULATE_METRIC: PopulateOptions | (string | PopulateOptions)[] = [
+  {
+    path: 'keys',
+    select: 'key average frequency active pwz active_sub',
+    match: { active: true, active_sub: true },
+    model: Keys.name,
+    populate: [
+      {
+        path: 'average',
+        select: 'timestamp average start_position cpm difference',
+        model: Average.name,
+      },
+      {
+        path: 'pwz',
+        select: 'name position city',
         model: Pvz.name,
         populate: {
           path: 'position',

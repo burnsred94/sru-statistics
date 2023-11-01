@@ -1,29 +1,40 @@
-import { Injectable } from '@nestjs/common';
-import { from, map } from 'rxjs';
-import { KeyBuilder, KeysService } from 'src/modules/structures/keys';
+import { Injectable, Logger } from '@nestjs/common';
+import { HydratedDocument } from 'mongoose';
+import { concatMap, from } from 'rxjs';
+import { KeyBuilder, Keys, KeysService } from 'src/modules/structures/keys';
 
 @Injectable()
 export class KeywordRefreshService {
+  protected readonly logger = new Logger(KeywordRefreshService.name)
   constructor(
     private readonly keywordBuilder: KeyBuilder,
     private readonly keywordService: KeysService,
-  ) {}
+  ) { }
 
   async updateNight() {
     const keywords = await this.keywordService.find({
       active: true,
-      $or: [{ active_sub: true }, { active_sub: { $exists: false } }],
+      active_sub: true,
     });
+
+    const callback = (() => true)
 
     from(keywords)
       .pipe(
-        map(value => {
-          return value;
+        concatMap(async (value) => {
+          return new Promise<[HydratedDocument<Keys>, () => boolean]>((resolve) => {
+            setTimeout(() => {
+              console.log(keywords.length)
+              this.keywordBuilder
+                .getFrequency(value.key)
+                .initialUpdateData(value, resolve([value, callback]));
+            }, 350)
+          })
         }),
       )
       .subscribe({
-        next: value => {
-          this.keywordBuilder.getFrequency(value.key).initialUpdateData(value);
+        next: ([value, result]) => {
+          this.logger.log(`Update ${value._id} status: ${result}`)
         },
       });
   }
