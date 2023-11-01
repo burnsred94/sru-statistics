@@ -126,5 +126,4 @@ export class FolderRepository extends AbstractRepository<FolderDocument> {
 
     return result as FolderDocument[];
   }
-
 }

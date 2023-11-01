@@ -108,4 +108,9 @@ export class KeysService {
   async keySubscriptionManagement(userId: number, update: boolean) {
     return await this.keysRepository.updateMany({ userId }, { active_sub: update });
   }
+
+  async refreshAllKeysFromArticle(article: string, user: User) {
+    await this.keysRefreshService.refreshKeysInArticle(article, user);
+  }
+
 }

@@ -2,7 +2,7 @@ import { QueryOptions } from 'mongoose';
 import { Document, FilterQuery, Model, PopulateOptions, UpdateQuery } from 'mongoose';
 
 export abstract class AbstractRepository<T extends Document> {
-  constructor(protected readonly abstractModel: Model<T>) {}
+  constructor(protected readonly abstractModel: Model<T>) { }
 
   async findOne(
     filterQuery: FilterQuery<T>,

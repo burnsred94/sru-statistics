@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -156,12 +157,14 @@ export class ArticleController {
     try {
       const remove = await this.articleService.removeKeywords(dto, user);
 
-      const initArticle = initArticleMessage(null, remove);
-      return response.status(HttpStatus.OK).send({
-        status: HttpStatus.OK,
-        data: { message: initArticle },
-        errors: [],
-      });
+      if (remove) {
+        const initArticle = initArticleMessage(remove.article, remove, remove.key);
+        return response.status(HttpStatus.OK).send({
+          status: HttpStatus.OK,
+          data: { message: initArticle },
+          errors: [],
+        });
+      }
     } catch (error) {
       this.logger.error(error);
       return response.status(HttpStatus.OK).send({
@@ -200,32 +203,6 @@ export class ArticleController {
     }
   }
 
-  @ApiAcceptedResponse({ description: 'Refresh article' })
-  @UseGuards(JwtAuthGuard)
-  @Post('refresh-article')
-  async refreshArticle(
-    @Body() dto: RefreshArticleDto,
-    @CurrentUser() user: User,
-    @Res() response: Response,
-  ) {
-    try {
-      console.log(dto.article)
-      const result = await this.articleService.refreshArticle(dto.article, user);
-      const initArticle = initArticleMessage(result, result);
-      return response.status(HttpStatus.OK).send({
-        data: { message: initArticle },
-        error: [],
-        status: HttpStatus.OK,
-      });
-    } catch (error) {
-      this.logger.error(error);
-      return response.status(HttpStatus.OK).send({
-        data: [],
-        error: [{ message: error.response.message }],
-        status: error.status,
-      });
-    }
-  }
 
   @RabbitMqResponser({
     exchange: RmqExchanges.STATISTICS,
