@@ -42,7 +42,6 @@ export class ArticleMetricsService {
 
                                 const addresses = elements.flatMap((value) => value.pwz)
                                 const cityMetric = await this.metricMathUtils.getCityMetric(addresses);
-                                console.log(cityMetric);
                                 const table = await this.metricMathUtils.getTableMetric(elements, userId, _id, cityMetric);
                                 resolve([this.metricService.updateMetric(table), _id, index])
                             })

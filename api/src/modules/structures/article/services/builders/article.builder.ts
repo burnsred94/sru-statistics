@@ -13,6 +13,7 @@ import { IAddressSendData } from 'src/modules/structures/keys/types';
 import { EventPostmanDispatcher } from 'src/modules/lib/events/event-postman.dispatcher';
 import { AbstractArticleService } from '../article-service.abstract';
 import { MetricsService } from 'src/modules/structures/metrics/services';
+import { EventPostmanEnum } from 'src/modules/lib/events/types/enum';
 
 export interface IPreparationKey {
   address: Promise<Types.ObjectId[]>;
@@ -185,11 +186,13 @@ export class ArticleBuilder extends AbstractArticleService {
       const { keys } = document;
       Promise.all(
         keys.map(async keyword => {
+
           const builder = this.keyBuilder;
           const document = (await builder.getDocument(keyword)) as HydratedDocument<Keys>;
           return builder.initialUpdateData(document);
         }),
       );
+      super.activateSendPostman(keys.length, document.userId)
     });
   }
 }
