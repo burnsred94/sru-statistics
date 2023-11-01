@@ -8,13 +8,13 @@ export type PaginationDocument = HydratedDocument<Pagination>;
 })
 export class Pagination {
   @Prop({ type: Number, default: 10 })
-  key_limit: number;
+  key_limit?: number;
 
   @Prop({ type: Types.ObjectId, required: true })
   article_id: Types.ObjectId;
 
   @Prop({ type: Number, default: 1 })
-  page: number;
+  page?: number;
 }
 
 export const PaginationSchema = SchemaFactory.createForClass(Pagination);

@@ -50,3 +50,31 @@ export const keysPopulateAndQuery = async (
     },
   ];
 };
+
+
+export const POPULATE_KEYS_REFRESH = [
+  {
+    path: 'keys',
+    select: 'key average frequency active',
+    match: { active: true },
+    model: Keys.name,
+    populate: [
+      {
+        path: 'average',
+        select: 'average start_position timestamp difference cpm',
+        model: Average.name,
+      },
+      {
+        path: 'pwz',
+        select: 'city position name',
+        model: Pvz.name,
+        populate: {
+          path: 'position',
+          select: 'position cpm promo_position timestamp difference',
+          model: Periods.name,
+        },
+      }
+    ],
+  },
+];
+

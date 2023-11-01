@@ -9,6 +9,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { UtilsModule } from './modules/utils/utils.module';
 import { StructuresModule } from './modules/structures/structures.module';
 import { LibraryModule } from './modules/lib/library.module';
+import { IntegrationModule } from './modules/integrations/integrations.module';
+import { CoreModule } from './modules/core/core.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { LibraryModule } from './modules/lib/library.module';
     UtilsModule,
     StructuresModule,
     LibraryModule,
+    IntegrationModule,
+    CoreModule,
   ],
 })
 export class AppModule {}

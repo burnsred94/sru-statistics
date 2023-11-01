@@ -3,19 +3,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Metrics, MetricsSchema } from './schemas';
 import { MetricsController } from './metrics.controller';
 import { MetricsRepository } from './repositories';
-import { MetricsService } from './metrics.service';
-import { KeysModule } from '../keys';
-import { ArticleModule } from '../article';
-import { PvzModule } from '../pvz';
-
-const STRUCTURES = [ArticleModule, KeysModule, PvzModule];
+import { MetricsService } from './services/metrics.service';
 
 @Module({
-  imports: [
-    ...STRUCTURES,
-    MongooseModule.forFeature([{ name: Metrics.name, schema: MetricsSchema }]),
-  ],
+  imports: [MongooseModule.forFeature([{ name: Metrics.name, schema: MetricsSchema }])],
   providers: [MetricsRepository, MetricsService],
+  exports: [MetricsService],
   controllers: [MetricsController],
 })
 export class MetricsModule {}

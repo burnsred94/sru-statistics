@@ -27,9 +27,12 @@ export class EventGateway {
     this.clients.set(payload.data.userId, {
       client: client,
       exp: () =>
-        setTimeout(() => {
-          this.clients.delete(payload.data.userId), this.logger.log(`Delete: ${client.id}`);
-        }, 60 * 1000 * 30),
+        setTimeout(
+          () => {
+            this.clients.delete(payload.data.userId), this.logger.log(`Delete: ${client.id}`);
+          },
+          60 * 1000 * 30,
+        ),
     });
 
     const getClient = this.clients.get(payload.data.userId);

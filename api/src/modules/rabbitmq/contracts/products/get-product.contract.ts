@@ -1,3 +1,4 @@
+import { IProductResponse } from 'src/modules/integrations/products/types';
 import { ProductEventsRMQ } from './events/product.events';
 
 export namespace GetProductRMQ {
@@ -9,7 +10,7 @@ export namespace GetProductRMQ {
     article: string;
   }
 
-  export class Response {
+  export class Response implements IProductResponse {
     img: string;
     product_name: string;
     product_url: string;

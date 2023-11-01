@@ -7,9 +7,11 @@ import * as compression from 'compression';
 import * as cookieParser from 'cookie-parser';
 import { RabbitMqPublisher } from './modules/rabbitmq/services';
 import { RpcExceptionFilter } from './modules/rabbitmq/utils';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
+
   const configService: ConfigService = app.get(ConfigService);
 
   app.setGlobalPrefix(`${configService.get('PROJECT')}`);
@@ -31,7 +33,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
 
   SwaggerModule.setup(`api-${configService.get('PROJECT')}`, app, document);
-  await app.listen(configService.get('PORT'));
+  await app.listen(configService.get('PORT'), '0.0.0.0');
+  console.log(`Application is running on: ${await app.getUrl()}`);
 }
 
 bootstrap();

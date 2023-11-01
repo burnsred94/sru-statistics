@@ -25,10 +25,13 @@ export abstract class AbstractRepository<T extends Document> {
   async create(
     createEntityData: unknown,
     populate?: PopulateOptions | (string | PopulateOptions)[],
-  ): Promise<T | null> {
+  ): Promise<any> {
     const entity = new this.abstractModel(createEntityData);
     const create = await entity.save();
-    return populate ? create.populate(populate) : create;
+    if (create) {
+      const data = populate ? await create.populate(populate) : create;
+      return data;
+    }
   }
 
   async findOneAndUpdate(

@@ -1,5 +1,5 @@
-import { Controller, Get, HttpStatus, Logger, Param, Query, Res, UseGuards } from '@nestjs/common';
-import { MetricsService } from './metrics.service';
+import { Controller, Get, HttpStatus, Logger, Param, Res, UseGuards } from '@nestjs/common';
+import { MetricsService } from './services/metrics.service';
 import { CurrentUser, JwtAuthGuard, User } from 'src/modules/auth';
 import { ApiAcceptedResponse } from '@nestjs/swagger';
 import { Response } from 'express';

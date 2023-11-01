@@ -66,7 +66,7 @@ export class FetchProvider {
     return await this.rmqRequester.request<GetProfileRMQ.Payload, GetProfileRMQ.Response>({
       exchange: RmqExchanges.PROFILE,
       routingKey: GetProfileRMQ.routingKey,
-      payload: { userId: id as unknown as number },
+      payload: { userId: id },
       timeout: 5000 * 10,
     });
   }

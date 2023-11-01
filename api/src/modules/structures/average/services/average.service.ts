@@ -28,7 +28,6 @@ export class AverageService {
     key_id: Types.ObjectId;
   }) {
     const find = await this.averageRepository.findOne({ _id: payload.id });
-
     const average = Number.isNaN(+find.average) ? 0 : Number(find.average);
     const promo = find.start_position === null ? 0 : Number(find.start_position);
     const delimiter = find.delimiter;
@@ -99,17 +98,6 @@ export class AverageService {
     return find.delimiter === 14;
   }
 
-  async updateRefresh(id: Types.ObjectId) {
-    return await this.averageRepository.findOneAndUpdate(
-      { _id: id },
-      {
-        average: 'Ожидается',
-        delimiter: 0,
-        loss_delimiter: 0,
-      },
-    );
-  }
-
   async updateDiff(average) {
     const first = average.at(1);
     const second = average.at(0);
@@ -126,5 +114,32 @@ export class AverageService {
         $set: { difference: data },
       },
     );
+  }
+
+  async checkAndUpdate(_id: Types.ObjectId) {
+    const date = await this.mathUtils.currentDate();
+    const average = await this.averageRepository.findOne({ _id });
+    if (average.timestamp === date) {
+      await this.averageRepository.findOneAndUpdate(
+        { _id },
+        {
+          $set: {
+            average: 'Ожидается',
+            delimiter: 0,
+            loss_delimiter: 0,
+            difference: '0',
+          },
+        },
+      );
+    } else {
+      return await this.averageRepository.create({
+        average: 'Ожидается',
+        userId: average.userId,
+        delimiter: 0,
+        loss_delimiter: 0,
+        difference: '0',
+        timestamp: date,
+      });
+    }
   }
 }

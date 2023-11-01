@@ -1,5 +1,19 @@
 export class MetricEntity {
   async initMetric(data, oldMetric) {
+    if (!oldMetric) {
+      const middle_ads = Math.round(data.ads.num / data.ads.del);
+      return {
+        $set: {
+          top_100: [{ ts: data.ts, met: data.top_100 }],
+          top_1000: [{ ts: data.ts, met: data.top_1000 }],
+          indexes: [{ ts: data.ts, met: data.index }],
+          middle_pos_adverts: [{ ts: data.ts, met: middle_ads }],
+          middle_pos_organic: [{ ts: data.ts, met: 0 }],
+        },
+        middle_pos_cities: data.city_metric,
+      };
+    }
+
     if (data.ads.num > 0) {
       const middle_ads = Math.round(data.ads.num / data.ads.del);
       return {
