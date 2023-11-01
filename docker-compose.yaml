@@ -1,9 +1,9 @@
 version: '3.8'
 
 networks:
-  sru-geo_default:
+  sgeo_default:
     external:
-      name: sru-geo_default
+      name: geo_default
 
 services:
   api:
@@ -25,4 +25,4 @@ services:
     volumes:
       - ./api/:/usr/src/app
     networks:
-      - sru-geo_default
+      - geo_default
