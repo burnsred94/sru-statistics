@@ -7,6 +7,9 @@ import { concatMap, from, } from 'rxjs';
 import { MetricMathUtils } from 'src/modules/utils/providers';
 import { MetricsService } from 'src/modules/structures/metrics/services';
 import { ARTICLE_POPULATE_METRIC } from '../../constants/populate';
+import { Average } from 'src/modules/structures/average';
+import { Pvz } from 'src/modules/structures/pvz';
+import { Periods } from 'src/modules/structures/periods';
 
 @Injectable()
 export class ArticleMetricsService {
@@ -23,7 +26,8 @@ export class ArticleMetricsService {
     ) { }
 
     getDocuments() {
-        this.documents = this.articleRepository.find({ active: true }, ARTICLE_POPULATE_METRIC)
+        this.documents = this.articleRepository.find({ active: true })
+
         return this;
     }
 
@@ -36,8 +40,23 @@ export class ArticleMetricsService {
                             return new Promise(async (resolve) => {
                                 const { _id, userId, keys } = value;
 
-                                const elements = keys as unknown as HydratedDocument<Keys>[]
-
+                                const elements = await this.keywordService.find({ _id: keys, active: true, active_sub: true }, [
+                                    {
+                                        path: 'average',
+                                        select: 'timestamp average start_position cpm difference',
+                                        model: Average.name,
+                                    },
+                                    {
+                                        path: 'pwz',
+                                        select: 'name position city',
+                                        model: Pvz.name,
+                                        populate: {
+                                            path: 'position',
+                                            select: 'position timestamp difference promo_position cpm',
+                                            model: Periods.name,
+                                        },
+                                    },
+                                ])
                                 if (elements.length === 0) resolve([null, _id, index]);
 
                                 const addresses = elements.flatMap((value) => value.pwz)
