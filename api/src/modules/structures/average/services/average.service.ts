@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AverageRepository } from '../repositories';
 import { Types } from 'mongoose';
 import { MathUtils } from 'src/modules/utils/providers';
+import { User } from 'src/modules/auth';
 
 @Injectable()
 export class AverageService {
@@ -102,10 +103,9 @@ export class AverageService {
     const first = average.at(1);
     const second = average.at(0);
     const data = await this.mathUtils.calculateDiff(
-      { position: second.average },
-      { position: first.average },
+      { position: second?.average },
+      { position: first?.average },
     );
-    console.log(data)
     await this.averageRepository.findOneAndUpdate(
       {
         _id: second._id,
@@ -116,30 +116,32 @@ export class AverageService {
     );
   }
 
-  async checkAndUpdate(_id: Types.ObjectId) {
+  async checkAndUpdate(_id: Types.ObjectId, userId: User) {
     const date = await this.mathUtils.currentDate();
-    const average = await this.averageRepository.findOne({ _id });
-    if (average.timestamp === date) {
-      await this.averageRepository.findOneAndUpdate(
-        { _id },
-        {
-          $set: {
+    return await this.averageRepository.findOne({ _id: _id })
+      .then(async (average) => {
+        if (average?.timestamp === date) {
+          await this.averageRepository.findOneAndUpdate(
+            { _id },
+            {
+              $set: {
+                average: 'Ожидается',
+                delimiter: 0,
+                loss_delimiter: 0,
+                difference: '0',
+              },
+            },
+          );
+        } else {
+          return await this.averageRepository.create({
             average: 'Ожидается',
+            userId: userId,
             delimiter: 0,
             loss_delimiter: 0,
             difference: '0',
-          },
-        },
-      );
-    } else {
-      return await this.averageRepository.create({
-        average: 'Ожидается',
-        userId: average.userId,
-        delimiter: 0,
-        loss_delimiter: 0,
-        difference: '0',
-        timestamp: date,
-      });
-    }
+            timestamp: date,
+          });
+        }
+      })
   }
 }

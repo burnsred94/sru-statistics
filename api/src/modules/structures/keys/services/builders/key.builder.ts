@@ -95,7 +95,7 @@ export class KeyBuilder {
     Promise.resolve(this.frequency).then(async frequency => {
       const { pwz } = keyword;
 
-      const average = await this.averageService.checkAndUpdate(keyword.average.at(-1));
+      const average = await this.averageService.checkAndUpdate(keyword.average.at(-1), keyword.userId);
 
       if (average) {
         this.keysRepository.findOneAndUpdate(
@@ -135,7 +135,7 @@ export class KeyBuilder {
   initialUpdateData(keyword: HydratedDocument<Keys>, callback?) {
     Promise.resolve(this.frequency).then(async frequency => {
       const { pwz } = keyword;
-      const average = await this.averageService.checkAndUpdate(keyword.average.at(-1));
+      const average = await this.averageService.checkAndUpdate(keyword.average.at(-1), keyword.userId);
 
       await this.keysRepository.findOneAndUpdate(
         { _id: keyword._id },
