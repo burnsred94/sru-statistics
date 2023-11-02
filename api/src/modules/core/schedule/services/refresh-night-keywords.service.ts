@@ -10,4 +10,6 @@ export class RefreshNightKeywords {
   async taskKeywordsNightUpdate() {
     this.keywordRefreshService.updateNight()
   }
+
+
 }

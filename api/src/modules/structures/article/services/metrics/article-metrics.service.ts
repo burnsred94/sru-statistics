@@ -2,14 +2,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ArticleRepository } from '../../repositories'
 import { HydratedDocument } from 'mongoose';
 import { Article } from '../../schemas';
-import { Keys, KeysService } from 'src/modules/structures/keys';
+import { KeysService } from 'src/modules/structures/keys';
 import { concatMap, from, } from 'rxjs';
 import { MetricMathUtils } from 'src/modules/utils/providers';
 import { MetricsService } from 'src/modules/structures/metrics/services';
-import { ARTICLE_POPULATE_METRIC } from '../../constants/populate';
 import { Average } from 'src/modules/structures/average';
 import { Pvz } from 'src/modules/structures/pvz';
 import { Periods } from 'src/modules/structures/periods';
+
 
 @Injectable()
 export class ArticleMetricsService {
@@ -27,7 +27,6 @@ export class ArticleMetricsService {
 
     getDocuments() {
         this.documents = this.articleRepository.find({ active: true })
-
         return this;
     }
 

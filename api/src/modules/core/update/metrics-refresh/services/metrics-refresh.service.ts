@@ -8,6 +8,7 @@ export class MetricsRefreshService {
     constructor(
         private readonly articleMetricsService: ArticleMetricsService,
         private readonly folderMetricsService: FolderMetricsService,
+
     ) { }
 
     async taskMetricArticleUpdate() {
@@ -19,4 +20,6 @@ export class MetricsRefreshService {
     async taskMetricsFolderUpdate() {
         this.folderMetricsService.updateAll();
     }
+
+
 }

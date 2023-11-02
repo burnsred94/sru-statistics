@@ -14,5 +14,7 @@ export class MetricsUpdatedService {
     this.metricRefreshService.taskMetricArticleUpdate()
     this.metricRefreshService.taskMetricsFolderUpdate()
   }
+
+
 }
 

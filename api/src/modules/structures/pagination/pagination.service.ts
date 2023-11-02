@@ -11,7 +11,7 @@ export class PaginationService {
   constructor(
     private readonly paginationRepository: PaginationRepository,
     private readonly eventEmitter: EventEmitter2,
-  ) {}
+  ) { }
 
   async create(data?: Pagination) {
     if (data) {

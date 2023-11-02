@@ -5,6 +5,7 @@ import { Keys } from '../../schemas';
 import { AverageService } from 'src/modules/structures/average';
 import { PvzService } from 'src/modules/structures/pvz';
 import { StatisticsUpdateRMQ } from 'src/modules/rabbitmq/contracts/statistics';
+import { KEYWORDS_METRIC_UPDATE } from '../../constants';
 
 @Injectable()
 export class UpdateKeywordService {
@@ -19,7 +20,7 @@ export class UpdateKeywordService {
     private readonly keywordsRepository: KeysRepository,
     private readonly averageService: AverageService,
     private readonly addressService: PvzService,
-  ) {}
+  ) { }
 
   setDocument(document: Promise<HydratedDocument<Keys>>) {
     this.document = document;
@@ -28,7 +29,6 @@ export class UpdateKeywordService {
 
   setDataUpdate(dataUpdate: Promise<StatisticsUpdateRMQ.Payload>) {
     this.dataUpdated = dataUpdate;
-    console.log('dataUpdated');
     return this;
   }
 
@@ -53,7 +53,16 @@ export class UpdateKeywordService {
           average: data.position,
           key_id: data.key_id,
         });
+
         this.checkUpdateCurrentAverage = Promise.resolve(true);
+        return data
+      }).then((update) => {
+        if (update) {
+          this.keywordsRepository.findOne({ _id: update.key_id }, KEYWORDS_METRIC_UPDATE)
+            .then((data) => {
+              this.averageService.updateDiff([data.average.at(-1), data.average.at(-2)]);
+            })
+        }
       })
       .catch(error => {
         this.logger.error(error.message);
