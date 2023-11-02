@@ -16,7 +16,7 @@ import {
   DEFAULT_ERROR_ALL_REMOVE_KEYWORDS_NOT_FIND,
 } from '../constants';
 import { EventPostmanEnum } from 'src/modules/lib/events/types/enum';
-import { ARTICLE_POPULATE } from '../constants/populate';
+import { ARTICLE_POPULATE_METRIC } from '../constants/populate';
 import { PaginationUtils } from 'src/modules/utils/providers';
 
 @Injectable({ scope: Scope.REQUEST })
@@ -192,7 +192,7 @@ export class ArticleService {
   async getArticlesUpload(payload: StatisticsGetArticlesRMQ.Payload) {
     return await this.articleRepository.find(
       { _id: payload.articles, userId: payload.userId },
-      ARTICLE_POPULATE,
+      ARTICLE_POPULATE_METRIC,
     );
   }
 

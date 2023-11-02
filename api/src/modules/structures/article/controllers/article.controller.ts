@@ -209,7 +209,6 @@ export class ArticleController {
     @Res() response: Response,
   ) {
     try {
-      console.log(dto.article)
       const result = await this.articleService.refreshArticle(dto.article, user);
       const initArticle = initArticleMessage(result, result);
       return response.status(HttpStatus.OK).send({
@@ -233,7 +232,7 @@ export class ArticleController {
     queue: StatisticsGetArticlesRMQ.queue,
     currentService: RmqServices.STATISTICS,
   })
-  async getDataUpload(payload: StatisticsGetArticlesRMQ.Payload) {
+  async getDataUpload(@Body() payload: StatisticsGetArticlesRMQ.Payload) {
     try {
       return { articles: await this.articleService.getArticlesUpload(payload) };
     } catch (error) {

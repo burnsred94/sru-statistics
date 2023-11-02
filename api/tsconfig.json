@@ -49,6 +49,8 @@
   },
   "include": [
     "src/**/*.ts",
+    "src/**/**/*.ts",
+    "src/**/**/**/*.ts",
     "src/services/reviews/index.js",
     "test"
   ],
