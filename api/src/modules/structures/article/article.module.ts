@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { FetchModule } from '../../fetch/fetch.module';
 import { JwtStrategy } from '../../auth';
 import { KeysModule } from '../keys';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -20,8 +19,7 @@ import { ArticleVisitor } from './services/visitors';
 import { MetricsModule } from '../metrics/metrics.module';
 import { ArticleMetricsService } from './services/metrics'
 import { QueueModule } from 'src/modules/lib/queue';
-import { RmqModule } from '../../rabbitmq/rabbitmq.module';
-import { RmqExchanges } from '../../rabbitmq/exchanges';
+
 
 const STRUCTURES = [PaginationModule, KeysModule, PvzModule];
 const INTEGRATIONS = [ProfilesIntegrationModule, ProductsIntegrationModule];
@@ -30,8 +28,6 @@ const INTEGRATIONS = [ProfilesIntegrationModule, ProductsIntegrationModule];
   imports: [
     MongooseModule.forFeature([{ name: Article.name, schema: ArticleSchema }]),
     EventEmitterModule.forRoot({ global: true, maxListeners: 10, verboseMemoryLeak: true }),
-    RmqModule.register({ exchanges: [RmqExchanges.STATISTICS] }),
-    FetchModule,
     MetricsModule,
     HttpModule,
     EventsModule,
@@ -50,6 +46,6 @@ const INTEGRATIONS = [ProfilesIntegrationModule, ProductsIntegrationModule];
     ValidationArticlePipe,
     JwtStrategy,
   ],
-  exports: [ArticleService, ArticleMetricsService],
+  exports: [ArticleService, ArticleMetricsService, ArticleRepository],
 })
 export class ArticleModule { }

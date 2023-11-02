@@ -24,9 +24,6 @@ import { ArticleService } from '../services';
 import { Response } from 'express';
 import { initArticleMessage } from 'src/constatnts';
 import { Types } from 'mongoose';
-import { RabbitMqResponser } from 'src/modules/rabbitmq/decorators';
-import { RmqExchanges, RmqServices } from 'src/modules/rabbitmq/exchanges';
-import { StatisticsGetArticlesRMQ } from 'src/modules/rabbitmq/contracts/statistics';
 import { ValidationArticlePipe } from '../pipe';
 import { MessagesEvent } from 'src/interfaces';
 
@@ -226,17 +223,4 @@ export class ArticleController {
     }
   }
 
-  @RabbitMqResponser({
-    exchange: RmqExchanges.STATISTICS,
-    routingKey: StatisticsGetArticlesRMQ.routingKey,
-    queue: StatisticsGetArticlesRMQ.queue,
-    currentService: RmqServices.STATISTICS,
-  })
-  async getDataUpload(@Body() payload: StatisticsGetArticlesRMQ.Payload) {
-    try {
-      return { articles: await this.articleService.getArticlesUpload(payload) };
-    } catch (error) {
-      this.logger.error(error.message);
-    }
-  }
 }

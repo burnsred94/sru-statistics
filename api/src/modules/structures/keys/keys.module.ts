@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Keys, KeysSchema } from './schemas';
 import { KeysRepository } from './repositories';
@@ -8,7 +8,6 @@ import { AverageModule } from '../average';
 import { RmqModule } from '../../rabbitmq/rabbitmq.module';
 import { RmqExchanges } from '../../rabbitmq/exchanges';
 import { KeysController } from './controllers';
-import { FetchModule } from '../../fetch';
 import { QueueModule } from 'src/modules/lib/queue';
 import { EventsModule } from 'src/modules/lib/events/event.module';
 import { CoreKeysIntegrationModule } from 'src/modules/integrations';
@@ -22,7 +21,6 @@ const SERVICES = [KeysService, KeyBuilder, InspectorKeywords, UpdateKeywordServi
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Keys.name, schema: KeysSchema }]),
-    forwardRef(() => FetchModule),
     KeywordContextModule,
     CoreKeysIntegrationModule,
     EventsModule,
@@ -34,4 +32,4 @@ const SERVICES = [KeysService, KeyBuilder, InspectorKeywords, UpdateKeywordServi
   exports: [...SERVICES],
   controllers: [KeysController],
 })
-export class KeysModule {}
+export class KeysModule { }

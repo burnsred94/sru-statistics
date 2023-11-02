@@ -4,7 +4,6 @@ import { ConfigModule } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtOptions } from './configs/jwt.config';
-import { FetchModule } from './modules/fetch/fetch.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { UtilsModule } from './modules/utils/utils.module';
 import { StructuresModule } from './modules/structures/structures.module';
@@ -22,7 +21,6 @@ import { CoreModule } from './modules/core/core.module';
     ScheduleModule.forRoot(),
     JwtModule.registerAsync(jwtOptions),
     PassportModule,
-    FetchModule,
     UtilsModule,
     StructuresModule,
     LibraryModule,
@@ -30,4 +28,4 @@ import { CoreModule } from './modules/core/core.module';
     CoreModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

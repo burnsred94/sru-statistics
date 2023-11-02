@@ -6,7 +6,6 @@ import { KeysService } from '../../keys';
 import { MessagesEvent } from 'src/interfaces';
 import { HydratedDocument, Types } from 'mongoose';
 import { Article } from '../schemas';
-import { StatisticsGetArticlesRMQ } from 'src/modules/rabbitmq/contracts/statistics';
 import { Pagination } from '../../pagination';
 import { ArticleBuilder } from './builders/article.builder';
 import { ArticleVisitor } from './visitors';
@@ -16,7 +15,6 @@ import {
   DEFAULT_ERROR_ALL_REMOVE_KEYWORDS_NOT_FIND,
 } from '../constants';
 import { EventPostmanEnum } from 'src/modules/lib/events/types/enum';
-import { ARTICLE_POPULATE_METRIC } from '../constants/populate';
 import { PaginationUtils } from 'src/modules/utils/providers';
 
 @Injectable({ scope: Scope.REQUEST })
@@ -187,13 +185,6 @@ export class ArticleService {
         length: data.keysId.length,
       };
     }
-  }
-
-  async getArticlesUpload(payload: StatisticsGetArticlesRMQ.Payload) {
-    return await this.articleRepository.find(
-      { _id: payload.articles, userId: payload.userId },
-      ARTICLE_POPULATE_METRIC,
-    );
   }
 
   async refreshArticle(article: string, user: User) {
