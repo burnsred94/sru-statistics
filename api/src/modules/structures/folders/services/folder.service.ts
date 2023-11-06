@@ -183,7 +183,6 @@ export class FolderService {
   }
 
   private async initMetricKeywords(folder: HydratedDocument<FolderDocument>, keys: Types.ObjectId[], article_id: Types.ObjectId) {
-    console.log(folder, article_id)
     await this.metricService.create({
       folder: folder._id,
       userId: folder.user,

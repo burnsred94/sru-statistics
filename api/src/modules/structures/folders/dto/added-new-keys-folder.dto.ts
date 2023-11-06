@@ -6,6 +6,8 @@ export class AddNewKeysToFolderDto {
   @Transform(data => (data.obj.article_id = new Types.ObjectId(data.value)))
   article_id: Types.ObjectId;
 
+  folder_ids: Types.ObjectId[]
+
   @IsArray()
   keys: string[];
 }

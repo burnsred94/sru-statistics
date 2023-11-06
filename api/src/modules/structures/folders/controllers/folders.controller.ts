@@ -31,6 +31,7 @@ import { HydratedDocument, Types } from 'mongoose';
 import { DUPLICATE_NAME } from '../constants';
 import { FolderDocument } from '../schemas';
 import { ArticleService } from '../../article';
+import { concatMap, from } from 'rxjs';
 
 @Controller('keys-folders')
 export class FoldersController {
@@ -297,18 +298,28 @@ export class FoldersController {
   }
 
 
-  @Post('parse-and-added/:id')
+  @Post('parse-and-added')
   @UseGuards(JwtAuthGuard)
   async addedNewKeysToFolder(
     @Res() response: Response,
     @Body() dto: AddNewKeysToFolderDto,
     @CurrentUser() user: User,
-    @Param('id', new TransformMongoIdPipe()) id: Types.ObjectId,
   ) {
     try {
       const addNewKeys = await this.articleService.addKeywords({ articleId: dto.article_id, keys: dto.keys }, user);
 
-      await this.folderService.addedNewKeywords(dto, user, id, addNewKeys.article)
+      from(dto.folder_ids)
+        .pipe(concatMap(async (value) => {
+          return new Promise<any>(async (resolve) => {
+            await this.folderService.addedNewKeywords(dto, user, value, addNewKeys.article)
+            resolve(addNewKeys);
+          })
+        }))
+        .subscribe({
+          next: () => {
+            this.logger.log(`${addNewKeys.article} Update`)
+          }
+        })
 
       response.status(HttpStatus.OK).send({
         data: [],

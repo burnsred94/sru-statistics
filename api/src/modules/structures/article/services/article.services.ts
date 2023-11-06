@@ -34,6 +34,20 @@ export class ArticleService {
       const { keys, article } = data;
       const findArticle = await this.articleRepository.findOne({ userId: user, article });
 
+      if (keys.length === 0 && !findArticle) {
+        const builder = this.articleBuilder.create(keys.length, user, article).initPagination();
+
+        const document = builder.document;
+
+        builder
+          .getProductAndUpdate(article)
+
+        builder.activateSendPostman(3, user);
+
+        return { event: MessagesEvent.CREATE_ARTICLE, article: document }
+
+      }
+
       if (findArticle) {
         const document = await this.articleRepository.findOneAndUpdate(
           { _id: findArticle._id },
