@@ -306,19 +306,20 @@ export class FoldersController {
     @CurrentUser() user: User,
   ) {
     try {
-      const addNewKeys = await this.articleService.addKeywords({ articleId: dto.article_id, keys: dto.keys }, user);
-
-      from(dto.folder_ids)
-        .pipe(concatMap(async (value) => {
-          return new Promise<any>(async (resolve) => {
-            await this.folderService.addedNewKeywords(dto, user, value, addNewKeys.article)
-            resolve(addNewKeys);
-          })
-        }))
-        .subscribe({
-          next: () => {
-            this.logger.log(`${addNewKeys.article} Update`)
-          }
+      await this.articleService.addKeywords({ articleId: dto.article_id, keys: dto.keys }, user)
+        .then((keywords) => {
+          from(dto.folder_ids)
+            .pipe(
+              concatMap(async (value: Types.ObjectId) => {
+                return value;
+              })
+            )
+            .subscribe({
+              next: async (value) => {
+                await this.folderService.addedNewKeywords(dto, user, value, keywords.article);
+                this.logger.log(`${keywords.article} Update`)
+              }
+            })
         })
 
       response.status(HttpStatus.OK).send({
