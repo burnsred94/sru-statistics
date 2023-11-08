@@ -135,7 +135,7 @@ export class ArticleService {
   async articles(id: User, query) {
     const list = await this.articleRepository.findList(id, query.search, query.sort);
     return {
-      articles: [...list.NullKeywordArray, list.articles],
+      articles: [...list.NullKeywordArray, ...list.articles],
       count_keys: list.articles.reduce((accumulator, currentValue) => {
         return (accumulator += currentValue.count);
       }, 0),
