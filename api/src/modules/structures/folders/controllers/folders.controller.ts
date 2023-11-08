@@ -307,7 +307,8 @@ export class FoldersController {
   ) {
     try {
       await this.articleService.addKeywords({ articleId: dto.article_id, keys: dto.keys }, user)
-        .then((keywords) => {
+        .then((data) => {
+          console.log(data)
           from(dto.folder_ids)
             .pipe(
               concatMap(async (value: Types.ObjectId) => {
@@ -316,8 +317,8 @@ export class FoldersController {
             )
             .subscribe({
               next: async (value) => {
-                await this.folderService.addedNewKeywords(dto, user, value, keywords.article);
-                this.logger.log(`${keywords.article} Update`)
+                await this.folderService.addedNewKeywords(dto, user, value, data.article);
+                this.logger.log(`${data.article} Update`)
               }
             })
         })

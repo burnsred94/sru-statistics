@@ -15,7 +15,7 @@ import { FilterQuery, HydratedDocument, PopulateOptions, Types, UpdateQuery } fr
 import { PaginationUtils } from 'src/modules/utils/providers';
 import { IPaginationResponse } from 'src/modules/utils/types';
 import { IManyFolderResponse } from '../types';
-import { reduce } from 'lodash';
+import { map, reduce } from 'lodash';
 import { MetricsService } from '../../metrics/services';
 import { FolderMetricsService } from './metrics';
 import { IMetric } from '../../article/types/interfaces';
@@ -169,10 +169,15 @@ export class FolderService {
   }
 
   async addedNewKeywords(dto: AddNewKeysToFolderDto, user: User, id: Types.ObjectId, article: string) {
-    dto.keys.forEach(async (key) => {
-      const getKeyId = await this.keysService.getOne({ article, key, userId: user })
+    map(dto.keys, async (key) => {
+      const getKeyId = await this.keysService.getOne({ article: article, key: key, userId: user })
       if (getKeyId) {
+        dto.keys.shift();
         this.folderRepository.findOneAndUpdate({ _id: id }, { $push: { keys: getKeyId._id } });
+      } else {
+        setTimeout(() => {
+          this.addedNewKeywords(dto, user, id, article);
+        }, 3000)
       }
     })
   }
