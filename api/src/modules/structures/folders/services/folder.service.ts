@@ -169,17 +169,12 @@ export class FolderService {
   }
 
   async addedNewKeywords(dto: AddNewKeysToFolderDto, user: User, id: Types.ObjectId, article: string) {
-    const key = dto.keys.shift()
-    const getKeyId = await this.keysService.getOne({ article, key, userId: user })
-    if (getKeyId) {
-      this.folderRepository.findOneAndUpdate({ _id: id }, { $push: { keys: getKeyId._id } });
-      this.addedNewKeywords(dto, user, id, article)
-    } else {
-      setTimeout(() => {
-        dto.keys.push(key);
-        this.addedNewKeywords(dto, user, id, article)
-      }, 1000)
-    }
+    dto.keys.forEach(async (key) => {
+      const getKeyId = await this.keysService.getOne({ article, key, userId: user })
+      if (getKeyId) {
+        this.folderRepository.findOneAndUpdate({ _id: id }, { $push: { keys: getKeyId._id } });
+      }
+    })
   }
 
   private async initMetricKeywords(folder: HydratedDocument<FolderDocument>, keys: Types.ObjectId[], article_id: Types.ObjectId) {
