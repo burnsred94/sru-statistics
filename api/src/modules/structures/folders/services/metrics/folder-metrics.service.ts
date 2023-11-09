@@ -60,9 +60,11 @@ export class FolderMetricsService {
                 .then(async (keywords) => {
                     const elements = keywords as unknown as HydratedDocument<Keys>[]
                     const addresses = elements.flatMap((value) => value.pwz)
-                    const cityMetric = await this.metricMathUtils.getCityMetric(addresses)
-                    const table = await this.metricMathUtils.getTableMetric(keywords, user, this.article, cityMetric)
-                    resolve(table);
+                    this.metricMathUtils.getCityMetric(addresses)
+                        .then(async (cityMetric) => {
+                            const table = await this.metricMathUtils.getTableMetric(keywords, user, this.article, cityMetric)
+                            resolve(table);
+                        })
                 })
         })
     }

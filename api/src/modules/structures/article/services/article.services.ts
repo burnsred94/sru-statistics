@@ -34,6 +34,22 @@ export class ArticleService {
       const { keys, article } = data;
       const findArticle = await this.articleRepository.findOne({ userId: user, article });
 
+      if (keys.length === 0 && !findArticle) {
+        const builder = this.articleBuilder.create(keys.length, user, article).initPagination();
+
+        const document = builder.document;
+
+        builder
+          .getProductAndUpdate(article)
+          .getCities(user)
+          .metricsCreate()
+
+        builder.activateSendPostman(3, user);
+
+        return { event: MessagesEvent.CREATE_ARTICLE, article: document }
+
+      }
+
       if (findArticle) {
         const document = await this.articleRepository.findOneAndUpdate(
           { _id: findArticle._id },
@@ -121,7 +137,7 @@ export class ArticleService {
   async articles(id: User, query) {
     const list = await this.articleRepository.findList(id, query.search, query.sort);
     return {
-      articles: list.articles,
+      articles: [...list.NullKeywordArray, ...list.articles],
       count_keys: list.articles.reduce((accumulator, currentValue) => {
         return (accumulator += currentValue.count);
       }, 0),

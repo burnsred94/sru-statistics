@@ -9,6 +9,7 @@ import { Average } from '../../average';
 import { Periods } from '../../periods';
 import { Pagination } from '../../pagination';
 import { AbstractRepository } from 'src/modules/database';
+import { MathUtils } from 'src/modules/utils/providers';
 
 export enum MetricsEnum {
   NEUTRAL = 'blue',
@@ -20,7 +21,7 @@ export enum MetricsEnum {
 export class ArticleRepository extends AbstractRepository<ArticleDocument> {
   protected readonly logger = new Logger(ArticleRepository.name);
 
-  constructor(@InjectModel(Article.name) private modelArticle: Model<ArticleDocument>) {
+  constructor(@InjectModel(Article.name) private modelArticle: Model<ArticleDocument>, private readonly mathUtils: MathUtils) {
     super(modelArticle);
   }
 
@@ -42,7 +43,58 @@ export class ArticleRepository extends AbstractRepository<ArticleDocument> {
       })()
       : { createdAt: -1 };
 
-    return await this.modelArticle
+    const NullKeywordArray = await this.modelArticle.aggregate([
+      { $match: { userId: user, keys: { $size: 0 }, active: true } },
+      {
+        $addFields: {
+          сount: 0,
+          middle_pos_organic: {
+            num: 0,
+            data: [{ ts: await this.mathUtils.currentDate(), met: 0 }],
+          },
+          middle_pos_adverts: {
+            num: 0,
+            data: [{ ts: await this.mathUtils.currentDate(), met: 0 }],
+          },
+          trend: {
+            num: 0,
+            data: [{ ts: await this.mathUtils.currentDate(), met: 0 }],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: '$_id',
+          article: { $first: '$article' },
+          userId: { $first: '$userId' },
+          count: { $first: '$count' },
+          productName: { $first: '$productName' },
+          metrics: { $first: '$metrics' },
+          productImg: { $first: '$productImg' },
+          createdAt: { $first: '$createdAt' },
+          middle_pos_organic: { $first: '$middle_pos_organic' },
+          middle_pos_adverts: { $first: '$middle_pos_adverts' },
+          trend: { $first: '$trend' }
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          article: 1,
+          userId: 1,
+          count: 1,
+          productName: 1,
+          productImg: 1,
+          createdAt: 1,
+          middle_pos_organic: 1,
+          middle_pos_adverts: 1,
+          trend: 1
+        },
+      },
+
+    ])
+
+    const articles = await this.modelArticle
       .aggregate([
         { $match: { userId: user, active: true, ...query } },
         {
@@ -151,6 +203,8 @@ export class ArticleRepository extends AbstractRepository<ArticleDocument> {
       ])
       .exec()
       .then(value => ({ articles: value }));
+
+    return { articles: articles.articles, NullKeywordArray };
   }
 
   //Забирает один артикул

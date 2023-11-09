@@ -297,18 +297,18 @@ export class FoldersController {
   }
 
 
-  @Post('parse-and-added/:id')
+  @Post('parse-and-added')
   @UseGuards(JwtAuthGuard)
   async addedNewKeysToFolder(
     @Res() response: Response,
     @Body() dto: AddNewKeysToFolderDto,
     @CurrentUser() user: User,
-    @Param('id', new TransformMongoIdPipe()) id: Types.ObjectId,
   ) {
     try {
-      const addNewKeys = await this.articleService.addKeywords({ articleId: dto.article_id, keys: dto.keys }, user);
-
-      await this.folderService.addedNewKeywords(dto, user, id, addNewKeys.article)
+      await this.articleService.addKeywords({ articleId: dto.article_id, keys: dto.keys }, user)
+        .then((data) => {
+          return this.folderService.addedNewKeywords(dto, user, dto.folder_ids, data.article);
+        })
 
       response.status(HttpStatus.OK).send({
         data: [],

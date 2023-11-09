@@ -15,7 +15,7 @@ import { FilterQuery, HydratedDocument, PopulateOptions, Types, UpdateQuery } fr
 import { PaginationUtils } from 'src/modules/utils/providers';
 import { IPaginationResponse } from 'src/modules/utils/types';
 import { IManyFolderResponse } from '../types';
-import { reduce } from 'lodash';
+import { map, reduce } from 'lodash';
 import { MetricsService } from '../../metrics/services';
 import { FolderMetricsService } from './metrics';
 import { IMetric } from '../../article/types/interfaces';
@@ -168,22 +168,27 @@ export class FolderService {
     return await this.folderRepository.findOneAndUpdate({ _id: updateQuery._id }, updateQuery);
   }
 
-  async addedNewKeywords(dto: AddNewKeysToFolderDto, user: User, id: Types.ObjectId, article: string) {
-    const key = dto.keys.shift()
-    const getKeyId = await this.keysService.getOne({ article, key, userId: user })
-    if (getKeyId) {
-      this.folderRepository.findOneAndUpdate({ _id: id }, { $push: { keys: getKeyId._id } });
-      this.addedNewKeywords(dto, user, id, article)
-    } else {
-      setTimeout(() => {
-        dto.keys.push(key);
-        this.addedNewKeywords(dto, user, id, article)
-      }, 1000)
-    }
+  async addedNewKeywords(dto: AddNewKeysToFolderDto, user: User, ids: Types.ObjectId[], article: string) {
+    return map(dto.keys, (key) => {
+      return this.updateManyKeys(article, key, user, ids)
+    })
+  }
+
+  async updateManyKeys(article: string, key: string, userId: User, ids: Types.ObjectId[]) {
+    return new Promise((resolve) => {
+      setTimeout(async () => {
+        const getKeyId = await this.keysService.getOne({ article: article, key, userId });
+        if (getKeyId) {
+          const update = await this.folderRepository.updateMany({ _id: ids }, { $push: { keys: getKeyId._id } });
+          resolve(update);
+        } else {
+          this.updateManyKeys(article, key, userId, ids)
+        }
+      }, 250)
+    })
   }
 
   private async initMetricKeywords(folder: HydratedDocument<FolderDocument>, keys: Types.ObjectId[], article_id: Types.ObjectId) {
-    console.log(folder, article_id)
     await this.metricService.create({
       folder: folder._id,
       userId: folder.user,
