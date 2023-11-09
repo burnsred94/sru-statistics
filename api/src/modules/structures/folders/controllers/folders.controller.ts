@@ -32,6 +32,7 @@ import { DUPLICATE_NAME } from '../constants';
 import { FolderDocument } from '../schemas';
 import { ArticleService } from '../../article';
 import { concatMap, from } from 'rxjs';
+import { map } from 'lodash';
 
 @Controller('keys-folders')
 export class FoldersController {
@@ -308,19 +309,7 @@ export class FoldersController {
     try {
       await this.articleService.addKeywords({ articleId: dto.article_id, keys: dto.keys }, user)
         .then((data) => {
-          console.log(data)
-          from(dto.folder_ids)
-            .pipe(
-              concatMap(async (value: Types.ObjectId) => {
-                return value;
-              })
-            )
-            .subscribe({
-              next: async (value) => {
-                await this.folderService.addedNewKeywords(dto, user, value, data.article);
-                this.logger.log(`${data.article} Update`)
-              }
-            })
+          return this.folderService.addedNewKeywords(dto, user, dto.folder_ids, data.article);
         })
 
       response.status(HttpStatus.OK).send({

@@ -168,17 +168,23 @@ export class FolderService {
     return await this.folderRepository.findOneAndUpdate({ _id: updateQuery._id }, updateQuery);
   }
 
-  async addedNewKeywords(dto: AddNewKeysToFolderDto, user: User, id: Types.ObjectId, article: string) {
-    map(dto.keys, async (key) => {
-      const getKeyId = await this.keysService.getOne({ article: article, key: key, userId: user })
-      if (getKeyId) {
-        dto.keys.shift();
-        this.folderRepository.findOneAndUpdate({ _id: id }, { $push: { keys: getKeyId._id } });
-      } else {
-        setTimeout(() => {
-          this.addedNewKeywords(dto, user, id, article);
-        }, 3000)
-      }
+  async addedNewKeywords(dto: AddNewKeysToFolderDto, user: User, ids: Types.ObjectId[], article: string) {
+    return map(dto.keys, (key) => {
+      return this.updateManyKeys(article, key, user, ids)
+    })
+  }
+
+  async updateManyKeys(article: string, key: string, userId: User, ids: Types.ObjectId[]) {
+    return new Promise((resolve) => {
+      setTimeout(async () => {
+        const getKeyId = await this.keysService.getOne({ article: article, key, userId });
+        if (getKeyId) {
+          const update = await this.folderRepository.updateMany({ _id: ids }, { $push: { keys: getKeyId._id } });
+          resolve(update);
+        } else {
+          this.updateManyKeys(article, key, userId, ids)
+        }
+      }, 250)
     })
   }
 
