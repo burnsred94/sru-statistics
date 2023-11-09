@@ -41,6 +41,8 @@ export class ArticleService {
 
         builder
           .getProductAndUpdate(article)
+          .getCities(user)
+          .metricsCreate()
 
         builder.activateSendPostman(3, user);
 

@@ -31,8 +31,6 @@ import { HydratedDocument, Types } from 'mongoose';
 import { DUPLICATE_NAME } from '../constants';
 import { FolderDocument } from '../schemas';
 import { ArticleService } from '../../article';
-import { concatMap, from } from 'rxjs';
-import { map } from 'lodash';
 
 @Controller('keys-folders')
 export class FoldersController {
