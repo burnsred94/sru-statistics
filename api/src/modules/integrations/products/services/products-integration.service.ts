@@ -8,18 +8,24 @@ import { IProductResponse } from '../types';
 export class ProductsIntegrationService {
   protected readonly logger = new Logger(ProductsIntegrationService.name);
 
-  constructor(private readonly rmqRequester: RabbitMqRequester) {}
+  constructor(private readonly rmqRequester: RabbitMqRequester) { }
 
   async getProduct(article: string): Promise<IProductResponse> {
     try {
       return await this.rmqRequester.request<GetProductRMQ.Payload, GetProductRMQ.Response>({
         exchange: RmqExchanges.PRODUCT,
         routingKey: GetProductRMQ.routingKey,
-        timeout: 5000 * 10,
+        timeout: 5000 * 50,
         payload: { article: article },
       });
     } catch (error) {
       this.logger.error(error.message);
+      return {
+        img: "",
+        product_name: "Продукт небыл найден повторите позже",
+        product_url: "",
+        status: false,
+      }
     } finally {
       this.logger.log(
         `Sending message to exchange: ${RmqExchanges.PRODUCT} and routing: ${GetProductRMQ.routingKey}`,
