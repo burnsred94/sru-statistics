@@ -6,7 +6,7 @@ import { KeywordRefreshService } from '../../update/keywords-refresh/services/ke
 export class RefreshNightKeywords {
   constructor(private readonly keywordRefreshService: KeywordRefreshService) { }
 
-  @Cron('05 0 * * *', { timeZone: 'Europe/Moscow' })
+  @Cron('0 17 * * *', { timeZone: 'Europe/Moscow' })
   async taskKeywordsNightUpdate() {
     this.keywordRefreshService.updateNight()
   }

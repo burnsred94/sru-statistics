@@ -5,6 +5,7 @@ import { Types } from 'mongoose';
 import { MetricDefault, MetricEntity } from '../entities';
 import { IMetricData } from '../types';
 import { IMetric } from '../../article/types/interfaces';
+import { GetMetricsDto } from '../dto/metrics.dto';
 //"0 9-23/3 * * *"
 
 // export interface PayloadMetric {
@@ -18,33 +19,36 @@ export class MetricsService {
 
   constructor(private readonly metricsRepository: MetricsRepository) { }
 
-  async getMetrics(user: User, _id: Types.ObjectId) {
+  async getMetrics(user: User, _id: Types.ObjectId, dto?: GetMetricsDto) {
     const id = new Types.ObjectId(_id);
     const metrics = await this.metricsRepository.findOne({ $or: [{ article: id }, { folder: id }] });
-    return {
-      _id: metrics._id,
-      top_100: {
-        num: metrics.top_100.at(-1).met,
-        data: metrics.top_100,
-      },
-      top_1000: {
-        num: metrics.top_1000.at(-1).met,
-        data: metrics.top_1000,
-      },
-      indexes: {
-        num: metrics.indexes.at(-1).met,
-        data: metrics.indexes,
-      },
-      middle_pos_organic: {
-        num: metrics.middle_pos_organic.at(-1).met,
-        data: metrics.middle_pos_organic,
-      },
-      middle_pos_adverts: {
-        num: metrics.middle_pos_adverts.at(-1).met,
-        data: metrics.middle_pos_adverts,
-      },
-      middle_pos_cities: metrics.middle_pos_cities,
-    };
+
+    if (dto.peridos) {
+      return {
+        _id: metrics._id,
+        top_100: {
+          num: metrics.top_100.at(-1).met,
+          data: metrics.top_100.filter((value) => dto.peridos.includes(value.ts)),
+        },
+        top_1000: {
+          num: metrics.top_1000.at(-1).met,
+          data: metrics.top_1000.filter((value) => dto.peridos.includes(value.ts)),
+        },
+        indexes: {
+          num: metrics.indexes.at(-1).met,
+          data: metrics.indexes.filter((value) => dto.peridos.includes(value.ts)),
+        },
+        middle_pos_organic: {
+          num: metrics.middle_pos_organic.at(-1).met,
+          data: metrics.middle_pos_organic.filter((value) => dto.peridos.includes(value.ts)),
+        },
+        middle_pos_adverts: {
+          num: metrics.middle_pos_adverts.at(-1).met,
+          data: metrics.middle_pos_adverts.filter((value) => dto.peridos.includes(value.ts)),
+        },
+        middle_pos_cities: metrics.middle_pos_cities,
+      };
+    }
   }
 
   async updateMetric(data: IMetric) {

@@ -116,7 +116,6 @@ export class ArticleService {
 
   async findArticle(_id: Types.ObjectId, query) {
     const data = await this.articleRepository.findArticle({ _id: _id }, query);
-    console.log(data.keys.length)
     const pagination = data.pagination as unknown as HydratedDocument<Pagination>;
     const { keys, count, meta } = await this.paginationUtils.paginate(
       { limit: pagination.key_limit, page: pagination.page },

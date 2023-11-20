@@ -74,7 +74,7 @@ export class FolderService {
     query?: { search: string },
   ): Promise<IManyFolderResponse | { folders: HydratedDocument<FolderDocument>[] }> {
     const data = await this.folderRepository.findList(user, article, query);
-
+    console.log(data);
     if (dto.list) {
       const pagination_data = await this.paginationUtils.paginate(dto.pagination, data, 'folders');
 
@@ -110,7 +110,7 @@ export class FolderService {
     } else {
       const folder = await this.folderRepository.findOne(filterQuery);
       if (folder) {
-        metric = await this.metricService.getMetrics(filterQuery.user, folder?._id);
+        metric = await this.metricService.getMetrics(filterQuery.user, folder?._id, sortQuery.period);
       }
 
       return {
@@ -124,7 +124,7 @@ export class FolderService {
     const data = await this.folderRepository.findOne(filterQuery, populate);
 
     const response = await this.paginationUtils.paginate(pagination, data.keys, 'keys');
-    metric = await this.metricService.getMetrics(filterQuery.user, data._id);
+    metric = await this.metricService.getMetrics(filterQuery.user, data._id, sortQuery.period);
     return {
       metric,
       folder: response
