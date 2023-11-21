@@ -1,4 +1,4 @@
 
 export class GetMetricsDto {
-    peridos: Array<Date>
+    period: Array<Date>
 }
