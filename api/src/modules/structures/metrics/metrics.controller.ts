@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, Logger, Param, Res, UseGuards } from '@nestjs/common';
+import { Controller, HttpStatus, Logger, Param, Post, Res, UseGuards } from '@nestjs/common';
 import { MetricsService } from './services/metrics.service';
 import { CurrentUser, JwtAuthGuard, User } from 'src/modules/auth';
 import { ApiAcceptedResponse } from '@nestjs/swagger';
@@ -9,11 +9,11 @@ import { Types } from 'mongoose';
 export class MetricsController {
   protected readonly logger = new Logger(MetricsController.name);
 
-  constructor(private readonly metricsService: MetricsService) {}
+  constructor(private readonly metricsService: MetricsService) { }
 
   @ApiAcceptedResponse({ description: 'Get metrics article' })
   @UseGuards(JwtAuthGuard)
-  @Get('/:id')
+  @Post('/:id')
   async getMetrics(
     @Param('id') id: Types.ObjectId,
     @CurrentUser() user: User,
